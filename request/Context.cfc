@@ -19,7 +19,7 @@ component {
 	 * The target and event parameters are used to fire the corresponding event.
 	 * If no target or event parameters are present, the default values for these parameters, passed in as arguments, are used.
 	 **/
-	public struct function handleRequest(required string defaultTargetName, required string defaultEventType) {
+	public Response function handleRequest(required string defaultTargetName, required string defaultEventType) {
 		var properties = StructCopy(url);
 		StructAppend(properties, form, false);
 
@@ -32,22 +32,19 @@ component {
 			eventType = properties.event;
 		}
 
-		return fireEvent(targetName, eventType, properties);
+		return handleEvent(targetName, eventType, properties);
 	}
 
 	/**
 	 * Fires an event on the given target.
 	 **/
-	public struct function fireEvent(required string targetName, required string eventType, struct properties = {}) {
+	public Response function handleEvent(required string targetName, required string eventType, struct properties = {}) {
 
-		var processor = variables.factory.createProcessor();
-		var controller = variables.factory.createController(arguments.targetName);
-		var event = variables.factory.createEvent(controller, arguments.eventType, arguments.properties);
+		var processor = getFactory().createProcessor();
 
 		// TODO: execute start tasks
 
-		var tasks = getEventTasks(arguments.targetName, arguments.eventType);
-		processor.processTasks(tasks, event);
+		processor.processEvent(arguments.targetName, arguments.eventType, arguments.properties);
 
 		// TODO: execute end tasks
 
@@ -62,12 +59,10 @@ component {
 		return variables.factory;
 	}
 
-	// PRIVATE METHODS ----------------------------------------------------------------------------
-
 	/**
 	 * Returns an array of tasks to be executed for the given target and event.
 	 **/
-	private array function getEventTasks(required string targetName, required string eventType) {
+	public array function getEventTasks(required string targetName, required string eventType) {
 
 		var tasks = JavaCast("null", 0);
 		// check if the controller is registered and if it is listening to the event
@@ -75,16 +70,37 @@ component {
 			tasks = variables.controllers[arguments.targetName][arguments.eventType];
 		}
 
-		if (IsNull(tasks)) {
+		if (!StructKeyExists(local, "tasks")) {
 			if (variables.settings.implicitEvents) {
 				// use the event type as listener and view name
 				tasks = [
 					{"invoke" = arguments.eventType},
-					{"view" = arguments.eventType}
+					{"render" = arguments.eventType}
 				];
+			} else {
+				tasks = [];
 			}
 		}
 
 		return tasks;
 	}
+
+	// FACTORY METHODS ============================================================================
+
+	public Controller function createController(required string name, required Processor processor) {
+		return new "#arguments.name#"(arguments.processor);
+	}
+
+	public View function createView(required string name) {
+		return new "#arguments.name#"();
+	}
+
+	public Event function createEvent(required string targetName, required string eventType, struct properties = {}) {
+		return new Event(arguments.target, arguments.eventType, arguments.properties);
+	}
+
+	public Processor function createProcessor() {
+		return new Processor(this);
+	}
+
 }

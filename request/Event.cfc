@@ -1,8 +1,8 @@
 component {
 
-	variables.cancelled = false;
+	variables.canceled = false;
 
-	public void function init(required Controller target, required string type, struct properties = {}) {
+	public void function init(required string target, required string type, struct properties = {}) {
 
 		variables.target = arguments.target;
 		variables.type = arguments.type;
@@ -21,6 +21,10 @@ component {
 
 	public string function getType() {
 		return variables.type;
+	}
+
+	public boolean function isCanceled() {
+		return variables.canceled;
 	}
 
 	public struct function getProperties() {

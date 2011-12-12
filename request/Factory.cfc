@@ -4,7 +4,7 @@ component {
 		variables.context = arguments.context;
 	}
 
-	public Handler function createHandler(required string name) {
+	public Handler function createController(required string name) {
 		return new "#arguments.name#"(getContext());
 	}
 

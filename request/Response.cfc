@@ -1,15 +1,13 @@
-component {
-
-	variables.type = "HTML";
-	variables.contentTypes = {
-		HTML = "text/html",
-		JSON = "application/json",
-		TEXT = "text/plain"
-	};
+component Response {
 
 	public void function init() {
-		variables.content = {}; // store content by view name
-		variables.viewNames = []; // keep the order in which views write content
+		variables.type = "HTML";
+		variables.contentTypes = {
+			HTML = "text/html",
+			JSON = "application/json",
+			TEXT = "text/plain"
+		};
+		variables.contents = [];
 	}
 
 	public void function setType(required string type) {
@@ -24,21 +22,12 @@ component {
 		return variables.contentTypes[getType()];
 	}
 
-	public void function write(required string viewName, required any content) {
-		if (!StructKeyExists(variables.content, arguments.viewName)) {
-			ArrayAppend(variables.viewNames, arguments.viewName);
-		}
-		variables.content[arguments.viewName] = arguments.content;
+	public void function write(required any content) {
+		ArrayAppend(variables.contents, arguments.content);
 	}
 
-	public array function getRawContent() {
-
-		var rawContent = [];
-		for (var viewName in variables.viewNames) {
-			ArrayAppend(rawContent, variables.content[viewName]);
-		}
-
-		return rawContent;
+	public array function getContents() {
+		return variables.contents;
 	}
 
 	/**
@@ -47,43 +36,52 @@ component {
 	 **/
 	public string function render() {
 
-		var rawContent = getRawContent();
 		var result = "";
+		var contents = getContents();
 
-		switch (getContentType()) {
+		switch (getType()) {
 			case "HTML":
 			case "TEXT":
-				for (var content in rawContent) {
+				for (var content in contents) {
 					if (IsSimpleValue(content)) {
 						result &= content;
 					}
 				}
 				break;
 			case "JSON":
-				// if there is 1 element in the raw content, serialize that
+				// if there is 1 element in the content, serialize that
 				// if there are more, serialize the whole array
-				if (ArrayLen(rawContent) == 1) {
-					result = SerializeJSON(rawContent[1]);
+				if (ArrayLen(contents) == 1) {
+					result = SerializeJSON(contents[1]);
 				} else {
-					result = SerializeJSON(rawContent);
+					result = SerializeJSON(contents);
 				}
 				break;
 		}
 
+		//clear();
+
 		return result;
 	}
 
-	public void function clear(string viewName) {
-		if (StructKeyExists(arguments, "viewName")) {
-			var index = ArrayFind(variables.viewNames, arguments.viewName);
-			if (index > 0) {
-				StructDelete(variables.content, arguments.viewName);
-				ArrayDeleteAt(variables.viewNames, index);
-			}
-		} else {
-			StructClear(variables.content);
-			ArrayClear(variables.viewNames);
-		}
+	public void function clear() {
+		ArrayClear(variables.contents);
 	}
+
+	public array function getExecutedTasks() {
+		return variables.executedTasks;
+	}
+
+	package void function addExecutedTask(required string targetName, required string eventType, struct task = JavaCast("null", 0)) {
+		if (!StructKeyExists(variables, "executedTasks")) {
+			variables.executedTasks = [];
+		}
+		ArrayAppend(variables.executedTasks, {
+			target = arguments.targetName,
+			event = arguments.eventType,
+			task = arguments.task
+		});
+	}
+
 
 }

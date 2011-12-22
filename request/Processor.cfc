@@ -1,11 +1,12 @@
-component {
-
-	variables.controllers = {};
+component Processor {
 
 	public void function init(required Context context) {
 		variables.context = arguments.context;
 		variables.factory = variables.context; //.getFactory();
 		variables.response = variables.factory.createResponse();
+
+		variables.controllers = {};
+		variables.debug = getContext().getSetting("debug");
 	}
 
 	/**
@@ -15,18 +16,34 @@ component {
 
 		var event = getFactory().createEvent(arguments.targetName, arguments.eventType, arguments.properties);
 		var tasks = getContext().getEventTasks(arguments.targetName, arguments.eventType);
-		for (var task in arguments.tasks) {
-			executeTask(task, arguments.event);
-			if (arguments.event.isCanceled()) {
-				break;
+
+		if (ArrayIsEmpty(tasks)) {
+			if (variables.debug) {
+				response.addExecutedTask(arguments.targetName, arguments.eventType);
+			}
+		} else {
+			for (var task in tasks) {
+				if (variables.debug) {
+					response.addExecutedTask(arguments.targetName, arguments.eventType, task);
+				}
+
+				executeTask(task, event);
+				if (event.isCanceled()) {
+					break;
+				}
 			}
 		}
 
-		return !arguments.event.isCanceled();
+
+		return !event.isCanceled();
 	}
 
-	public Response function getResponse() {
+	package Response function getResponse() {
 		return variables.response;
+	}
+
+	public array function getExecutedTasks() {
+		return variables.executedTasks;
 	}
 
 	/**
@@ -38,42 +55,34 @@ component {
 		// invoke: invoke the event handler of that name
 		// render: render the view of that name
 		// dispatch: dispatch the event of that name
-		if (StructKeyExists(arguments.task, "invoke") {
-			// invoke the given event handler
-			var controller = JavaCast("null", 0);
-			var method = "";
-			if (ListLen(arguments.task.invoke, ".") == 1) {
-				// no explicit handler specified, so use the event target
-				controller = getController(arguments.event.getTarget());
-				method = arguments.task.invoke;
-			} else {
-				controller = getController(ListFirst(arguments.task.invoke, "."));
-				method = ListLast(arguments.task.invoke);
-			}
+		if (StructKeyExists(arguments.task, "invoke")) {
+			// invoke the given handler method on the specified controller
+			// the invoke key should be of the form <name>.<method>
+			var method = ListLast(arguments.task.invoke, ".");
+			var controllerName = ListDeleteAt(arguments.task.invoke, ListLen(arguments.task.invoke, "."), ".");
+			var controller = getController(controllerName);
 			// invoke the handler method
 			controller[method](arguments.event);
-			if (arguments.event.isCancelled()) {
+			if (arguments.event.isCanceled()) {
 				// if there is an instead key in the task, execute it
-				if (StructKeyExists(arguments.task, "instead") {
+				if (StructKeyExists(arguments.task, "instead")) {
 					executeTask(arguments.task.instead, arguments.event);
 				}
 			}
 
 		} else if (StructKeyExists(arguments.task, "render")) {
-			var viewName = arguments.task.view;
-			if (ListLen(arguments.task.view, ".") == 1) {
-				viewName = arguments.event.getTarget() & "." & viewName;
+			var template = arguments.task.render;
+			if (arguments.task.render does not contain "/") {
+				template = arguments.event.getTarget() & "/" & template;
 			}
 
-			var result = getFactory().createView(viewName, this).render(arguments.event.getProperties());
-			// gather the result in the response instance
-			getResponse().write(viewName, result);
+			getContext().render(template, arguments.event.getProperties(), variables.response);
 
-		} else if (StructKeyExists(arguments.task, "dispatch") {
+		} else if (StructKeyExists(arguments.task, "dispatch")) {
 			// dispatch the given event
 			var eventType = arguments.task.dispatch;
 			var targetName = arguments.event.getTarget();
-			if (ListLen(eventType) > 1) {
+			if (ListLen(eventType, ".") > 1) {
 				targetName = ListFirst(eventType, ".");
 				eventType = ListLast(eventType, ".");
 			}
@@ -82,7 +91,7 @@ component {
 			if (!success) {
 				arguments.event.cancel();
 				// if there is an instead key in the task, execute it
-				if (StructKeyExists(arguments.task, "instead") {
+				if (StructKeyExists(arguments.task, "instead")) {
 					executeTask(arguments.task.instead, arguments.event);
 				}
 			}
@@ -105,7 +114,7 @@ component {
 		return variables.context;
 	}
 
-	private Factory getFactory() {
+	private Context function getFactory() {
 		return variables.factory;
 	}
 

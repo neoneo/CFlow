@@ -1,8 +1,8 @@
-component {
+component Controller {
 
-	public void function init(required Processor processor, required string name) {
+/*
+	public void function init(required Processor processor) {
 		variables.processor = arguments.processor;
-		variables.name = arguments.name;
 	}
 
 	private boolean function dispatchEvent(required string eventType, Event event) {
@@ -14,13 +14,8 @@ component {
 			properties = {};
 		}
 
-		// if the event is a single list item, the event target is this controller
-		var eventType = arguments.eventType;
-		var targetName = getName();
-		if (ListLen(eventType, ".") > 1) {
-			targetName = ListFirst(eventType ,".");
-			eventType = ListLast(eventType ,".");
-		}
+		var targetName = ListFirst(eventType, ".");
+		var eventType = ListLast(eventType, ".");
 
 		return getProcessor().processEvent(targetName, eventType, properties);
 	}
@@ -29,8 +24,6 @@ component {
 		return variables.processor;
 	}
 
-	private string function getName() {
-		return variables.name;
-	}
+*/
 
 }

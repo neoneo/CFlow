@@ -1,15 +1,43 @@
-component {
+component Context {
 
 	public void function init() {
-		variables.controllers = {
-
+		variables.tasks = {
+			"world" = {
+				"hello" = [
+					/*{
+						"invoke" = "World.voerUit",
+						"instead" = {
+							"dispatch" = "nietgelukt"
+						}
+					},*/
+					{"invoke" = "Reader.readFile"},
+					{"render" = "reader/dumpFile"},
+					{"render" = "laatzien"}
+				],
+				"nietgelukt" = [
+					{"invoke" = "World.naKijken"},
+					{"dispatch" = "niemandluistert"},
+					{"dispatch" = "universe.bye"}
+				]
+			},
+			"universe" = {
+				"bye" = [
+					{"render" = "totziens"}
+				]
+			}
 		};
 
 		variables.settings = {
-			implicitEvents = false
+			debug = true,
+			implicitEvents = false,
+			defaultTarget = "world",
+			defaultEvent = "hello",
+			controllerMapping = "speeltuin.cflow.controllers",
+			viewMapping = "/speeltuin/cflow/views"
 		};
 
-		variables.factory = new Factory(this);
+		variables.factory = this;//new Factory(this);
+		variables.view = new View();
 	}
 
 	/**
@@ -19,15 +47,15 @@ component {
 	 * The target and event parameters are used to fire the corresponding event.
 	 * If no target or event parameters are present, the default values for these parameters, passed in as arguments, are used.
 	 **/
-	public Response function handleRequest(required string defaultTargetName, required string defaultEventType) {
+	public Response function handleRequest() {
 		var properties = StructCopy(url);
 		StructAppend(properties, form, false);
 
-		var targetName = arguments.defaultTargetName;
+		var targetName = variables.settings.defaultTarget;
+		var eventType = variables.settings.defaultEvent;
 		if (StructKeyExists(properties, "target")) {
 			targetName = properties.target;
 		}
-		var eventType = arguments.defaultEventType;
 		if (StructKeyExists(properties, "event")) {
 			eventType = properties.event;
 		}
@@ -55,7 +83,7 @@ component {
 
 	}
 
-	public Factory function getFactory() {
+	public Context function getFactory() {
 		return variables.factory;
 	}
 
@@ -65,17 +93,17 @@ component {
 	public array function getEventTasks(required string targetName, required string eventType) {
 
 		var tasks = JavaCast("null", 0);
-		// check if the controller is registered and if it is listening to the event
-		if (StructKeyExists(variables.controllers, arguments.targetName) && StructKeyExists(variables.controllers[arguments.targetName], arguments.eventType)) {
-			tasks = variables.controllers[arguments.targetName][arguments.eventType];
+		// check if there are tasks for this event
+		if (StructKeyExists(variables.tasks, arguments.targetName) && StructKeyExists(variables.tasks[arguments.targetName], arguments.eventType)) {
+			tasks = variables.tasks[arguments.targetName][arguments.eventType];
 		}
 
 		if (!StructKeyExists(local, "tasks")) {
 			if (variables.settings.implicitEvents) {
 				// use the event type as listener and view name
 				tasks = [
-					{"invoke" = arguments.eventType},
-					{"render" = arguments.eventType}
+					{"invoke" = arguments.targetName & "." & arguments.eventType},
+					{"render" = arguments.targetName & "." & arguments.eventType}
 				];
 			} else {
 				tasks = [];
@@ -85,22 +113,38 @@ component {
 		return tasks;
 	}
 
+	public View function getView() {
+		return variables.view;
+	}
+
+	public void function render(required string template, required struct properties, required Response response) {
+		getView().render(variables.settings.viewMapping & "/" & arguments.template, arguments.properties, arguments.response);
+	}
+
+	package string function getSetting(required string key) {
+		return variables.settings[arguments.key];
+	}
+
 	// FACTORY METHODS ============================================================================
 
 	public Controller function createController(required string name, required Processor processor) {
-		return new "#arguments.name#"(arguments.processor);
+		return new "#variables.settings.controllerMapping#.#arguments.name#"(arguments.processor);
 	}
 
-	public View function createView(required string name) {
-		return new "#arguments.name#"();
-	}
+	/*public View function createView(required string name, required Processor processor) {
+		return new "#variables.settings.viewMapping#.#arguments.name#"();
+	}*/
 
 	public Event function createEvent(required string targetName, required string eventType, struct properties = {}) {
-		return new Event(arguments.target, arguments.eventType, arguments.properties);
+		return new Event(arguments.targetName, arguments.eventType, arguments.properties);
 	}
 
 	public Processor function createProcessor() {
 		return new Processor(this);
+	}
+
+	public Response function createResponse() {
+		return new Response();
 	}
 
 }

@@ -1,4 +1,4 @@
-component {
+component Event {
 
 	variables.canceled = false;
 
@@ -15,12 +15,16 @@ component {
 		this.type = arguments.type;
 	}
 
-	public Controller function getTarget() {
+	public string function getTarget() {
 		return variables.target;
 	}
 
 	public string function getType() {
 		return variables.type;
+	}
+
+	public void function cancel() {
+		variables.canceled = true;
 	}
 
 	public boolean function isCanceled() {

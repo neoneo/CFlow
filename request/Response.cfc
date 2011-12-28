@@ -32,7 +32,6 @@ component Response {
 
 	/**
 	 * Default implementation for rendering HTML and JSON.
-	 * Override this method, or use getRawContent(), to render other content types or to render differently.
 	 **/
 	public string function render() {
 

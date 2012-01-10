@@ -11,7 +11,6 @@ component TaskReader {
 		}
 
 		compileIncludes();
-		// TODO: default controllers
 
 		return variables.tasks;
 	}

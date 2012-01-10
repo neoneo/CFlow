@@ -52,4 +52,11 @@ component Event {
 		}
 	}
 
+	/**
+	* Returns a copy of the event, with its canceled flag reset.
+	**/	
+	package Event function clone() {
+		return new Event(getTarget(), getType(), getProperties());
+	}
+
 }

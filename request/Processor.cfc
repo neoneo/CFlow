@@ -17,87 +17,93 @@ component Processor {
 		var event = getFactory().createEvent(arguments.targetName, arguments.eventType, arguments.properties);
 		var tasks = getContext().getEventTasks(arguments.targetName, arguments.eventType);
 
-		if (ArrayIsEmpty(tasks)) {
-			if (variables.debug) {
-				response.addExecutedTask(arguments.targetName, arguments.eventType);
-			}
-		} else {
-			for (var task in tasks) {
-				if (variables.debug) {
-					response.addExecutedTask(arguments.targetName, arguments.eventType, task);
-				}
-
-				executeTask(task, event);
-				if (event.isCanceled()) {
-					break;
-				}
-			}
-		}
-
+		processTasks(tasks, event);
 
 		return !event.isCanceled();
 	}
-
-	package Response function getResponse() {
-		return variables.response;
-	}
-
+	
+	/**
+	 * Returns the tasks that were executed by this processor. This is only useful if the associated context is in debug mode.
+	 **/
 	public array function getExecutedTasks() {
 		return variables.executedTasks;
 	}
 
 	/**
+	 * Returns the response object.
+	 **/
+	package Response function getResponse() {
+		return variables.response;
+	}
+	
+	private void processTasks(required array tasks, required Event event) {
+
+		if (ArrayIsEmpty(arguments.tasks)) {
+			if (variables.debug) {
+				response.addExecutedTask(arguments.event.getTarget(), arguments.event.getType());
+			}
+		} else {
+			for (var task in arguments.tasks) {
+				if (variables.debug) {
+					response.addExecutedTask(arguments.event.getTarget(), arguments.event.getType(), task);
+				}
+
+				processTask(task, arguments.event);
+				if (arguments.event.isCanceled()) {
+					break;
+				}
+			}
+		}
+		
+	}
+
+	/**
 	 * Executes the given task using the given event.
 	 **/
-	private void function executeTask(required struct task, required Event event) {
+	private void function processTask(required struct task, required Event event) {
 
 		// a task can be one of the following:
 		// invoke: invoke the event handler of that name
 		// render: render the view of that name
 		// dispatch: dispatch the event of that name
-		if (StructKeyExists(arguments.task, "invoke")) {
-			// invoke the given handler method on the specified controller
-			// the invoke key should be of the form <name>.<method>
-			var method = ListLast(arguments.task.invoke, ".");
-			var controllerName = ListDeleteAt(arguments.task.invoke, ListLen(arguments.task.invoke, "."), ".");
-			var controller = getController(controllerName);
-			// invoke the handler method
-			controller[method](arguments.event);
-			if (arguments.event.isCanceled()) {
-				// if there is an instead key in the task, execute it
-				if (StructKeyExists(arguments.task, "instead")) {
-					executeTask(arguments.task.instead, arguments.event);
+		switch (arguments.task.type) {
+			case "invoke":
+				// invoke the given handler method on the specified controller
+				var controller = getController(arguments.task.controller);
+				// invoke the handler method
+				controller[arguments.task.method](arguments.event);
+				if (arguments.event.isCanceled()) {
+					// if there are instead tasks, execute them
+					if (StructKeyExists(arguments.task, "instead")) {
+						processTasks(arguments.task.instead, arguments.event.clone());
+					}
 				}
-			}
-
-		} else if (StructKeyExists(arguments.task, "render")) {
-			var template = arguments.task.render;
-			if (arguments.task.render does not contain "/") {
-				template = arguments.event.getTarget() & "/" & template;
-			}
-
-			getContext().render(template, arguments.event.getProperties(), variables.response);
-
-		} else if (StructKeyExists(arguments.task, "dispatch")) {
-			// dispatch the given event
-			var eventType = arguments.task.dispatch;
-			var targetName = arguments.event.getTarget();
-			if (ListLen(eventType, ".") > 1) {
-				targetName = ListFirst(eventType, ".");
-				eventType = ListLast(eventType, ".");
-			}
-			var success = processEvent(targetName, eventType, arguments.event.getProperties());
-
-			if (!success) {
-				arguments.event.cancel();
-				// if there is an instead key in the task, execute it
-				if (StructKeyExists(arguments.task, "instead")) {
-					executeTask(arguments.task.instead, arguments.event);
+				break;
+			
+			case "render":
+				var template = arguments.task.template;
+				if (template does not contain "/") {
+					template = arguments.event.getTarget() & "/" & template;
 				}
-			}
+	
+				getContext().render(template, arguments.event.getProperties(), variables.response);
+				break;
 
-		} else {
-			throw(type = "cflow", message = "Invalid definition for event #arguments.event.getTarget()#.#arguments.event.getType()#");
+			case "dispatch":
+				// dispatch the given event
+				var success = processEvent(arguments.task.target, arguments.task.event, arguments.event.getProperties());
+	
+				if (!success) {
+					arguments.event.cancel();
+					if (StructKeyExists(arguments.task, "instead")) {
+						processTasks(arguments.task.instead, arguments.event.clone());
+					}
+				}
+				break;
+			
+			default:
+				throw(type = "cflow", message = "Invalid definition for event #arguments.event.getTarget()#.#arguments.event.getType()#");
+				break;
 		}
 
 	}

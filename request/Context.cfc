@@ -1,14 +1,14 @@
-component Context {
+component Context accessors="true" {
 
-	property name="debug" type="boolean" default="false" getter="true" setter="true";
-	property name="implicitEvents" type="boolean" default="false" getter="true" setter="true";
-	property name="defaultTarget" type="string" default="" getter="true" setter="true";
-	property name="defaultEvent" type="string" default="" getter="true" setter="true";
-	property name="controllerMapping" type="string" default="" getter="true" setter="true";
-	property name="viewMapping" type="string" default="" getter="true" setter="true";
-	property name="configurationPath" type="string" default="" getter="true" setter="true";
+	property name="debug" type="boolean" default="false";
+	property name="implicitEvents" type="boolean" default="false";
+	property name="defaultTarget" type="string" default="";
+	property name="defaultEvent" type="string" default="";
+	property name="controllerMapping" type="string" default="";
+	property name="viewMapping" type="string" default="";
+	property name="configurationPath" type="string" default="";
 
-	property name="renderer" type="Renderer" getter="true" setter="true";
+	property name="renderer" type="Renderer";
 
 	public void function init() {
 
@@ -74,14 +74,11 @@ component Context {
 		// check if there are tasks for this event
 		if (StructKeyExists(variables.tasks, arguments.targetName) && StructKeyExists(variables.tasks[arguments.targetName], arguments.eventType)) {
 			tasks = variables.tasks[arguments.targetName][arguments.eventType];
-		}
-
-		if (!StructKeyExists(local, "tasks")) {
+		} else {
 			if (getImplicitEvents()) {
-				// use the event type as listener and view name
 				tasks = [
-					{"invoke" = arguments.targetName & "." & arguments.eventType},
-					{"render" = arguments.targetName & "." & arguments.eventType}
+					{"type" = "invoke", "controller" = arguments.targetName, "method" = arguments.eventType},
+					{"type" = "render", "template" = arguments.eventType}
 				];
 			} else {
 				tasks = [];
@@ -102,82 +99,20 @@ component Context {
 		renderer.render(getViewMapping() & "/" & arguments.template, arguments.properties, arguments.response);
 	}
 
-
-	// GETTERS AND SETTERS FOR SETTINGS ===========================================================
-/*
-	public void function setControllerMapping(required string mapping) {
-		variables.controllerMapping = arguments.mapping;
-	}
-
-	public void function setViewMapping(required string mapping) {
-		variables.viewMapping = arguments.mapping;
-	}
-
-	public void function setDefaultTarget(required string targetName) {
-		variables.defaultTarget = arguments.targetName;
-	}
-
-	public void function setDefaultEvent(required string eventType) {
-		variables.defaultEvent = arguments.eventType;
-	}
-
-	public void function setImplicitEvents(required boolean set) {
-		variables.implicitEvents = set;
-	}
-
-	public void function setDebug(required boolean set) {
-		variables.debug = set;
-	}
-
-	public void function getControllerMapping() {
-		return variables.controllerMapping;
-	}
-
-	public void function getViewMapping() {
-		return variables.viewMapping;
-	}
-
-	public void function getDefaultTarget() {
-		return variables.defaultTarget;
-	}
-
-	public void function getDefaultEvent() {
-		return variables.defaultEvent;
-	}
-
-	public void function setImplicitEvents(required boolean set) {
-		variables.implicitEvents = set;
-	}
-
-	public void function setDebug(required boolean set) {
-		variables.debug = set;
-	}
-	* */
-
-	// FACTORY METHODS ============================================================================
-
-	public Controller function getController(required string name, required Processor processor) {
+	package Controller function getController(required string name) {
 
 		var controller = JavaCast("null", 0);
 		if (StructKeyExists(variables.controllers, arguments.name)) {
 			controller = variables.controllers[arguments.name];
 		} else {
-			controller = new "#getControllerMapping()#.#arguments.name#"(arguments.processor);
+			controller = new "#getControllerMapping()#.#arguments.name#"();
 		}
 
 		return controller;
 	}
 
-	public Event function createEvent(required string targetName, required string eventType, struct properties = {}) {
-		return new Event(arguments.targetName, arguments.eventType, arguments.properties);
-	}
-
-	public Processor function createProcessor() {
+	private Processor function createProcessor() {
 		return new Processor(this);
-	}
-
-	public Response function createResponse() {
-		return new Response();
 	}
 
 }

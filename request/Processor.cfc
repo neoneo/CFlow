@@ -2,11 +2,9 @@ component Processor {
 
 	public void function init(required Context context) {
 		variables.context = arguments.context;
-		variables.factory = variables.context; //.getFactory();
-		variables.response = variables.factory.createResponse();
+		variables.response = createResponse();
 
-		variables.controllers = {};
-		variables.debug = getContext().getSetting("debug");
+		variables.debug = getContext().getDebug();
 	}
 
 	/**
@@ -14,9 +12,10 @@ component Processor {
 	 **/
 	public boolean function processEvent(required string targetName, required string eventType, struct properties = {}) {
 
-		var event = getFactory().createEvent(arguments.targetName, arguments.eventType, arguments.properties);
+		var event = createEvent(arguments.targetName, arguments.eventType, arguments.properties);
 		var tasks = getContext().getEventTasks(arguments.targetName, arguments.eventType);
 
+<<<<<<< HEAD
 		processTasks(tasks, event);
 
 		return !event.isCanceled();
@@ -41,24 +40,51 @@ component Processor {
 		if (ArrayIsEmpty(arguments.tasks)) {
 			if (variables.debug) {
 				response.addExecutedTask(arguments.event.getTarget(), arguments.event.getType());
+=======
+		return processTasks(tasks, event);
+	}
+
+	package Response function getResponse() {
+		return variables.response;
+	}
+
+	private boolean function processTasks(required array tasks, required Event event) {
+
+		if (ArrayIsEmpty(arguments.tasks)) {
+			if (variables.debug) {
+				response.addProcessedTask(arguments.event.getTarget(), arguments.event.getType());
+>>>>>>> Refactoring
 			}
 		} else {
 			for (var task in arguments.tasks) {
 				if (variables.debug) {
+<<<<<<< HEAD
 					response.addExecutedTask(arguments.event.getTarget(), arguments.event.getType(), task);
 				}
 
 				processTask(task, arguments.event);
 				if (arguments.event.isCanceled()) {
+=======
+					response.addProcessedTask(arguments.event.getTarget(), arguments.event.getType(), task);
+				}
+
+				processTask(task, event);
+				if (event.isCanceled()) {
+>>>>>>> Refactoring
 					break;
 				}
 			}
 		}
+<<<<<<< HEAD
 		
+=======
+
+		return !event.isCanceled();
+>>>>>>> Refactoring
 	}
 
 	/**
-	 * Executes the given task using the given event.
+	 * Processes the given task using the given event.
 	 **/
 	private void function processTask(required struct task, required Event event) {
 
@@ -69,6 +95,7 @@ component Processor {
 		switch (arguments.task.type) {
 			case "invoke":
 				// invoke the given handler method on the specified controller
+<<<<<<< HEAD
 				var controller = getController(arguments.task.controller);
 				// invoke the handler method
 				controller[arguments.task.method](arguments.event);
@@ -103,25 +130,49 @@ component Processor {
 			
 			default:
 				throw(type = "cflow", message = "Invalid definition for event #arguments.event.getTarget()#.#arguments.event.getType()#");
+=======
+				getContext().getController(arguments.task.controller)[arguments.task.method](arguments.event);
+				break;
+
+			case "render":
+				getContext().render(arguments.task.template, arguments.event.getProperties(), variables.response);
+				break;
+
+			case "dispatch":
+				// dispatch the given event
+				var success = processEvent(arguments.task.target, arguments.task.event, arguments.event.getProperties());
+
+				if (!success) {
+					arguments.event.cancel();
+				}
+				break;
+
+			default:
+				throw(type = "cflow", message = "Invalid task for event #arguments.event.getType()# on target #arguments.event.getTarget()#");
+>>>>>>> Refactoring
 				break;
 		}
 
-	}
-
-	private Controller function getController(required string name) {
-		if (!StructKeyExists(variables.controllers, arguments.name)) {
-			variables.controllers[arguments.name] = getFactory().createController(arguments.name, this);
+		if (arguments.event.isCanceled()) {
+			// if there is an instead key in the task, execute the tasks in it
+			if (StructKeyExists(arguments.task, "instead")) {
+				// the event is canceled, so for the next tasks we need a new event object
+				processTasks(arguments.task.instead, getContext().createEvent(arguments.event.getTarget(), arguments.event.getType(), arguments.event.getProperties()));
+			}
 		}
 
-		return variables.controllers[arguments.name];
 	}
 
 	private Context function getContext() {
 		return variables.context;
 	}
 
-	private Context function getFactory() {
-		return variables.factory;
+	private Event function createEvent(required string targetName, required string eventType, struct properties = {}) {
+		return new Event(this, arguments.targetName, arguments.eventType, arguments.properties);
+	}
+
+	private Response function createResponse() {
+		return new Response();
 	}
 
 }

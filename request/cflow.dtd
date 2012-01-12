@@ -1,0 +1,9 @@
+<!ELEMENT target (include*, start?, before?, event*, after?, end?)>
+<!ATTLIST target name CDATA #REQUIRED>
+<!ATTLIST target defaultcontroller CDATA #IMPLIED>
+
+<!ELEMENT include EMPTY>
+<!ATTLIST include target CDATA #REQUIRED>
+<!ATTLIST include event CDATA #IMPLIED>
+
+<!ELEMENT start ANY>

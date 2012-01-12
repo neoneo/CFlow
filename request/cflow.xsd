@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+	xmlns="http://www.neoneo.nl/cflow"
+	targetNamespace="http://www.neoneo.nl/cflow">
+	<xs:group name="task">
+		<xs:choice>
+			<xs:element name="invoke">
+				<xs:complexType>
+					<xs:choice minOccurs="0" maxOccurs="unbounded">
+						<xs:group ref="task" />
+					</xs:choice>
+					<xs:attribute name="controller" type="xs:string" use="optional" />
+					<xs:attribute name="method" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="render">
+				<xs:complexType>
+					<xs:attribute name="template" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="dispatch">
+				<xs:complexType>
+					<xs:choice minOccurs="0" maxOccurs="unbounded">
+						<xs:group ref="task" />
+					</xs:choice>
+					<xs:attribute name="target" type="xs:string" use="optional" />
+					<xs:attribute name="event" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+	</xs:group>
+	
+	<xs:element name="target">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="include" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:attribute name="target" type="xs:string" use="required" />
+						<xs:attribute name="event" type="xs:string" use="optional" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="start" minOccurs="0">
+					<xs:complexType>
+						<xs:choice minOccurs="1" maxOccurs="unbounded">
+							<xs:group ref="task" />
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="before" minOccurs="0">
+					<xs:complexType>
+						<xs:choice  minOccurs="1" maxOccurs="unbounded">
+							<xs:group ref="task" />
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="event" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:choice  minOccurs="1" maxOccurs="unbounded">
+							<xs:group ref="task" />
+						</xs:choice>
+				
+						<xs:attribute name="type" type="xs:string" use="required" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="after" minOccurs="0">
+					<xs:complexType>
+						<xs:choice  minOccurs="1" maxOccurs="unbounded">
+							<xs:group ref="task" />
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="end" minOccurs="0">
+					<xs:complexType>
+						<xs:choice  minOccurs="1" maxOccurs="unbounded">
+							<xs:group ref="task" />
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		
+			<xs:attribute name="name" type="xs:string" use="required" />
+			<xs:attribute name="defaultcontroller" type="xs:string" use="optional" />
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

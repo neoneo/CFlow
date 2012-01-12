@@ -2,17 +2,13 @@ component Event {
 
 	variables.canceled = false;
 
-	public void function init(required string target, required string type, struct properties = {}) {
+	public void function init(required Processor processor, required string target, required string type, struct properties = {}) {
 
+		variables.processor = arguments.processor;
 		variables.target = arguments.target;
 		variables.type = arguments.type;
 
 		setProperties(arguments.properties);
-		// make the type and the target available as public properties
-		// this also means they can be set, so the actual values of these properties cannot be trusted
-		// core components therefore have to use the package methods to get the actual values of these properties
-		this.target = arguments.target;
-		this.type = arguments.type;
 	}
 
 	public string function getTarget() {
@@ -50,6 +46,11 @@ component Event {
 				this[property] = arguments.properties[property];
 			}
 		}
+
+	}
+
+	public Processor function getProcessor() {
+		return variables.processor;
 	}
 
 	/**

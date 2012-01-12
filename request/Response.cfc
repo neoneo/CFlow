@@ -67,15 +67,15 @@ component Response {
 		ArrayClear(variables.contents);
 	}
 
-	public array function getExecutedTasks() {
-		return variables.executedTasks;
+	public array function getProcessedTasks() {
+		return variables.processedTasks;
 	}
 
-	package void function addExecutedTask(required string targetName, required string eventType, struct task = JavaCast("null", 0)) {
-		if (!StructKeyExists(variables, "executedTasks")) {
-			variables.executedTasks = [];
+	package void function addProcessedTask(required string targetName, required string eventType, struct task = JavaCast("null", 0)) {
+		if (!StructKeyExists(variables, "processedTasks")) {
+			variables.processedTasks = [];
 		}
-		ArrayAppend(variables.executedTasks, {
+		ArrayAppend(variables.processedTasks, {
 			target = arguments.targetName,
 			event = arguments.eventType,
 			task = arguments.task

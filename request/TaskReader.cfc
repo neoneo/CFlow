@@ -1,16 +1,22 @@
 component TaskReader {
 
 	public struct function read(required string path) {
-		variables.tasks = {};
+		variables.tasks = {}; // lists of tasks per target
+		variables.defaultControllers = {}; // default controllers per target
 
 		var path = ExpandPath(arguments.path);
 		var list = DirectoryList(path, false, "name", "*.xml");
 
-		for (var fileName in list) {
-			readFile(path & "/" & fileName);
-		}
+		//for (var fileName in list) {
+			readFile(path & "/" & "base.xml");
+		//}
 
 		compileIncludes();
+<<<<<<< HEAD
+=======
+		setTaskDefaults();
+
+>>>>>>> Refactoring
 
 		return variables.tasks;
 	}
@@ -18,12 +24,12 @@ component TaskReader {
 	private void function readFile(required string path) {
 
 		var content = FileRead(arguments.path);
-		var xmlDocument = XmlParse(content, false);
+		var xmlDocument = XmlParse(content, false, "cflow.xsd");
 
+		var name = xmlDocument.xmlRoot.xmlAttributes.name;
 		// the root element (target) may have an attribute default controller
-		var defaultController = "";
 		if (StructKeyExists(xmlDocument.xmlRoot.xmlAttributes, "defaultcontroller")) {
-			defaultController = xmlDocument.xmlRoot.xmlAttributes.defaultcontroller;
+			variables.defaultControllers[name] = xmlDocument.xmlRoot.xmlAttributes.defaultcontroller;
 		}
 
 		var tasks = {};
@@ -51,7 +57,7 @@ component TaskReader {
 			}
 		}
 
-		variables.tasks[xmlDocument.xmlRoot.xmlAttributes.name] = tasks;
+		variables.tasks[name] = tasks;
 
 	}
 
@@ -169,6 +175,36 @@ component TaskReader {
 			}
 
 			targets = StructFindKey(variables.tasks, "includes", "all");
+		}
+
+	}
+
+	/**
+	 * Sets default controllers and targets for tasks that have not specified them.
+	 **/
+	private void function setTaskDefaults() {
+
+		for (var targetName in variables.tasks) {
+			// if a default controller was specified, set it on all invoke tasks that have no controller
+			var target = variables.tasks[targetName];
+			if (StructKeyExists(variables.defaultControllers, targetName)) {
+				// find all tasks that have no controller specified
+				var invokes = StructFindValue(target, "invoke", "all");
+				for (var invoke in invokes) {
+					if (!StructKeyExists(invoke.owner, "controller")) {
+						// explicitly set the controller
+						invoke.owner["controller"] = variables.defaultControllers[targetName];
+					}
+				}
+			}
+
+			// the same thing for dispatch tasks: if no target is specified use the current target
+			var dispatches = StructFindValue(target, "dispatch", "all");
+			for (var dispatch in dispatches) {
+				if (!StructKeyExists(dispatch.owner, "target")) {
+					dispatch.owner["target"] = targetName;
+				}
+			}
 		}
 
 	}

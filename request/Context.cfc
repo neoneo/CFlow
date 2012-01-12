@@ -78,7 +78,7 @@ component Context accessors="true" {
 			if (getImplicitEvents()) {
 				tasks = [
 					{"type" = "invoke", "controller" = arguments.targetName, "method" = arguments.eventType},
-					{"type" = "render", "template" = arguments.eventType}
+					{"type" = "render", "template" = arguments.targetName & "/" & arguments.eventType}
 				];
 			} else {
 				tasks = [];
@@ -88,7 +88,7 @@ component Context accessors="true" {
 		return tasks;
 	}
 
-	public void function render(required string template, required struct properties, required Response response) {
+	package void function render(required string template, required struct properties, required Response response) {
 
 		var renderer = getRenderer();
 		if (!StructKeyExists(local, "renderer")) {

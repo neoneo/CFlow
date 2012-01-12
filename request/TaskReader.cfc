@@ -12,11 +12,7 @@ component TaskReader {
 		//}
 
 		compileIncludes();
-<<<<<<< HEAD
-=======
 		setTaskDefaults();
-
->>>>>>> Refactoring
 
 		return variables.tasks;
 	}

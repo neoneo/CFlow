@@ -15,17 +15,9 @@ component Processor {
 		var event = createEvent(arguments.targetName, arguments.eventType, arguments.properties);
 		var tasks = getContext().getEventTasks(arguments.targetName, arguments.eventType);
 
-<<<<<<< HEAD
 		processTasks(tasks, event);
 
 		return !event.isCanceled();
-	}
-	
-	/**
-	 * Returns the tasks that were executed by this processor. This is only useful if the associated context is in debug mode.
-	 **/
-	public array function getExecutedTasks() {
-		return variables.executedTasks;
 	}
 
 	/**
@@ -34,53 +26,25 @@ component Processor {
 	package Response function getResponse() {
 		return variables.response;
 	}
-	
-	private void processTasks(required array tasks, required Event event) {
 
-		if (ArrayIsEmpty(arguments.tasks)) {
-			if (variables.debug) {
-				response.addExecutedTask(arguments.event.getTarget(), arguments.event.getType());
-=======
-		return processTasks(tasks, event);
-	}
-
-	package Response function getResponse() {
-		return variables.response;
-	}
-
-	private boolean function processTasks(required array tasks, required Event event) {
+	private void function processTasks(required array tasks, required Event event) {
 
 		if (ArrayIsEmpty(arguments.tasks)) {
 			if (variables.debug) {
 				response.addProcessedTask(arguments.event.getTarget(), arguments.event.getType());
->>>>>>> Refactoring
 			}
 		} else {
 			for (var task in arguments.tasks) {
 				if (variables.debug) {
-<<<<<<< HEAD
-					response.addExecutedTask(arguments.event.getTarget(), arguments.event.getType(), task);
-				}
-
-				processTask(task, arguments.event);
-				if (arguments.event.isCanceled()) {
-=======
 					response.addProcessedTask(arguments.event.getTarget(), arguments.event.getType(), task);
 				}
 
-				processTask(task, event);
+				processTask(task, arguments.event);
 				if (event.isCanceled()) {
->>>>>>> Refactoring
 					break;
 				}
 			}
 		}
-<<<<<<< HEAD
-		
-=======
-
-		return !event.isCanceled();
->>>>>>> Refactoring
 	}
 
 	/**
@@ -95,8 +59,7 @@ component Processor {
 		switch (arguments.task.type) {
 			case "invoke":
 				// invoke the given handler method on the specified controller
-<<<<<<< HEAD
-				var controller = getController(arguments.task.controller);
+				var controller = getContext().getController(arguments.task.controller);
 				// invoke the handler method
 				controller[arguments.task.method](arguments.event);
 				if (arguments.event.isCanceled()) {
@@ -106,20 +69,20 @@ component Processor {
 					}
 				}
 				break;
-			
+
 			case "render":
 				var template = arguments.task.template;
 				if (template does not contain "/") {
 					template = arguments.event.getTarget() & "/" & template;
 				}
-	
+
 				getContext().render(template, arguments.event.getProperties(), variables.response);
 				break;
 
 			case "dispatch":
 				// dispatch the given event
 				var success = processEvent(arguments.task.target, arguments.task.event, arguments.event.getProperties());
-	
+
 				if (!success) {
 					arguments.event.cancel();
 					if (StructKeyExists(arguments.task, "instead")) {
@@ -127,30 +90,11 @@ component Processor {
 					}
 				}
 				break;
-			
+
 			default:
 				throw(type = "cflow", message = "Invalid definition for event #arguments.event.getTarget()#.#arguments.event.getType()#");
-=======
-				getContext().getController(arguments.task.controller)[arguments.task.method](arguments.event);
 				break;
 
-			case "render":
-				getContext().render(arguments.task.template, arguments.event.getProperties(), variables.response);
-				break;
-
-			case "dispatch":
-				// dispatch the given event
-				var success = processEvent(arguments.task.target, arguments.task.event, arguments.event.getProperties());
-
-				if (!success) {
-					arguments.event.cancel();
-				}
-				break;
-
-			default:
-				throw(type = "cflow", message = "Invalid task for event #arguments.event.getType()# on target #arguments.event.getTarget()#");
->>>>>>> Refactoring
-				break;
 		}
 
 		if (arguments.event.isCanceled()) {

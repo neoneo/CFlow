@@ -2,13 +2,13 @@ component Event {
 
 	variables.canceled = false;
 
-	public void function init(required Processor processor, required string target, required string type, struct properties = {}) {
+	public void function init(required string target, required string type, struct properties = {}) {
 
-		variables.processor = arguments.processor;
 		variables.target = arguments.target;
 		variables.type = arguments.type;
 
 		setProperties(arguments.properties);
+
 	}
 
 	public string function getTarget() {
@@ -49,13 +49,9 @@ component Event {
 
 	}
 
-	public Processor function getProcessor() {
-		return variables.processor;
-	}
-
 	/**
 	* Returns a copy of the event, with its canceled flag reset.
-	**/	
+	**/
 	package Event function clone() {
 		return new Event(getTarget(), getType(), getProperties());
 	}

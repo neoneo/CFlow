@@ -7,9 +7,9 @@ component TaskReader {
 		var path = ExpandPath(arguments.path);
 		var list = DirectoryList(path, false, "name", "*.xml");
 
-		//for (var fileName in list) {
+		for (var fileName in list) {
 			readFile(path & "/" & "base.xml");
-		//}
+		}
 
 		compileIncludes();
 		setTaskDefaults();
@@ -17,10 +17,50 @@ component TaskReader {
 		return variables.tasks;
 	}
 
+	public void function register(required Context context) {
+
+		var phases = ["start", "end", "before", "after"];
+		// variables.tasks is a struct where each key is a target name
+		for (var name in variables.tasks) {
+
+			var tasks = variables.tasks[name];
+			// tasks contains all the tasks for this target, stored by phase and by event
+			// first create tasks for all phases
+			for (var phase in phases) {
+				// always create the task, even if it remains empty, because otherwise the task is created for each request later
+				var eventTask = createTask();
+				if (StructKeyExists(tasks, phase)) {
+					for (var task in tasks[phase]) {
+						eventTask.addSubtask(createTask(arguments.context, task));
+					}
+				}
+				// register the task for the current phase under the target name
+				arguments.context.register(eventTask, phase, name);
+
+			}
+
+			tasks = tasks.events;
+			// tasks is now a struct where keys are event types
+			for (var type in tasks) {
+
+				var eventTask = createTask();
+				// loop over the tasks for this event and create subtasks
+				for (var task in tasks[type]) {
+					eventTask.addSubtask(createTask(arguments.context, task));
+				}
+				// register the task for the given event
+				arguments.context.register(eventTask, "event", name, type);
+
+			}
+
+		}
+
+	}
+
 	private void function readFile(required string path) {
 
 		var content = FileRead(arguments.path);
-		var xmlDocument = XmlParse(content, false, "cflow.xsd");
+		var xmlDocument = XmlParse(content, false); //, "cflow.xsd");
 
 		var name = xmlDocument.xmlRoot.xmlAttributes.name;
 		// the root element (target) may have an attribute default controller
@@ -203,6 +243,35 @@ component TaskReader {
 			}
 		}
 
+	}
+
+	private Task function createTask(required Context context, struct task) {
+
+		var instance = JavaCast("null", 0);
+		if (!StructKeyExists(arguments, task)) {
+			instance = new EventTask();
+		} else {
+			switch (arguments.task.type) {
+				case "invoke":
+					instance = arguments.context.createInvokeTask(arguments.task.controller, arguments.task.method);
+					break;
+				case "dispatch":
+					instance = arguments.context.createDispatchTask(arguments.context, arguments.task.target, arguments.task.event);
+					break;
+				case "render":
+					instance = arguments.context.createRenderTask(arguments.task.template);
+					break;
+			}
+
+			// if there are instead tasks, they will become subtasks of the current task
+			if (StructKeyExists(arguments.task.type, "instead")) {
+				for (var insteadTask in arguments.task.instead) {
+					instance.addSubtask(createTask(arguments.context, insteadTask));
+				}
+			}
+		}
+
+		return instance;
 	}
 
 }

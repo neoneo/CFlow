@@ -8,20 +8,20 @@ component Context accessors="true" {
 	property name="viewMapping" type="string" default="";
 	property name="configurationPath" type="string" default="";
 
-	property name="renderer" type="Renderer";
-
-	public void function init() {
-
-		variables.controllers = {}; // controllers are static, so we need only one instance of each
-		variables.tasks = {};
-
-	}
+	variables.controllers = {}; // controllers are static, so we need only one instance of each
+	variables.tasks = {
+		event = {},
+		start = {},
+		end = {},
+		before = {},
+		after = {}
+	};
 
 	/**
 	 * Default request handling implementation.
 	 *
 	 * The parameter values in the url and form scopes are collected as properties for the event.
-	 * The target and event parameters are used to fire the corresponding event.
+	 * The target and event parameters are used to dispatch the corresponding event.
 	 * If no target or event parameters are present, the default values for these parameters are used.
 	 **/
 	public Response function handleRequest() {
@@ -50,69 +50,149 @@ component Context accessors="true" {
 	 **/
 	public Response function handleEvent(required string targetName, required string eventType, struct properties = {}) {
 
-		var processor = createProcessor();
+		var response = new Response();
+		var event = new Event(arguments.targetName, arguments.eventType, arguments.properties);
 
-		// TODO: execute start tasks
+		var success = getStartTask(event).process(event, response);
 
-		processor.processEvent(arguments.targetName, arguments.eventType, arguments.properties);
+		if (success) {
+			success = dispatchEvent(event, response);
+		}
 
-		// TODO: execute end tasks
+		if (!success) {
+			// for the remainder, we need an event object with its canceled flag reset
+			event = event.clone();
+		}
 
-		return processor.getResponse();
+		getEndTask(event).process(event, response);
+
+		return response;
 	}
 
-	public boolean function register(required string name, required string targetName, required string eventType, string phase = "") {
+	public boolean function dispatchEvent(required Event event, required Response response) {
 
+		var success = getBeforeTask(arguments.event).process(arguments.event, arguments.response);
+
+		if (success) {
+			success = getEventTask(arguments.event).process(arguments.event, arguments.response)
+		}
+
+		if (success) {
+			success = getAfterTask(arguments.event).process(arguments.event, arguments.response);
+		}
+
+		return success;
+	}
+
+	public void function register(required Task task, required string phase, required string targetName, string eventType) {
+
+		switch (arguments.phase) {
+			case "start":
+			case "end":
+			case "before":
+			case "after":
+				variables.tasks[arguments.phase][arguments.targetName] = arguments.task;
+				break;
+			default:
+				if (!StructKeyExists(arguments, "eventType")) {
+					throw(type="cflow", message="Event type is required when registering tasks for the event phase");
+				}
+				if (!StructKeyExists(variables.tasks, arguments.targetName)) {
+					variables.tasks[arguments.targetName] = {};
+				}
+				variables.tasks[arguments.targetName][arguments.eventType] = arguments.task;
+				break;
+		}
+
+	}
+
+	public Renderer function getRenderer() {
+
+		if (!StructKeyExists(variables, "renderer")) {
+			setRenderer(new CFMLRenderer());
+		}
+
+		return variables.renderer;
+	}
+
+	public void function setRenderer(required Renderer renderer) {
+		variables.renderer = arguments.renderer;
 	}
 
 	/**
-	 * Returns an array of tasks to be executed for the given target and event.
+	 * Returns the task for the given event.
 	 **/
-	public array function getEventTasks(required string targetName, required string eventType) {
+	private Task function getEventTask(required event Event) {
 
-		var tasks = JavaCast("null", 0);
+		var task = JavaCast("null", 0);
 		// check if there are tasks for this event
-		if (StructKeyExists(variables.tasks, arguments.targetName) && StructKeyExists(variables.tasks[arguments.targetName], arguments.eventType)) {
-			tasks = variables.tasks[arguments.targetName][arguments.eventType];
+		var targetName = arguments.event.getTarget();
+		var eventType = arguments.event.getType();
+		if (StructKeyExists(variables.tasks.event, targetName) && StructKeyExists(variables.tasks.event[targetName], eventType)) {
+			task = variables.tasks.event[targetName][eventType];
 		} else {
+			task = new EventTask();
 			if (getImplicitEvents()) {
-				tasks = [
-					{"type" = "invoke", "controller" = arguments.targetName, "method" = arguments.eventType},
-					{"type" = "render", "template" = arguments.targetName & "/" & arguments.eventType}
-				];
-			} else {
-				tasks = [];
+				// we now assume there is a controller with the name of the target, that exposes a method with the name of the event type
+				task.addChild(createInvokeTask(targetName, eventType));
+				// and that there is a template in a directory with the name of the target, that has the same name as the event type
+				task.addChild(createRenderTask(targetName & "/" & eventType));
 			}
 		}
 
-		return tasks;
+		return task;
 	}
 
-	package void function render(required string template, required struct properties, required Response response) {
+	private Task function getPhaseTask(required string phase, required Event event) {
 
-		var renderer = getRenderer();
-		if (!StructKeyExists(local, "renderer")) {
-			renderer = new View();
-			setRenderer(renderer);
-		}
+		var task = JavaCast("null", 0);
+		var targetName = arguments.event.getTarget();
 
-		renderer.render(getViewMapping() & "/" & arguments.template, arguments.properties, arguments.response);
-	}
-
-	package Controller function getController(required string name) {
-
-		var controller = JavaCast("null", 0);
-		if (StructKeyExists(variables.controllers, arguments.name)) {
-			controller = variables.controllers[arguments.name];
+		if (StructKeyExists(variables.tasks[arguments.phase], targetName)) {
+			task = variables.tasks[arguments.phase][targetName];
 		} else {
-			controller = new "#getControllerMapping()#.#arguments.name#"();
+			// create an empty EventTask
+			task = new EventTask();
 		}
 
-		return controller;
+		return task;
 	}
 
-	private Processor function createProcessor() {
-		return new Processor(this);
+	private Task function getStartTask(required Event event) {
+		return getPhaseTask("start", arguments.event);
+	}
+
+	private Task function getEndTask(required Event event) {
+		return getPhaseTask("end", arguments.event);
+	}
+
+	private Task function getBeforeTask(required Event event) {
+		return getPhaseTask("before", arguments.event);
+	}
+
+	private Task function getAfterTask(required Event event) {
+		return getPhaseTask("after", arguments.event);
+	}
+
+	private component function getController(required string name) {
+
+		if (!StructKeyExists(variables.controllers, arguments.name)) {
+			variables.controllers[arguments.name] = new "#getControllerMapping()#.#arguments.name#"(this);
+		}
+
+		return variables.controllers[arguments.name];
+	}
+
+	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {
+		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
+	}
+
+	public DispatchTask function createDispatchTask(required string targetName, required string eventType) {
+		return new DispatchTask(this, arguments.targetName, arguments.eventType);
+	}
+
+	public RenderTask function createRenderTask(required string template) {
+		return new RenderTask(getRenderer(), arguments.template);
 	}
 
 }

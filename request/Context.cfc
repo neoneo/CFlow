@@ -6,7 +6,6 @@ component Context accessors="true" {
 	property name="defaultEvent" type="string" default="";
 	property name="controllerMapping" type="string" default="";
 	property name="viewMapping" type="string" default="";
-	property name="configurationPath" type="string" default="";
 
 	variables.controllers = {}; // controllers are static, so we need only one instance of each
 	variables.tasks = {
@@ -51,12 +50,13 @@ component Context accessors="true" {
 	public Response function handleEvent(required string targetName, required string eventType, struct properties = {}) {
 
 		var response = new Response();
-		var event = new Event(arguments.targetName, arguments.eventType, arguments.properties);
+		var event = new Event(arguments.targetName, arguments.eventType, arguments.properties, response);
 
-		var success = getStartTask(event).process(event, response);
+		var success = getStartTask(event).process(event);
 
+		// only process the event task if we have success
 		if (success) {
-			success = dispatchEvent(event, response);
+			success = dispatchEvent(event);
 		}
 
 		if (!success) {
@@ -64,21 +64,22 @@ component Context accessors="true" {
 			event = event.clone();
 		}
 
-		getEndTask(event).process(event, response);
+		// the end task is always processed
+		getEndTask(event).process(event);
 
 		return response;
 	}
 
-	public boolean function dispatchEvent(required Event event, required Response response) {
+	public boolean function dispatchEvent(required Event event) {
 
-		var success = getBeforeTask(arguments.event).process(arguments.event, arguments.response);
+		var success = getBeforeTask(arguments.event).process(arguments.event);
 
 		if (success) {
-			success = getEventTask(arguments.event).process(arguments.event, arguments.response)
+			success = getEventTask(arguments.event).process(arguments.event)
 		}
 
 		if (success) {
-			success = getAfterTask(arguments.event).process(arguments.event, arguments.response);
+			success = getAfterTask(arguments.event).process(arguments.event);
 		}
 
 		return success;
@@ -119,6 +120,8 @@ component Context accessors="true" {
 		variables.renderer = arguments.renderer;
 	}
 
+	// PRIVATE METHODS ============================================================================
+
 	/**
 	 * Returns the task for the given event.
 	 **/
@@ -143,6 +146,9 @@ component Context accessors="true" {
 		return task;
 	}
 
+	/**
+	 * Returns the task for the given phase and event.
+	 **/
 	private Task function getPhaseTask(required string phase, required Event event) {
 
 		var task = JavaCast("null", 0);
@@ -174,13 +180,19 @@ component Context accessors="true" {
 		return getPhaseTask("after", arguments.event);
 	}
 
-	private component function getController(required string name) {
+	private Controller function getController(required string name) {
 
 		if (!StructKeyExists(variables.controllers, arguments.name)) {
 			variables.controllers[arguments.name] = new "#getControllerMapping()#.#arguments.name#"(this);
 		}
 
 		return variables.controllers[arguments.name];
+	}
+
+	// PUBLIC FACTORY METHODS =====================================================================
+
+	public Event function createEvent(required string targetName, required string eventType, required Event event) {
+
 	}
 
 	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {

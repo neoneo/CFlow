@@ -1,20 +1,28 @@
 component InvokeTask extends="AbstractTask" {
 
-	public void function init(required component controller, required string method) {
+	public void function init(required Controller controller, required string method) {
 		variables.controller = arguments.controller;
 		variables.method = arguments.method;
 	}
 
-	public boolean function process(required Event event, required Response response) {
+	public boolean function process(required Event event) {
 
-		variables.controller[variables.method](arguments.event);
+		getController()[getMethod()](arguments.event);
 
 		var success = !arguments.event.isCanceled();
 		if (!success) {
-			processSubtasks(arguments.event.clone(), arguments.response);
+			processSubtasks(arguments.event.clone());
 		}
 
 		return success;
+	}
+
+	private Controller function getController() {
+		return variables.controller;
+	}
+
+	private string function getMethod() {
+		return variables.method;
 	}
 
 }

@@ -2,7 +2,7 @@ component AbstractTask implements="Task" {
 
 	variables.subtasks = [];
 
-	/*public boolean function process(required Event event, required Response response) {
+	/*public boolean function process(required Event event) {
 		throw(type="cflow", message="Not implemented");
 	}*/
 
@@ -10,7 +10,7 @@ component AbstractTask implements="Task" {
 		ArrayAppend(variables.subtasks, arguments.task);
 	}
 
-	private boolean function processSubtasks(required Event event, required Response response) {
+	private boolean function processSubtasks(required Event event) {
 
 		var success = true;
 		for (var task in variables.subtasks) {

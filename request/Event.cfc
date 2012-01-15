@@ -2,10 +2,11 @@ component Event {
 
 	variables.canceled = false;
 
-	public void function init(required string target, required string type, struct properties = {}) {
+	public void function init(required string target, required string type, required struct properties = {}, required Response response) {
 
 		variables.target = arguments.target;
 		variables.type = arguments.type;
+		variables.response = arguments.response;
 
 		setProperties(arguments.properties);
 
@@ -52,8 +53,12 @@ component Event {
 	/**
 	* Returns a copy of the event, with its canceled flag reset.
 	**/
-	package Event function clone() {
-		return new Event(getTarget(), getType(), getProperties());
+	public Event function clone() {
+		return new Event(getTarget(), getType(), getProperties(), getResponse());
+	}
+
+	package Response function getResponse() {
+		return variables.response;
 	}
 
 }

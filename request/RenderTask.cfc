@@ -5,8 +5,8 @@ component RenderTask implements="Task" {
 		variables.template = arguments.template;
 	}
 
-	public boolean function process(required Event event, required Response response) {
-		variables.renderer.render(template, arguments.event.getProperties(), arguments.response);
+	public boolean function process(required Event event) {
+		variables.renderer.render(template, arguments.event.getProperties(), arguments.event.getResponse());
 
 		return true;
 	}

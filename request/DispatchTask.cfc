@@ -6,19 +6,23 @@ component DispatchTask extends="AbstractTask" {
 		variables.eventType = arguments.eventType;
 	}
 
-	public boolean function process(required Event event, required Response response) {
+	public boolean function process(required Event event) {
 
 		// create a new event object with the properties of the event object that is passed in
-		var dispatch = new Event(variables.targetName, variables.eventType, arguments.event.getProperties());
+		var dispatch = getContext().createEvent(variables.targetName, variables.eventType, arguments.event);
 
-		var success = getContext().dispatchEvent(dispatch, arguments.response);
+		var success = getContext().dispatchEvent(dispatch);
 
 		if (!success) {
 			arguments.event.cancel();
-			processSubtasks(arguments.event.clone(), arguments.response);
+			processSubtasks(arguments.event.clone());
 		}
 
 		return success;
+	}
+
+	private Context function getContext() {
+		return variables.context;
 	}
 
 }

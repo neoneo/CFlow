@@ -134,9 +134,9 @@ component Context accessors="true" {
 			task = new EventTask();
 			if (getImplicitEvents()) {
 				// we now assume there is a controller with the name of the target, that exposes a method with the name of the event type
-				task.addChild(createInvokeTask(targetName, eventType));
+				task.addSubtask(createInvokeTask(targetName, eventType));
 				// and that there is a template in a directory with the name of the target, that has the same name as the event type
-				task.addChild(createRenderTask(targetName & "/" & eventType));
+				task.addSubtask(createRenderTask(targetName & "/" & eventType));
 			}
 		}
 

@@ -98,10 +98,10 @@ component Context accessors="true" {
 				if (!StructKeyExists(arguments, "eventType")) {
 					throw(type="cflow", message="Event type is required when registering tasks for the event phase");
 				}
-				if (!StructKeyExists(variables.tasks, arguments.targetName)) {
-					variables.tasks[arguments.targetName] = {};
+				if (!StructKeyExists(variables.tasks.event, arguments.targetName)) {
+					variables.tasks.event[arguments.targetName] = {};
 				}
-				variables.tasks[arguments.targetName][arguments.eventType] = arguments.task;
+				variables.tasks.event[arguments.targetName][arguments.eventType] = arguments.task;
 				break;
 		}
 
@@ -191,10 +191,6 @@ component Context accessors="true" {
 
 	// PUBLIC FACTORY METHODS =====================================================================
 
-	public Event function createEvent(required string targetName, required string eventType, required Event event) {
-
-	}
-
 	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {
 		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
 	}
@@ -204,7 +200,7 @@ component Context accessors="true" {
 	}
 
 	public RenderTask function createRenderTask(required string template) {
-		return new RenderTask(getRenderer(), arguments.template);
+		return new RenderTask(getRenderer(), getViewMapping() & "/" & arguments.template);
 	}
 
 }

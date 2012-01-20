@@ -8,7 +8,7 @@ component TaskReader {
 		var list = DirectoryList(path, false, "name", "*.xml");
 
 		for (var fileName in list) {
-			readFile(path & "/" & "base.xml");
+			readFile(path & "/" & fileName);
 		}
 
 		compileIncludes();
@@ -28,7 +28,7 @@ component TaskReader {
 			// first create tasks for all phases
 			for (var phase in phases) {
 				// always create the task, even if it remains empty, because otherwise the task is created for each request later
-				var eventTask = createTask();
+				var eventTask = createTask(arguments.context);
 				if (StructKeyExists(tasks, phase)) {
 					for (var task in tasks[phase]) {
 						eventTask.addSubtask(createTask(arguments.context, task));
@@ -43,7 +43,7 @@ component TaskReader {
 			// tasks is now a struct where keys are event types
 			for (var type in tasks) {
 
-				var eventTask = createTask();
+				var eventTask = createTask(arguments.context);
 				// loop over the tasks for this event and create subtasks
 				for (var task in tasks[type]) {
 					eventTask.addSubtask(createTask(arguments.context, task));
@@ -220,26 +220,34 @@ component TaskReader {
 	 **/
 	private void function setTaskDefaults() {
 
-		for (var targetName in variables.tasks) {
+		var tasks = JavaCast("null", 0);
+		var task = JavaCast("null", 0);
+		for (var name in variables.tasks) {
 			// if a default controller was specified, set it on all invoke tasks that have no controller
-			var target = variables.tasks[targetName];
-			if (StructKeyExists(variables.defaultControllers, targetName)) {
+			var target = variables.tasks[name];
+			if (StructKeyExists(variables.defaultControllers, name)) {
 				// find all tasks that have no controller specified
-				var invokes = StructFindValue(target, "invoke", "all");
-				for (var invoke in invokes) {
-					if (!StructKeyExists(invoke.owner, "controller")) {
+				tasks = StructFindValue(target, "invoke", "all");
+				for (task in tasks) {
+					if (!StructKeyExists(task.owner, "controller")) {
 						// explicitly set the controller
-						invoke.owner["controller"] = variables.defaultControllers[targetName];
+						task.owner["controller"] = variables.defaultControllers[name];
 					}
 				}
 			}
 
 			// the same thing for dispatch tasks: if no target is specified use the current target
-			var dispatches = StructFindValue(target, "dispatch", "all");
-			for (var dispatch in dispatches) {
-				if (!StructKeyExists(dispatch.owner, "target")) {
-					dispatch.owner["target"] = targetName;
+			tasks = StructFindValue(target, "dispatch", "all");
+			for (task in tasks) {
+				if (!StructKeyExists(task.owner, "target")) {
+					task.owner["target"] = name;
 				}
+			}
+
+			tasks = StructFindValue(target, "render", "all");
+			for (task in tasks) {
+				// look for templates in a directory with the target name
+				task.owner.template = name & "/" & task.owner.template;
 			}
 		}
 
@@ -248,7 +256,7 @@ component TaskReader {
 	private Task function createTask(required Context context, struct task) {
 
 		var instance = JavaCast("null", 0);
-		if (!StructKeyExists(arguments, task)) {
+		if (!StructKeyExists(arguments, "task")) {
 			instance = new EventTask();
 		} else {
 			switch (arguments.task.type) {
@@ -256,7 +264,7 @@ component TaskReader {
 					instance = arguments.context.createInvokeTask(arguments.task.controller, arguments.task.method);
 					break;
 				case "dispatch":
-					instance = arguments.context.createDispatchTask(arguments.context, arguments.task.target, arguments.task.event);
+					instance = arguments.context.createDispatchTask(arguments.task.target, arguments.task.event);
 					break;
 				case "render":
 					instance = arguments.context.createRenderTask(arguments.task.template);
@@ -264,7 +272,7 @@ component TaskReader {
 			}
 
 			// if there are instead tasks, they will become subtasks of the current task
-			if (StructKeyExists(arguments.task.type, "instead")) {
+			if (StructKeyExists(arguments.task, "instead")) {
 				for (var insteadTask in arguments.task.instead) {
 					instance.addSubtask(createTask(arguments.context, insteadTask));
 				}

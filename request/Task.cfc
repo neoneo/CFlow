@@ -1,5 +1,5 @@
-interface Task {
+interface {
 
-	public boolean function process(required Event event) {}
+	public boolean function process(required Event event);
 
 }

@@ -2,9 +2,9 @@ component AbstractTask implements="Task" {
 
 	variables.subtasks = [];
 
-	/*public boolean function process(required Event event) {
+	public boolean function process(required Event event) {
 		throw(type="cflow", message="Not implemented");
-	}*/
+	}
 
 	public void function addSubtask(required Task task) {
 		ArrayAppend(variables.subtasks, arguments.task);
@@ -14,7 +14,7 @@ component AbstractTask implements="Task" {
 
 		var success = true;
 		for (var task in variables.subtasks) {
-			success = task.process(arguments.event, arguments.response);
+			success = task.process(arguments.event);
 			if (!success) {
 				break;
 			}

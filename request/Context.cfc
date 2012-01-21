@@ -1,6 +1,5 @@
 component Context accessors="true" {
 
-	property name="debug" type="boolean" default="false";
 	property name="implicitEvents" type="boolean" default="false";
 	property name="defaultTarget" type="string" default="";
 	property name="defaultEvent" type="string" default="";
@@ -49,8 +48,8 @@ component Context accessors="true" {
 	 **/
 	public Response function handleEvent(required string targetName, required string eventType, struct properties = {}) {
 
-		var response = new Response();
-		var event = new Event(arguments.targetName, arguments.eventType, arguments.properties, response);
+		var response = createResponse();
+		var event = createEvent(arguments.targetName, arguments.eventType, arguments.properties, response);
 
 		var success = getStartTask(event).process(event);
 
@@ -189,18 +188,39 @@ component Context accessors="true" {
 		return variables.controllers[arguments.name];
 	}
 
-	// PUBLIC FACTORY METHODS =====================================================================
+	// FACTORY METHODS ============================================================================
 
-	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {
+	public Task function createInvokeTask(required string controllerName, required string methodName) {
 		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
 	}
 
-	public DispatchTask function createDispatchTask(required string targetName, required string eventType) {
+	public Task function createDispatchTask(required string targetName, required string eventType) {
 		return new DispatchTask(this, arguments.targetName, arguments.eventType);
 	}
 
-	public RenderTask function createRenderTask(required string template) {
+	public Task function createRenderTask(required string template) {
 		return new RenderTask(getRenderer(), getViewMapping() & "/" & arguments.template);
+	}
+
+	package Event function createEvent(required string targetName, required string eventType, required struct data, Response response) {
+
+		var properties = JavaCast("null", 0);
+		var response = JavaCast("null", 0);
+
+		// 'method overloading': we expect either an Event, or a struct and a Response
+		if (IsInstanceOf(arguments.data, "Event")) {
+			properties = arguments.data.getProperties();
+			response = arguments.data.getResponse();
+		} else {
+			properties = arguments.data;
+			response = arguments.response;
+		}
+
+		return new Event(arguments.targetName, arguments.eventType, properties, response);
+	}
+
+	private Response function createResponse() {
+		return new Response();
 	}
 
 }

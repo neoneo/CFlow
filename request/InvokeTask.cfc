@@ -1,4 +1,4 @@
-component InvokeTask extends="AbstractTask" {
+component InvokeTask extends="ComplexTask" {
 
 	public void function init(required Controller controller, required string method) {
 		variables.controller = arguments.controller;

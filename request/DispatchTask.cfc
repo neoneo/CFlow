@@ -1,4 +1,4 @@
-component DispatchTask extends="AbstractTask" {
+component DispatchTask extends="ComplexTask" {
 
 	public void function init(required Context context, required string targetName, required string eventType) {
 		variables.context = arguments.context;

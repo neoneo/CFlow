@@ -1,4 +1,7 @@
-component AbstractTask implements="Task" {
+/**
+ * A ComplexTask is a task that can have subtasks. When these subtasks are processed is up to the implementation.
+ **/
+component ComplexTask implements="Task" {
 
 	variables.subtasks = [];
 
@@ -8,6 +11,10 @@ component AbstractTask implements="Task" {
 
 	public void function addSubtask(required Task task) {
 		ArrayAppend(variables.subtasks, arguments.task);
+	}
+
+	package boolean function hasSubtasks() {
+		return !ArrayIsEmpty(variables.subtasks);
 	}
 
 	private boolean function processSubtasks(required Event event) {

@@ -1,4 +1,4 @@
-component EventTask extends="AbstractTask" {
+component EventTask extends="ComplexTask" {
 
 	public boolean function process(required Event event) {
 		return processSubtasks(arguments.event);

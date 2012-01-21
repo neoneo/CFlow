@@ -11,8 +11,8 @@ component TaskReader {
 			readFile(path & "/" & fileName);
 		}
 
-		compileIncludes();
 		setTaskDefaults();
+		compileIncludes();
 
 		return variables.tasks;
 	}

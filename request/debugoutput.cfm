@@ -1,1 +1,1 @@
-<cfdump var="#properties.debugInformation#">
+<cfdump var="#properties._messages#">

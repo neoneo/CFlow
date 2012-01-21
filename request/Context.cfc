@@ -86,23 +86,37 @@ component Context accessors="true" {
 
 	public void function register(required Task task, required string phase, required string targetName, string eventType) {
 
+		var eventTask = JavaCast("null", 0);
+
 		switch (arguments.phase) {
 			case "start":
 			case "end":
 			case "before":
 			case "after":
-				variables.tasks[arguments.phase][arguments.targetName] = arguments.task;
+				if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
+					variables.tasks[arguments.phase][arguments.targetName] = createEventTask();
+				}
+				eventTask = variables.tasks[arguments.phase][arguments.targetName];
 				break;
-			default:
+
+			case "event":
 				if (!StructKeyExists(arguments, "eventType")) {
 					throw(type="cflow", message="Event type is required when registering tasks for the event phase");
 				}
 				if (!StructKeyExists(variables.tasks.event, arguments.targetName)) {
 					variables.tasks.event[arguments.targetName] = {};
 				}
-				variables.tasks.event[arguments.targetName][arguments.eventType] = arguments.task;
+				if (!StructKeyExists(variables.tasks.event[arguments.targetName], arguments.eventType)) {
+					variables.tasks.event[arguments.targetName][arguments.eventType] = createEventTask();
+				}
+				eventTask = variables.tasks.event[arguments.targetName][arguments.eventType];
+				break;
+			default:
+				throw(type = "cflow", message = "Unknown phase '#arguments.phase#'");
 				break;
 		}
+
+		eventTask.addSubtask(arguments.task);
 
 	}
 
@@ -133,7 +147,7 @@ component Context accessors="true" {
 		if (StructKeyExists(variables.tasks.event, targetName) && StructKeyExists(variables.tasks.event[targetName], eventType)) {
 			task = variables.tasks.event[targetName][eventType];
 		} else {
-			task = new EventTask();
+			task = createEventTask();
 			if (getImplicitEvents()) {
 				// we now assume there is a controller with the name of the target, that exposes a method with the name of the event type
 				task.addSubtask(createInvokeTask(targetName, eventType));
@@ -157,7 +171,7 @@ component Context accessors="true" {
 			task = variables.tasks[arguments.phase][targetName];
 		} else {
 			// create an empty EventTask
-			task = new EventTask();
+			task = createEventTask();
 		}
 
 		return task;
@@ -202,21 +216,12 @@ component Context accessors="true" {
 		return new RenderTask(getRenderer(), getViewMapping() & "/" & arguments.template);
 	}
 
-	package Event function createEvent(required string targetName, required string eventType, required struct data, Response response) {
+	private Task function createEventTask() {
+		return new EventTask();
+	}
 
-		var properties = JavaCast("null", 0);
-		var response = JavaCast("null", 0);
-
-		// 'method overloading': we expect either an Event, or a struct and a Response
-		if (IsInstanceOf(arguments.data, "Event")) {
-			properties = arguments.data.getProperties();
-			response = arguments.data.getResponse();
-		} else {
-			properties = arguments.data;
-			response = arguments.response;
-		}
-
-		return new Event(arguments.targetName, arguments.eventType, properties, response);
+	public Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
+		return new Event(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
 	}
 
 	private Response function createResponse() {

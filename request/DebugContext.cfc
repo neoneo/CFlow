@@ -18,11 +18,9 @@ component DebugContext extends="Context" {
 
 	public boolean function dispatchEvent(required Event event) {
 
-		ArrayAppend(arguments.event.debugInformation, {
-			"message" = "dispatchEvent",
+		arguments.event.logMessage("dispatchEvent", {
 			"target" = arguments.event.getTarget(),
-			"event" = arguments.event.getType(),
-			"tickcount" = GetTickCount()
+			"event" = arguments.event.getType()
 		});
 
 		return super.dispatchEvent(arguments.event);
@@ -49,15 +47,14 @@ component DebugContext extends="Context" {
 		return new DebugTask(task, arguments);
 	}
 
-	package Event function createEvent(required string targetName, required string eventType, required struct data, Response response) {
+	private Task function createEventTask() {
+		var task = super.createEventTask();
 
-		var event = super.createEvent(argumentCollection = arguments);
+		return new DebugTask(task, arguments);
+	}
 
-		if (!StructKeyExists(event, "debugInformation")) {
-			event.debugInformation = [];
-		}
-
-		return event;
+	public Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
+		return new DebugEvent(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
 	}
 
 }

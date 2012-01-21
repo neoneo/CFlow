@@ -28,14 +28,13 @@ component TaskReader {
 			// first create tasks for all phases
 			for (var phase in phases) {
 				// always create the task, even if it remains empty, because otherwise the task is created for each request later
-				var eventTask = createTask(arguments.context);
 				if (StructKeyExists(tasks, phase)) {
 					for (var task in tasks[phase]) {
-						eventTask.addSubtask(createTask(arguments.context, task));
+						// register the task for the current phase under the target name
+						arguments.context.register(createTask(arguments.context, task), phase, name);
 					}
 				}
-				// register the task for the current phase under the target name
-				arguments.context.register(eventTask, phase, name);
+				//arguments.context.register(eventTask, phase, name);
 
 			}
 
@@ -43,13 +42,12 @@ component TaskReader {
 			// tasks is now a struct where keys are event types
 			for (var type in tasks) {
 
-				var eventTask = createTask(arguments.context);
 				// loop over the tasks for this event and create subtasks
 				for (var task in tasks[type]) {
-					eventTask.addSubtask(createTask(arguments.context, task));
+					// register the task for the given event
+					arguments.context.register(createTask(arguments.context, task), "event", name, type);
 				}
-				// register the task for the given event
-				arguments.context.register(eventTask, "event", name, type);
+				//arguments.context.register(eventTask, "event", name, type);
 
 			}
 

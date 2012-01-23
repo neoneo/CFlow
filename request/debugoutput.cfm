@@ -9,7 +9,7 @@
 
 		<cfset data.element = messages[index]><!--- we loop until we find the corresponding item --->
 		<!--- only certain messages can contain children --->
-		<cfif ListFind("task,startTasks,beforeTasks,afterTasks,endTasks,eventTasks", data.element.message) gt 0>
+		<cfif REFind("(task|(start|before|after|end|event)Tasks)", data.element.message) eq 1>
 			<cfset index++>
 			<cfset data.children = []>
 			<cfloop condition="index lte ArrayLen(messages)">
@@ -91,15 +91,9 @@
 						<cfcase value="eventCanceled">Event #data.element.target#.#data.element.event# canceled</cfcase>
 						<cfcase value="task">
 							<cfswitch expression="#type#">
-								<cfcase value="InvokeTask">
-									Invoke #metadata.controllerName#.#metadata.methodName#
-								</cfcase>
-								<cfcase value="DispatchTask">
-									Dispatch #metadata.targetName#.#metadata.eventType#
-								</cfcase>
-								<cfcase value="RenderTask">
-									Render #metadata.template#
-								</cfcase>
+								<cfcase value="InvokeTask">Invoke #metadata.controllerName#.#metadata.methodName#</cfcase>
+								<cfcase value="DispatchTask">Dispatch #metadata.targetName#.#metadata.eventType#</cfcase>
+								<cfcase value="RenderTask">Render #metadata.template#</cfcase>
 							</cfswitch>
 						</cfcase>
 						<cfcase value="error">
@@ -116,7 +110,7 @@
 						<span class="duration">#data.duration#</span>
 					</cfif>
 				</div>
-				<cfset dumpMetadata = dumpMetadata and !StructIsEmpty(metadata)>
+				<cfset dumpMetadata = dumpMetadata and not StructIsEmpty(metadata)>
 				<cfset renderChildren = StructKeyExists(data, "children") and not ArrayIsEmpty(data.children)>
 				<cfif dumpMetadata or renderChildren or renderError>
 					<div class="data">

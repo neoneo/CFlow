@@ -1,5 +1,5 @@
 interface {
 
-	public boolean function process(required Event event);
+	public boolean function run(required Event event);
 
 }

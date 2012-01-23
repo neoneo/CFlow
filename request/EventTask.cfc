@@ -1,7 +1,7 @@
 component EventTask extends="ComplexTask" {
 
-	public boolean function process(required Event event) {
-		return processSubtasks(arguments.event);
+	public boolean function run(required Event event) {
+		return runSubtasks(arguments.event);
 	}
 
 }

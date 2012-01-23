@@ -1,22 +1,27 @@
 component DebugEvent extends="Event" {
 
-	this._messages = [];
+	public void function init(required string target, required string type, required struct properties, required Response response) {
+
+		this._messages = [];
+		super.init(arguments.target, arguments.type, arguments.properties, arguments.response);
+
+	}
 
 	public void function cancel() {
 
-		logMessage("eventCanceled");
+		record("eventCanceled");
 		super.cancel();
 
 	}
 
-	public void function logMessage(required string message, struct metadata = {}) {
+	public void function record(required string message, struct metadata = {}) {
 
 		ArrayAppend(this._messages, {
-			"message" = arguments.message,
-			"metadata" = arguments.metadata,
-			"target" = getTarget(),
-			"event" = getType(),
-			"tickcount" = GetTickCount()
+			message = arguments.message,
+			metadata = arguments.metadata,
+			target = getTarget(),
+			event = getType(),
+			tickcount = GetTickCount()
 		});
 
 	}

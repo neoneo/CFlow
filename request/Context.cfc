@@ -51,34 +51,34 @@ component Context accessors="true" {
 		var response = createResponse();
 		var event = createEvent(arguments.targetName, arguments.eventType, arguments.properties, response);
 
-		var success = getStartTask(event).process(event);
+		var success = runStartTasks(event);
 
-		// only process the event task if we have success
+		// only run the event task if we have success
 		if (success) {
 			success = dispatchEvent(event);
 		}
 
+		// the end tasks are always run
 		if (!success) {
 			// for the remainder, we need an event object with its canceled flag reset
 			event = event.clone();
 		}
 
-		// the end task is always processed
-		getEndTask(event).process(event);
+		runEndTasks(event);
 
 		return response;
 	}
 
 	public boolean function dispatchEvent(required Event event) {
 
-		var success = getBeforeTask(arguments.event).process(arguments.event);
+		var success = runBeforeTasks(arguments.event);
 
 		if (success) {
-			success = getEventTask(arguments.event).process(arguments.event)
+			success = runEventTasks(arguments.event);
 		}
 
 		if (success) {
-			success = getAfterTask(arguments.event).process(arguments.event);
+			success = runAfterTasks(arguments.event);
 		}
 
 		return success;
@@ -101,7 +101,7 @@ component Context accessors="true" {
 
 			case "event":
 				if (!StructKeyExists(arguments, "eventType")) {
-					throw(type="cflow", message="Event type is required when registering tasks for the event phase");
+					throw(type = "cflow", message = "Event type is required when registering tasks for the event phase");
 				}
 				if (!StructKeyExists(variables.tasks.event, arguments.targetName)) {
 					variables.tasks.event[arguments.targetName] = {};
@@ -120,25 +120,25 @@ component Context accessors="true" {
 
 	}
 
-	public Renderer function getRenderer() {
+	// TEMPLATE METHODS ===========================================================================
 
-		if (!StructKeyExists(variables, "renderer")) {
-			setRenderer(new CFMLRenderer());
-		}
-
-		return variables.renderer;
+	private boolean function runStartTasks(required Event event) {
+		return getPhaseTask("start", arguments.event.getTarget()).run(arguments.event);
 	}
 
-	public void function setRenderer(required Renderer renderer) {
-		variables.renderer = arguments.renderer;
+	private boolean function runBeforeTasks(required Event event) {
+		return getPhaseTask("before", arguments.event.getTarget()).run(arguments.event);
 	}
 
-	// PRIVATE METHODS ============================================================================
+	private boolean function runAfterTasks(required Event event) {
+		return getPhaseTask("after", arguments.event.getTarget()).run(arguments.event);
+	}
 
-	/**
-	 * Returns the task for the given event.
-	 **/
-	private Task function getEventTask(required event Event) {
+	private boolean function runEndTasks(required Event event) {
+		return getPhaseTask("end", arguments.event.getTarget()).run(arguments.event);
+	}
+
+	private boolean function runEventTasks(required Event event) {
 
 		var task = JavaCast("null", 0);
 		// check if there are tasks for this event
@@ -156,41 +156,19 @@ component Context accessors="true" {
 			}
 		}
 
-		return task;
+		return task.run(arguments.event);
 	}
 
 	/**
 	 * Returns the task for the given phase and event.
 	 **/
-	private Task function getPhaseTask(required string phase, required Event event) {
+	private Task function getPhaseTask(required string phase, required string targetName) {
 
-		var task = JavaCast("null", 0);
-		var targetName = arguments.event.getTarget();
-
-		if (StructKeyExists(variables.tasks[arguments.phase], targetName)) {
-			task = variables.tasks[arguments.phase][targetName];
-		} else {
-			// create an empty EventTask
-			task = createEventTask();
+		if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
+			variables.tasks[arguments.phase][arguments.targetName] = createEventTask();
 		}
 
-		return task;
-	}
-
-	private Task function getStartTask(required Event event) {
-		return getPhaseTask("start", arguments.event);
-	}
-
-	private Task function getEndTask(required Event event) {
-		return getPhaseTask("end", arguments.event);
-	}
-
-	private Task function getBeforeTask(required Event event) {
-		return getPhaseTask("before", arguments.event);
-	}
-
-	private Task function getAfterTask(required Event event) {
-		return getPhaseTask("after", arguments.event);
+		return variables.tasks[arguments.phase][arguments.targetName];
 	}
 
 	private Controller function getController(required string name) {
@@ -208,12 +186,12 @@ component Context accessors="true" {
 		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
 	}
 
-	public Task function createDispatchTask(required string targetName, required string eventType) {
-		return new DispatchTask(this, arguments.targetName, arguments.eventType);
+	public Task function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
+		return new DispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
 	}
 
 	public Task function createRenderTask(required string template) {
-		return new RenderTask(getRenderer(), getViewMapping() & "/" & arguments.template);
+		return new RenderTask(getViewMapping() & "/" & arguments.template);
 	}
 
 	private Task function createEventTask() {

@@ -2,7 +2,7 @@ component Event {
 
 	variables.canceled = false;
 
-	public void function init(required string target, required string type, required struct properties = {}, required Response response) {
+	public void function init(required string target, required string type, required struct properties, required Response response) {
 
 		variables.target = arguments.target;
 		variables.type = arguments.type;

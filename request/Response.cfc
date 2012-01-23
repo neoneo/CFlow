@@ -67,20 +67,4 @@ component Response {
 		ArrayClear(variables.contents);
 	}
 
-	public array function getProcessedTasks() {
-		return variables.processedTasks;
-	}
-
-	package void function addProcessedTask(required string targetName, required string eventType, struct task = JavaCast("null", 0)) {
-		if (!StructKeyExists(variables, "processedTasks")) {
-			variables.processedTasks = [];
-		}
-		ArrayAppend(variables.processedTasks, {
-			target = arguments.targetName,
-			event = arguments.eventType,
-			task = arguments.task
-		});
-	}
-
-
 }

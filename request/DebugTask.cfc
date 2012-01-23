@@ -7,17 +7,17 @@ component DebugTask implements="Task" {
 
 		variables.task = arguments.task;
 		variables.metadata = arguments.metadata;
-		StructAppend(variables.metadata, {"type" = GetMetaData(variables.task).name});
+		StructAppend(variables.metadata, {type = GetMetaData(variables.task).name});
 
 	}
 
-	public boolean function process(required Event event) {
+	public boolean function run(required Event event) {
 
-		arguments.event.logMessage("taskStart", variables.metadata);
+		arguments.event.record("task", variables.metadata);
 
-		var success = variables.task.process(arguments.event);
+		var success = variables.task.run(arguments.event);
 
-		arguments.event.logMessage("taskEnd", variables.metadata);
+		arguments.event.record("task", variables.metadata);
 
 		return success;
 	}

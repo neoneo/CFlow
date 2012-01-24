@@ -1,6 +1,7 @@
 component TaskReader {
 
 	public struct function read(required string path) {
+
 		variables.tasks = {}; // lists of tasks per target
 		variables.defaultControllers = {}; // default controllers per target
 
@@ -34,8 +35,6 @@ component TaskReader {
 						arguments.context.register(createTask(arguments.context, task), phase, name);
 					}
 				}
-				//arguments.context.register(eventTask, phase, name);
-
 			}
 
 			tasks = tasks.events;
@@ -47,12 +46,8 @@ component TaskReader {
 					// register the task for the given event
 					arguments.context.register(createTask(arguments.context, task), "event", name, type);
 				}
-				//arguments.context.register(eventTask, "event", name, type);
-
 			}
-
 		}
-
 	}
 
 	private void function readFile(required string path) {
@@ -60,16 +55,36 @@ component TaskReader {
 		var content = FileRead(arguments.path);
 		var xmlDocument = XmlParse(content, false); //, "cflow.xsd");
 
-		var name = xmlDocument.xmlRoot.xmlAttributes.name;
-		// the root element (target) may have an attribute default controller
-		if (StructKeyExists(xmlDocument.xmlRoot.xmlAttributes, "defaultcontroller")) {
-			variables.defaultControllers[name] = xmlDocument.xmlRoot.xmlAttributes.defaultcontroller;
+		// the root element can be targets or target
+		switch (xmlDocument.xmlRoot.xmlName) {
+			case "targets":
+				// get all targets and create task definitions
+				var targets = xmlDocument.xmlRoot.xmlChildren;
+				var count = ArrayLen(targets);
+				for (var i = 1; i <= count; i++) {
+					getTasksFromTargetNode(targets[i]);
+				}
+				break;
+
+			case "target":
+				getTasksFromTargetNode(xmlDocument.xmlRoot);
+				break;
+		}
+
+	}
+
+	private void function getTasksFromTargetNode(required xml node) {
+
+		var name = arguments.node.xmlAttributes.name;
+		// the node may have an attribute default controller
+		if (StructKeyExists(arguments.node.xmlAttributes, "defaultcontroller")) {
+			variables.defaultControllers[name] = arguments.node.xmlAttributes.defaultcontroller;
 		}
 
 		var tasks = {};
 		var tagNames = ["start", "end", "before", "after"];
 		for (var tagName in tagNames) {
-			var nodes = XmlSearch(xmlDocument, "/target/#tagName#");
+			var nodes = XmlSearch(arguments.node, tagName);
 			// we expect at most 1 node of this type
 			if (!ArrayIsEmpty(nodes)) {
 				tasks[tagName] = getTasksFromChildNodes(nodes[1]);
@@ -77,12 +92,12 @@ component TaskReader {
 		}
 
 		tasks["events"] = {};
-		var eventNodes = XmlSearch(xmlDocument, "/target/event");
+		var eventNodes = XmlSearch(arguments.node, "event");
 		for (var eventNode in eventNodes) {
 			tasks.events[eventNode.xmlAttributes.type] = getTasksFromChildNodes(eventNode);
 		}
 
-		var includeNodes = XmlSearch(xmlDocument, "/target/include");
+		var includeNodes = XmlSearch(arguments.node, "include");
 		if (!ArrayIsEmpty(includeNodes)) {
 			// create an array that will contain the includes in source order
 			tasks["includes"] = [];

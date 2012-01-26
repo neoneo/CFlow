@@ -66,7 +66,7 @@
 		<cfset var message = data.element.message>
 		<cfset var metadata = data.element.metadata>
 		<cfset var renderChildren = false>
-		<cfset var renderError = false>
+		<cfset var renderException = false>
 		<cfset var dumpMetadata = false>
 
 		<cfset var className = REReplace(message, "\s", "-", "all")>
@@ -96,9 +96,9 @@
 								<cfcase value="RenderTask">Render #metadata.template#</cfcase>
 							</cfswitch>
 						</cfcase>
-						<cfcase value="error">
-							Error
-							<cfset renderError = true>
+						<cfcase value="exception">
+							Exception
+							<cfset renderException = true>
 						</cfcase>
 						<cfdefaultcase>
 							#message#
@@ -112,7 +112,7 @@
 				</div>
 				<cfset dumpMetadata = dumpMetadata and not StructIsEmpty(metadata)>
 				<cfset renderChildren = StructKeyExists(data, "children") and not ArrayIsEmpty(data.children)>
-				<cfif dumpMetadata or renderChildren or renderError>
+				<cfif dumpMetadata or renderChildren or renderException>
 					<div class="data">
 						<cfif renderChildren>
 							<ul>
@@ -121,7 +121,7 @@
 							</cfloop>
 							</ul>
 						</cfif>
-						<cfif renderError>
+						<cfif renderException>
 							<cfset var exception = metadata.exception>
 							<h2>#exception.type#: #exception.message#</h2>
 							<p><strong>#exception.detail#</strong></p>
@@ -225,17 +225,17 @@
 		background-color: rgb(255, 102, 0);
 	}
 
-	#cflow .error > .message {
+	#cflow .exception > .message {
 		background-color: rgb(220, 50, 47);
 		font-weight: bold;
 		color: white;
 	}
 
-	#cflow .error > .data {
+	#cflow .exception > .data {
 		background-color: rgb(255, 204, 0);
 	}
 
-	#cflow .error h2 {
+	#cflow .exception h2 {
 		font-size: 11pt;
 	}
 </style>

@@ -1,6 +1,6 @@
 component DebugContext extends="Context" {
 
-	variables.debugTargets = [];
+	// FACTORY METHODS ============================================================================
 
 	public Task function createInvokeTask(required string controllerName, required string methodName) {
 
@@ -24,7 +24,7 @@ component DebugContext extends="Context" {
 		return new DebugTask(task, arguments);
 	}
 
-	public Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
+	package Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
 		return new DebugEvent(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
 	}
 
@@ -34,7 +34,11 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("startTasks");
 
-		var success = super.runStartTasks(arguments.event);
+		try {
+			var success = super.runStartTasks(arguments.event);
+		} catch (any e) {
+			handleException(e, arguments.event);
+		}
 
 		arguments.event.record("startTasks");
 
@@ -45,7 +49,11 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("beforeTasks");
 
-		var success = super.runBeforeTasks(arguments.event);
+		try {
+			var success = super.runBeforeTasks(arguments.event);
+		} catch (any e) {
+			handleException(e, arguments.event);
+		}
 
 		arguments.event.record("beforeTasks");
 
@@ -56,7 +64,11 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("afterTasks");
 
-		var success = super.runAfterTasks(arguments.event);
+		try {
+			var success = super.runAfterTasks(arguments.event);
+		} catch (any e) {
+			handleException(e, arguments.event);
+		}
 
 		arguments.event.record("afterTasks");
 
@@ -67,7 +79,11 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("endTasks");
 
-		var success = super.runEndTasks(arguments.event);
+		try {
+			var success = super.runEndTasks(arguments.event);
+		} catch (any e) {
+			handleException(e, arguments.event);
+		}
 
 		arguments.event.record("endTasks");
 
@@ -84,9 +100,7 @@ component DebugContext extends="Context" {
 		try {
 			var success = super.runEventTasks(arguments.event);
 		} catch (any e) {
-			arguments.event.record("error", {exception: e});
-			writeDebugOutput(arguments.event);
-			abort;
+			handleException(e, arguments.event);
 		}
 
 		arguments.event.record("eventTasks");
@@ -96,20 +110,25 @@ component DebugContext extends="Context" {
 
 	private void function renderDebugOutput(required Event event) {
 
-		var viewMapping = getViewMapping();
-		setViewMapping("/cflow/request");
-		// create a (non-debug) render task and run it
-		super.createRenderTask("debugoutput").run(arguments.event);
-		setViewMapping(viewMapping);
+		lock name="renderDebugOutput" timeout="1" {
+			var viewMapping = getViewMapping();
+			setViewMapping("/cflow/request");
+			// create a (non-debug) render task and run it
+			var task = super.createRenderTask("debugoutput");
+			setViewMapping(viewMapping);
+		}
+		task.run(arguments.event);
 
 	}
 
-	private void function writeDebugOutput(required Event event) {
+	private void function handleException(required any exception, required Event event) {
 
+		arguments.event.record("exception", {exception: exception});
 		var response = arguments.event.getResponse();
 		response.clear();
 		renderDebugOutput(arguments.event);
-		WriteOutput(response.render());
+		response.render();
+		abort;
 
 	}
 

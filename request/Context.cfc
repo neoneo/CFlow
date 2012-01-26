@@ -1,6 +1,6 @@
 component Context accessors="true" {
 
-	property name="implicitEvents" type="boolean" default="false";
+	property name="implicitTasks" type="boolean" default="false";
 	property name="defaultTarget" type="string" default="";
 	property name="defaultEvent" type="string" default="";
 	property name="controllerMapping" type="string" default="";
@@ -86,7 +86,7 @@ component Context accessors="true" {
 
 	public void function register(required Task task, required string phase, required string targetName, string eventType) {
 
-		var eventTask = JavaCast("null", 0);
+		var phaseTask = JavaCast("null", 0);
 
 		switch (arguments.phase) {
 			case "start":
@@ -94,9 +94,9 @@ component Context accessors="true" {
 			case "before":
 			case "after":
 				if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
-					variables.tasks[arguments.phase][arguments.targetName] = createEventTask();
+					variables.tasks[arguments.phase][arguments.targetName] = createPhaseTask();
 				}
-				eventTask = variables.tasks[arguments.phase][arguments.targetName];
+				phaseTask = variables.tasks[arguments.phase][arguments.targetName];
 				break;
 
 			case "event":
@@ -107,16 +107,17 @@ component Context accessors="true" {
 					variables.tasks.event[arguments.targetName] = {};
 				}
 				if (!StructKeyExists(variables.tasks.event[arguments.targetName], arguments.eventType)) {
-					variables.tasks.event[arguments.targetName][arguments.eventType] = createEventTask();
+					variables.tasks.event[arguments.targetName][arguments.eventType] = createPhaseTask();
 				}
-				eventTask = variables.tasks.event[arguments.targetName][arguments.eventType];
+				phaseTask = variables.tasks.event[arguments.targetName][arguments.eventType];
 				break;
+
 			default:
 				throw(type = "cflow", message = "Unknown phase '#arguments.phase#'");
 				break;
 		}
 
-		eventTask.addSubtask(arguments.task);
+		phaseTask.addSubtask(arguments.task);
 
 	}
 
@@ -147,12 +148,14 @@ component Context accessors="true" {
 		if (StructKeyExists(variables.tasks.event, targetName) && StructKeyExists(variables.tasks.event[targetName], eventType)) {
 			task = variables.tasks.event[targetName][eventType];
 		} else {
-			task = createEventTask();
-			if (getImplicitEvents()) {
+			task = createPhaseTask();
+			if (getImplicitTasks()) {
 				// we now assume there is a controller with the name of the target, that exposes a method with the name of the event type
 				task.addSubtask(createInvokeTask(targetName, eventType));
 				// and that there is a template in a directory with the name of the target, that has the same name as the event type
 				task.addSubtask(createRenderTask(targetName & "/" & eventType));
+				// add this task to the cache, so that next time we can reuse it
+				variables.tasks.event[targetName][eventType] = task;
 			}
 		}
 
@@ -165,7 +168,7 @@ component Context accessors="true" {
 	private Task function getPhaseTask(required string phase, required string targetName) {
 
 		if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
-			variables.tasks[arguments.phase][arguments.targetName] = createEventTask();
+			variables.tasks[arguments.phase][arguments.targetName] = createPhaseTask();
 		}
 
 		return variables.tasks[arguments.phase][arguments.targetName];
@@ -174,7 +177,11 @@ component Context accessors="true" {
 	private Controller function getController(required string name) {
 
 		if (!StructKeyExists(variables.controllers, arguments.name)) {
-			variables.controllers[arguments.name] = new "#getControllerMapping()#.#arguments.name#"(this);
+			var controllerName = arguments.name;
+			if (Len(getControllerMapping()) > 0) {
+				controllerName = getControllerMapping() & "." & controllerName;
+			}
+			variables.controllers[arguments.name] = new "#controllerName#"(this);
 		}
 
 		return variables.controllers[arguments.name];
@@ -191,14 +198,20 @@ component Context accessors="true" {
 	}
 
 	public Task function createRenderTask(required string template) {
-		return new RenderTask(getViewMapping() & "/" & arguments.template);
+
+		var templateLocation = arguments.template;
+		if (Len(getViewMapping()) > 0) {
+			templateLocation = getViewMapping() & "/" & arguments.template;
+		}
+
+		return new RenderTask(templateLocation);
 	}
 
-	private Task function createEventTask() {
-		return new EventTask();
+	private Task function createPhaseTask() {
+		return new PhaseTask();
 	}
 
-	public Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
+	package Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
 		return new Event(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
 	}
 

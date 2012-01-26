@@ -1,6 +1,9 @@
 component Response {
 
+	include "content.cfm"; // include the content() function, that calls cfcontent to set the content type
+
 	public void function init() {
+
 		variables.type = "HTML";
 		variables.contentTypes = {
 			HTML = "text/html",
@@ -8,6 +11,7 @@ component Response {
 			TEXT = "text/plain"
 		};
 		variables.contents = [];
+
 	}
 
 	public void function setType(required string type) {
@@ -18,25 +22,20 @@ component Response {
 		return variables.type;
 	}
 
-	public string function getContentType() {
-		return variables.contentTypes[getType()];
-	}
-
 	public void function write(required any content) {
 		ArrayAppend(variables.contents, arguments.content);
-	}
-
-	public array function getContents() {
-		return variables.contents;
 	}
 
 	/**
 	 * Default implementation for rendering HTML and JSON.
 	 **/
-	public string function render() {
+	public void function render() {
 
 		var result = "";
-		var contents = getContents();
+		var contents = variables.contents;
+
+		// set the content header
+		content(variables.contentTypes[getType()]);
 
 		switch (getType()) {
 			case "HTML":
@@ -60,7 +59,7 @@ component Response {
 
 		//clear();
 
-		return result;
+		WriteOutput(result);
 	}
 
 	public void function clear() {

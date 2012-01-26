@@ -9,7 +9,6 @@ component RenderTask implements="Task" {
 	public boolean function run(required Event event) {
 
 		// create the following variables for use within the template
-		var template = variables.template;
 		var properties = arguments.event.getProperties();
 		var response = arguments.event.getResponse();
 

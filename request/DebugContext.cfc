@@ -12,7 +12,6 @@ component DebugContext extends="Context" {
 	public Task function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
 
 		var task = super.createDispatchTask(argumentCollection = arguments);
-		//var task = new DispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
 
 		return new DebugTask(task, arguments);
 	}
@@ -24,15 +23,31 @@ component DebugContext extends="Context" {
 		return new DebugTask(task, arguments);
 	}
 
-	package Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
-		return new DebugEvent(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
+	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
+
+		var properties = JavaCast("null", 0);
+		var response = JavaCast("null", 0);
+		var messages = JavaCast("null", 0);
+
+		// some code duplication from Context
+		if (IsInstanceOf(arguments.event, "Event")) {
+			properties = arguments.event.getProperties();
+			response = arguments.event.getResponse();
+			messages = arguments.event.getMessages();
+		} else {
+			properties = arguments.event;
+			response = arguments.response;
+			messages = [];
+		}
+
+		return new DebugEvent(arguments.targetName, arguments.eventType, properties, response, messages);
 	}
 
 	// TEMPLATE METHODS ===========================================================================
 
 	private boolean function runStartTasks(required Event event) {
 
-		arguments.event.record("startTasks");
+		arguments.event.record("cflow.starttasks");
 
 		try {
 			var success = super.runStartTasks(arguments.event);
@@ -40,14 +55,14 @@ component DebugContext extends="Context" {
 			handleException(e, arguments.event);
 		}
 
-		arguments.event.record("startTasks");
+		arguments.event.record("cflow.starttasks");
 
 		return success;
 	}
 
 	private boolean function runBeforeTasks(required Event event) {
 
-		arguments.event.record("beforeTasks");
+		arguments.event.record("cflow.beforetasks");
 
 		try {
 			var success = super.runBeforeTasks(arguments.event);
@@ -55,14 +70,14 @@ component DebugContext extends="Context" {
 			handleException(e, arguments.event);
 		}
 
-		arguments.event.record("beforeTasks");
+		arguments.event.record("cflow.beforetasks");
 
 		return success;
 	}
 
 	private boolean function runAfterTasks(required Event event) {
 
-		arguments.event.record("afterTasks");
+		arguments.event.record("cflow.aftertasks");
 
 		try {
 			var success = super.runAfterTasks(arguments.event);
@@ -70,14 +85,14 @@ component DebugContext extends="Context" {
 			handleException(e, arguments.event);
 		}
 
-		arguments.event.record("afterTasks");
+		arguments.event.record("cflow.aftertasks");
 
 		return success;
 	}
 
 	private boolean function runEndTasks(required Event event) {
 
-		arguments.event.record("endTasks");
+		arguments.event.record("cflow.endtasks");
 
 		try {
 			var success = super.runEndTasks(arguments.event);
@@ -85,7 +100,7 @@ component DebugContext extends="Context" {
 			handleException(e, arguments.event);
 		}
 
-		arguments.event.record("endTasks");
+		arguments.event.record("cflow.endtasks");
 
 		// render debug output
 		renderDebugOutput(arguments.event);
@@ -95,7 +110,7 @@ component DebugContext extends="Context" {
 
 	private boolean function runEventTasks(required Event event) {
 
-		arguments.event.record("eventTasks");
+		arguments.event.record("cflow.eventtasks");
 
 		try {
 			var success = super.runEventTasks(arguments.event);
@@ -103,27 +118,32 @@ component DebugContext extends="Context" {
 			handleException(e, arguments.event);
 		}
 
-		arguments.event.record("eventTasks");
+		arguments.event.record("cflow.eventtasks");
 
 		return success;
 	}
 
 	private void function renderDebugOutput(required Event event) {
 
-		lock name="renderDebugOutput" timeout="1" {
+		// we're going to change the viewmapping temporarily
+		// this might lead to race conditions in a production environment so debugging there is dangerous
+		// to make sure the context remains consistent, we put this code inside a lock
+		lock name="cflow.context" type="exclusive" timeout="1" {
 			var viewMapping = getViewMapping();
 			setViewMapping("/cflow/request");
-			// create a (non-debug) render task and run it
+			// create a (non-debug) render task
 			var task = super.createRenderTask("debugoutput");
 			setViewMapping(viewMapping);
 		}
+
+		arguments.event._messages = arguments.event.getMessages(); // make the messages available to the view
 		task.run(arguments.event);
 
 	}
 
 	private void function handleException(required any exception, required Event event) {
 
-		arguments.event.record("exception", {exception: exception});
+		arguments.event.record("cflow.exception", {exception: exception});
 		var response = arguments.event.getResponse();
 		response.clear();
 		renderDebugOutput(arguments.event);

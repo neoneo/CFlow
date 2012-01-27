@@ -13,11 +13,11 @@ component DebugTask implements="Task" {
 
 	public boolean function run(required Event event) {
 
-		arguments.event.record("task", variables.metadata);
+		arguments.event.record("cflow.task", variables.metadata);
 
 		var success = variables.task.run(arguments.event);
 
-		arguments.event.record("task", variables.metadata);
+		arguments.event.record("cflow.task", variables.metadata);
 
 		return success;
 	}

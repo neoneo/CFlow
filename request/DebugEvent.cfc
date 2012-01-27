@@ -1,22 +1,22 @@
 component DebugEvent extends="Event" {
 
-	public void function init(required string target, required string type, required struct properties, required Response response) {
+	public void function init(required string target, required string type, required struct properties, required Response response, array messages = []) {
 
-		this._messages = [];
+		variables.messages = arguments.messages;
 		super.init(arguments.target, arguments.type, arguments.properties, arguments.response);
 
 	}
 
 	public void function cancel() {
 
-		record("eventCanceled");
+		record("cflow.eventcanceled");
 		super.cancel();
 
 	}
 
 	public void function record(required string message, struct metadata = {}) {
 
-		ArrayAppend(this._messages, {
+		ArrayAppend(variables.messages, {
 			message = arguments.message,
 			metadata = arguments.metadata,
 			target = getTarget(),
@@ -27,7 +27,11 @@ component DebugEvent extends="Event" {
 	}
 
 	public Event function clone() {
-		return new DebugEvent(getTarget(), getType(), getProperties(), getResponse());
+		return new DebugEvent(getTarget(), getType(), getProperties(), getResponse(), getMessages());
+	}
+
+	package array function getMessages() {
+		return variables.messages;
 	}
 
 }

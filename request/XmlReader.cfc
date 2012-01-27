@@ -320,7 +320,7 @@ component TaskReader {
 		var instance = JavaCast("null", 0);
 
 		if (!StructKeyExists(arguments, "task")) {
-			instance = new PhaseTask();
+			instance = arguments.context.createPhaseTask();
 		} else {
 			switch (arguments.task.type) {
 				case "invoke":

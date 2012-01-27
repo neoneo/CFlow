@@ -12,7 +12,7 @@ component DispatchTask extends="ComplexTask" {
 	public boolean function run(required Event event) {
 
 		// create a new event object with the properties of the event object that is passed in
-		var dispatch = getContext().createEvent(variables.targetName, variables.eventType, arguments.event.getProperties(), arguments.event.getResponse());
+		var dispatch = getContext().createEvent(variables.targetName, variables.eventType, arguments.event); //.getProperties(), arguments.event.getResponse());
 
 		var success = getContext().dispatchEvent(dispatch);
 

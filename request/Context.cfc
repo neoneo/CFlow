@@ -207,12 +207,26 @@ component Context accessors="true" {
 		return new RenderTask(templateLocation);
 	}
 
-	private Task function createPhaseTask() {
+	public Task function createPhaseTask() {
 		return new PhaseTask();
 	}
 
-	package Event function createEvent(required string targetName, required string eventType, required struct properties, required Response response) {
-		return new Event(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
+	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
+
+		var properties = JavaCast("null", 0);
+		var response = JavaCast("null", 0);
+
+		// if event is an Event, we take the response from there
+		// if not, we expect a Response object in the arguments
+		if (IsInstanceOf(arguments.event, "Event")) {
+			properties = arguments.event.getProperties();
+			response = arguments.event.getResponse();
+		} else {
+			properties = arguments.event;
+			response = arguments.response;
+		}
+
+		return new Event(arguments.targetName, arguments.eventType, properties, response);
 	}
 
 	private Response function createResponse() {

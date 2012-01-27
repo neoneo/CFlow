@@ -9,7 +9,7 @@
 
 		<cfset data.element = messages[index]><!--- we loop until we find the corresponding item --->
 		<!--- only certain messages can contain children --->
-		<cfif REFind("(task|(start|before|after|end|event)Tasks)", data.element.message) eq 1>
+		<cfif REFind("cflow\.(task|(start|before|after|end|event)tasks)", data.element.message) eq 1>
 			<cfset index++>
 			<cfset data.children = []>
 			<cfloop condition="index lte ArrayLen(messages)">
@@ -69,13 +69,18 @@
 		<cfset var renderException = false>
 		<cfset var dumpMetadata = false>
 
-		<cfset var className = REReplace(message, "\s", "-", "all")>
-		<cfif message eq "task">
-			<cfset var type = ListLast(metadata.type, ".")>
-			<!--- cut off "Task" and make lower case --->
-			<cfset className &= " " & LCase(Left(type, Len(type) - 4))>
-		<cfelseif REFind("(start|before|after|end|event)Tasks", message) eq 1>
-			<cfset className &= " phase">
+		<cfset className = "">
+		<cfif ListFirst(message, ".") eq "cflow">
+			<cfset className = ListRest(message, ".")>
+			<cfif message eq "cflow.task">
+				<cfset var type = ListLast(metadata.type, ".")>
+				<!--- cut off "Task" and make lower case --->
+				<cfset className &= " " & LCase(Left(type, Len(type) - 4))>
+			<cfelseif REFind("cflow\.(start|before|after|end|event)tasks", message) eq 1>
+				<cfset className &= " phase">
+			</cfif>
+		<cfelse>
+			<cfset className="custom">
 		</cfif>
 
 		<cfsavecontent variable="content">
@@ -83,20 +88,20 @@
 			<li class="#className#">
 				<div class="message">
 					<cfswitch expression="#message#">
-						<cfcase value="startTasks">Start</cfcase>
-						<cfcase value="beforeTasks">Before</cfcase>
-						<cfcase value="afterTasks">After</cfcase>
-						<cfcase value="endTasks">End</cfcase>
-						<cfcase value="eventTasks">Event</cfcase>
-						<cfcase value="eventCanceled">Event #data.element.target#.#data.element.event# canceled</cfcase>
-						<cfcase value="task">
+						<cfcase value="cflow.starttasks">Start</cfcase>
+						<cfcase value="cflow.beforetasks">Before</cfcase>
+						<cfcase value="cflow.aftertasks">After</cfcase>
+						<cfcase value="cflow.endtasks">End</cfcase>
+						<cfcase value="cflow.eventtasks">Event</cfcase>
+						<cfcase value="cflow.eventcanceled">Event #data.element.target#.#data.element.event# canceled</cfcase>
+						<cfcase value="cflow.task">
 							<cfswitch expression="#type#">
 								<cfcase value="InvokeTask">Invoke #metadata.controllerName#.#metadata.methodName#</cfcase>
 								<cfcase value="DispatchTask">Dispatch #metadata.targetName#.#metadata.eventType#</cfcase>
 								<cfcase value="RenderTask">Render #metadata.template#</cfcase>
 							</cfswitch>
 						</cfcase>
-						<cfcase value="exception">
+						<cfcase value="cflow.exception">
 							Exception
 							<cfset renderException = true>
 						</cfcase>
@@ -221,7 +226,7 @@
 		font-weight: normal;
 	}
 
-	#cflow .eventCanceled > .message {
+	#cflow .eventcanceled > .message {
 		background-color: rgb(255, 102, 0);
 	}
 

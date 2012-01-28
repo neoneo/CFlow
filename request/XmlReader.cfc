@@ -1,6 +1,7 @@
 component TaskReader {
 
 	variables.tasks = {}; // lists of tasks per target
+	variables.abstractTargetNames = []; // list of targets that are abstract
 	variables.defaultControllers = {}; // default controllers per target
 
 	public struct function read(required string path) {
@@ -17,14 +18,14 @@ component TaskReader {
 
 	public void function register(required Context context) {
 
-		// set task defaults to all tasks that have been read, if needed
+		// set task defaults to tasks that have been read where needed
 		setDefaults();
 		// process all include nodes
 		compileIncludes();
-		// it is possible that invoke tasks are included without a controller, so we try to set their controller to the default, if possible
+		// it is possible that invoke tasks are included without a controller, so set them
 		setDefaultControllers();
-		// there may still be controllerless invoke tasks left, remove them since we can't use them
-		removeInvalidInvokes();
+		// throw away the abstract targets
+		removeAbstractTargets();
 
 		var phases = ["start", "end", "before", "after"];
 		// variables.tasks is a struct where each key is a target name
@@ -87,6 +88,12 @@ component TaskReader {
 	private void function getTasksFromTargetNode(required xml node) {
 
 		var name = arguments.node.xmlAttributes.name;
+
+		if (StructKeyExists(arguments.node.xmlAttributes, "abstract") && arguments.node.xmlAttributes.abstract) {
+			// abstract target
+			ArrayAppend(variables.abstractTargetNames, name);
+		}
+
 		// the node may have an attribute default controller
 		if (StructKeyExists(arguments.node.xmlAttributes, "defaultcontroller")) {
 			variables.defaultControllers[name] = arguments.node.xmlAttributes.defaultcontroller;
@@ -240,7 +247,7 @@ component TaskReader {
 	}
 
 	/**
-	 * Sets default controllers and targets for tasks that have not specified them.
+	 * Sets default controllers and targets for tasks that have not specified them, as well as adds the target name to template paths.
 	 **/
 	private void function setDefaults() {
 
@@ -294,23 +301,10 @@ component TaskReader {
 
 	}
 
-	private void function removeInvalidInvokes() {
+	private void function removeAbstractTargets() {
 
-		var tasks = StructFindValue(variables.tasks, "invoke", "all");
-		writedump(tasks);
-		//abort;
-
-		for (var task in tasks) {
-			if (!StructKeyExists(task.owner, "controller")) {
-				// task.path is of the form '.target.phase.event[index].type', maybe deeper, or less deep (if outside of event phase)
-				// StructFindValue() returns child nodes before parent nodes
-				// this is nice, we can delete them in this order without running into trouble
-				// find the last opening bracket (there can be several)
-				var position = REFind("\[[0-9]+]\.type$", task.path);
-				var taskArray = Evaluate("variables.tasks" & Left(task.path, position - 1));
-				var index = Val(ListLast(task.path, "["));
-				ArrayDeleteAt(taskArray, index);
-			}
+		for (var name in variables.abstractTargetNames) {
+			StructDelete(variables.tasks, name);
 		}
 
 	}
@@ -324,6 +318,9 @@ component TaskReader {
 		} else {
 			switch (arguments.task.type) {
 				case "invoke":
+					if (!StructKeyExists(arguments.task, "controller")) {
+						throw(type = "cflow", message = "No controller associated with invoke task for method '#arguments.task.method#'");
+					}
 					instance = arguments.context.createInvokeTask(arguments.task.controller, arguments.task.method);
 					break;
 				case "dispatch":

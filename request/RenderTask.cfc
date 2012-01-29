@@ -27,6 +27,7 @@ component RenderTask implements="Task" {
 		// create the following variables for use within the template
 		var properties = arguments.event.getProperties();
 		var response = arguments.event.getResponse();
+		StructDelete(arguments, "event");
 
 		savecontent variable="local.content" {
 			include variables.template & ".cfm";

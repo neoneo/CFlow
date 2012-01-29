@@ -24,10 +24,17 @@ component RenderTask implements="Task" {
 
 	public boolean function run(required Event event) {
 
+		// call render() in order to hide the event object
+		render(arguments.event.getProperties(), arguments.event.getResponse());
+
+		return true;
+	}
+
+	private void function render(required struct properties, required Response response) {
+
 		// create the following variables for use within the template
-		var properties = arguments.event.getProperties();
-		var response = arguments.event.getResponse();
-		StructDelete(arguments, "event");
+		var properties = arguments.properties;
+		var response = arguments.response;
 
 		savecontent variable="local.content" {
 			include variables.template & ".cfm";
@@ -35,7 +42,6 @@ component RenderTask implements="Task" {
 
 		response.write(content);
 
-		return true;
 	}
 
 }

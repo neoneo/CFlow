@@ -84,6 +84,7 @@
 		<cfset var renderChildren = false>
 		<cfset var renderException = false>
 		<cfset var dumpMetadata = false>
+		<cfset var dispatchTask = false>
 
 		<cfset className = "">
 		<cfif ListFirst(message, ".") eq "cflow">
@@ -113,7 +114,10 @@
 						<cfcase value="cflow.task">
 							<cfswitch expression="#type#">
 								<cfcase value="InvokeTask">Invoke #metadata.controllerName#.#metadata.methodName#</cfcase>
-								<cfcase value="DispatchTask">Dispatch #metadata.targetName#.#metadata.eventType#</cfcase>
+								<cfcase value="DispatchTask">
+									Dispatch #metadata.targetName#.#metadata.eventType#
+									<cfset dispatchTask = true>
+								</cfcase>
 								<cfcase value="RenderTask">Render #metadata.template#</cfcase>
 							</cfswitch>
 						</cfcase>
@@ -134,12 +138,20 @@
 				<cfset dumpMetadata = dumpMetadata and not StructIsEmpty(metadata)>
 				<cfset renderChildren = StructKeyExists(data, "children") and not ArrayIsEmpty(data.children)>
 				<cfif dumpMetadata or renderChildren or renderException>
+					<cfset grandchildren = 0><!--- count children of children, so that we can report back if a dispatch task didn't have any tasks (children are phase, so we need the grandchildren) --->
 					<div class="data">
 						<cfif renderChildren>
 							<ul>
 							<cfloop array="#data.children#" index="child">
 								#render(child)#
+								<cfif dispatchTask && StructKeyExists(child, "children")>
+									<!--- count the grandchildren --->
+									<cfset grandchildren += ArrayLen(child.children)>
+								</cfif>
 							</cfloop>
+							<cfif dispatchTask && grandchildren == 0>
+								<li class="eventwithouttasks"><div class="message">Event without tasks</div></li>
+							</cfif>
 							</ul>
 						</cfif>
 						<cfif renderException>
@@ -242,7 +254,7 @@
 		font-weight: normal;
 	}
 
-	#cflow .eventcanceled > .message {
+	#cflow .eventcanceled > .message, #cflow .eventwithouttasks > .message {
 		background-color: rgb(255, 102, 0);
 	}
 

@@ -282,6 +282,11 @@ component TaskReader {
 				if (!StructKeyExists(task.owner, "target")) {
 					task.owner["target"] = name;
 				}
+
+				if (task.owner.target eq name && (task.path contains ".before[" or task.path contains ".after[")) {
+					// event is dispatched to the current target in the before or after phase; this will lead to an infinite loop so must be prohibited
+					throw(type = "cflow", message = "Dispatching event '#task.owner.event#' to the current target '#name#' in before or after phases causes an infinite loop");
+				}
 			}
 
 			tasks = StructFindValue(target, "render", "all");

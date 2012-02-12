@@ -17,7 +17,7 @@
 component InvokeTask extends="ComplexTask" {
 
 	if (!StructKeyExists(GetFunctionList(), "invoke")) {
-		include "invoke.cfm";
+		include "../static/invoke.cfm";
 	}
 
 	public void function init(required Controller controller, required string method) {

@@ -16,7 +16,7 @@
 
 component Response {
 
-	include "content.cfm"; // include the content() function, that calls cfcontent to set the content type
+	include "../static/content.cfm"; // include the content() function, that calls cfcontent to set the content type
 
 	public void function init() {
 

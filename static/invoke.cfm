@@ -19,6 +19,9 @@
 	<cfargument name="method" type="string" required="true">
 	<cfargument name="argumentCollection" type="struct" required="true">
 
-	<cfinvoke component="#arguments.component#" method="#arguments.method#" argumentCollection="#arguments.argumentCollection#" returnvariable="result"></cfinvoke>
+	<cfinvoke component="#arguments.component#" method="#arguments.method#" argumentCollection="#arguments.argumentCollection#" returnvariable="local.result"></cfinvoke>
 
+	<cfif StructKeyExists(local, "result")>
+		<cfreturn local.result>
+	</cfif>
 </cffunction>

@@ -1,33 +1,40 @@
-component ValidRule implements="Rule" accessors="true" {
+component ValidRule implements="Rule" {
 
-	property name="field" type="string" required="true";
-	property name="parameter" type="string" required="true";
+	public void function init(required string type) {
+		variables.type = arguments.type;
+	}
 
-	public boolean function test(required struct data) {
+	public boolean function test(required struct data, required string fieldName) {
 
 		var result = false;
-		var value = arguments.data[getField()];
+		var value = arguments.data[arguments.fieldName];
 
-		switch (getParameter()) {
+		switch (variables.type) {
 
-			case "guid":
 			case "integer":
 			case "float":
+				result = IsValid(variables.type, value);
+				if (result) {
+					arguments.data[arguments.fieldName] = Val(value);
+				}
+				break;
+
+			case "guid":
 			case "boolean":
 			case "email":
 			case "url":
 			case "creditcard":
-				result = IsValid(getParameter(), value);
-				break;
-
-			case "date":
-			case "datetime":
-				result = IsDate(value) || value == "now";
+				result = IsValid(variables.type, value);
 				break;
 
 			case "time":
 				value = ListChangeDelims(value, ":", ".");
-				result = IsDate(value) || value == "now";
+			case "date":
+			case "datetime":
+				result = LSIsDate(value);
+				if (result) {
+					arguments.data[arguments.fieldName] = LSParseDateTime(value);
+				}
 				break;
 
 			case "website":

@@ -1,5 +1,5 @@
 interface {
 
-	public boolean function test(required struct data);
+	public boolean function test(required struct data, required string fieldName);
 
 }

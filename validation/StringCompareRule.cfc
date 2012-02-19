@@ -18,8 +18,4 @@ component StringCompareRule extends="StringParameterRule" {
 		return result;
 	}
 
-	private boolean function getMatchCase() {
-		return variables.matchCase;
-	}
-
 }

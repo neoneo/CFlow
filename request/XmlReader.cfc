@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component TaskReader {
+component XmlReader {
 
 	variables.tasks = {}; // lists of tasks per target
 	variables.abstractTargetNames = []; // list of targets that are abstract

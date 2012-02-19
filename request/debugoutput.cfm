@@ -149,7 +149,7 @@
 									<cfset grandchildren += ArrayLen(child.children)>
 								</cfif>
 							</cfloop>
-							<cfif dispatchTask && grandchildren == 0>
+							<cfif dispatchTask and grandchildren eq 0>
 								<li class="eventwithouttasks"><div class="message">Event without tasks</div></li>
 							</cfif>
 							</ul>

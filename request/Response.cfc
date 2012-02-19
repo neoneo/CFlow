@@ -27,6 +27,7 @@ component Response {
 			TEXT = "text/plain"
 		};
 		variables.contents = [];
+		variables.keys = [];
 
 	}
 
@@ -38,17 +39,28 @@ component Response {
 		return variables.type;
 	}
 
-	public void function write(required any content) {
+	public void function write(required any content, string key = "") {
+
 		ArrayAppend(variables.contents, arguments.content);
+		ArrayAppend(variables.keys, arguments.key);
+
 	}
 
 	/**
 	 * Default implementation for rendering HTML and JSON.
 	 **/
-	public void function render() {
+	public void function render(string key = "") {
 
 		var result = "";
 		var contents = variables.contents;
+
+		if (Len(arguments.key) > 0) {
+			contents = [];
+			var index = ArrayFind(variables.keys, arguments.key);
+			if (index > 0) {
+				ArrayAppend(contents, variables.contents[index]);
+			}
+		}
 
 		// set the content header
 		content(variables.contentTypes[getType()]);
@@ -73,13 +85,30 @@ component Response {
 				break;
 		}
 
-		//clear();
+		//clear(arguments.key);
 
 		WriteOutput(result);
 	}
 
-	public void function clear() {
-		ArrayClear(variables.contents);
+	public void function clear(string key = "") {
+
+		if (Len(arguments.key) == 0) {
+			ArrayClear(variables.contents);
+			ArrayClear(variables.keys);
+		} else {
+			// the key doesn't have to exist, or it can appear more than once
+			var index = 0;
+			while (true) {
+				index = ArrayFind(variables.keys, arguments.key);
+				if (index > 0) {
+					ArrayDeleteAt(variables.contents, index);
+					ArrayDeleteAt(variables.keys, index);
+				} else {
+					break;
+				}
+			}
+		}
+
 	}
 
 }

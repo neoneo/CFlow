@@ -40,7 +40,7 @@ component RenderTask implements="Task" {
 			include variables.template & ".cfm";
 		}
 
-		response.write(content);
+		response.write(content, variables.template);
 
 	}
 

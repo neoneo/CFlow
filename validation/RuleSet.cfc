@@ -24,16 +24,14 @@ component RuleSet {
 	public array function validate(required struct data) {
 
 		var messages = []; // collection of error messages
-		var result = false;
-		var setMessages = JavaCast("null", 0); // collection of error messages from child rule sets
 
 		for (var rule in variables.rules) {
-			result = rule.instance.test(arguments.data);
+			var result = rule.instance.test(arguments.data);
 			if (result) {
 				// the rule is passed; if there is a rule set, validate its rules
 				if (StructKeyExists(rule, "set")) {
 					// concatenate any resulting messages on the current messages array
-					setMessages = rule.set.validate(arguments.data);
+					var setMessages = rule.set.validate(arguments.data);
 					for (var message in setMessages) {
 						ArrayAppend(messages, message);
 					}

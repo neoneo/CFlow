@@ -14,78 +14,74 @@
    limitations under the License.
 */
 
-component Response {
+component Response accessors="true" {
+
+	property name="type" type="string" default="HTML";
+	property name="writeKey" type="string" default="";
 
 	include "../static/content.cfm"; // include the content() function, that calls cfcontent to set the content type
 
 	public void function init() {
 
-		variables.type = "HTML";
 		variables.contentTypes = {
-			HTML = "text/html",
-			JSON = "application/json",
-			TEXT = "text/plain"
+			html = "text/html",
+			json = "application/json",
+			text = "text/plain"
 		};
 		variables.contents = [];
 		variables.keys = [];
+		variables.contentTypeSet = false;
 
 	}
 
-	public void function setType(required string type) {
-		variables.type = arguments.type;
-	}
-
-	public string function getType() {
-		return variables.type;
-	}
-
-	public void function write(required any content, string key = "") {
-
+	public void function write(required any content, string key = getWriteKey()) {
 		ArrayAppend(variables.contents, arguments.content);
 		ArrayAppend(variables.keys, arguments.key);
-
 	}
 
 	/**
-	 * Default implementation for rendering HTML and JSON.
+	 * Default implementation for rendering html and json.
 	 **/
 	public void function render(string key = "") {
 
 		var result = "";
-		var contents = variables.contents;
+		var outputContents = variables.contents;
 
 		if (Len(arguments.key) > 0) {
-			contents = [];
-			var index = ArrayFind(variables.keys, arguments.key);
-			if (index > 0) {
-				ArrayAppend(contents, variables.contents[index]);
+			outputContents = [];
+
+			for (var i = 1; i <= ArrayLen(variables.keys); i++) {
+				if (variables.keys[i] == arguments.key) {
+					ArrayAppend(outputContents, variables.contents[i]);
+				}
 			}
 		}
 
-		// set the content header
-		content(variables.contentTypes[getType()]);
+		if (!variables.contentTypeSet) {
+			// set the content header
+			content(variables.contentTypes[getType()]);
+			variables.contentTypeSet = true;
+		}
 
 		switch (getType()) {
-			case "HTML":
-			case "TEXT":
-				for (var content in contents) {
+			case "html":
+			case "text":
+				for (var content in outputContents) {
 					if (IsSimpleValue(content)) {
 						result &= content;
 					}
 				}
 				break;
-			case "JSON":
+			case "json":
 				// if there is 1 element in the content, serialize that
 				// if there are more, serialize the whole array
-				if (ArrayLen(contents) == 1) {
-					result = SerializeJSON(contents[1]);
+				if (ArrayLen(outputContents) == 1) {
+					result = SerializeJSON(outputContents[1]);
 				} else {
-					result = SerializeJSON(contents);
+					result = SerializeJSON(outputContents);
 				}
 				break;
 		}
-
-		//clear(arguments.key);
 
 		WriteOutput(result);
 	}
@@ -96,15 +92,11 @@ component Response {
 			ArrayClear(variables.contents);
 			ArrayClear(variables.keys);
 		} else {
-			// the key doesn't have to exist, or it can appear more than once
-			var index = 0;
-			while (true) {
-				index = ArrayFind(variables.keys, arguments.key);
-				if (index > 0) {
-					ArrayDeleteAt(variables.contents, index);
-					ArrayDeleteAt(variables.keys, index);
-				} else {
-					break;
+			// the key doesn't have to exist, or there can be more than one occurrence
+			for (var i = ArrayLen(variables.keys); i >= 1; i--) {
+				if (variables.keys[i] == arguments.key) {
+					ArrayDeleteAt(variables.contents, i);
+					ArrayDeleteAt(variables.keys, i);
 				}
 			}
 		}

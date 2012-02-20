@@ -36,10 +36,14 @@ component RenderTask implements="Task" {
 		var properties = arguments.properties;
 		var response = arguments.response;
 
+		// set the write key, so that any response.write() calls will write to this view
+		response.setWriteKey(variables.template);
+
 		savecontent variable="local.content" {
 			include variables.template & ".cfm";
 		}
 
+		// depending on the write key is not thread safe, so we pass the key explicitly
 		response.write(content, variables.template);
 
 	}

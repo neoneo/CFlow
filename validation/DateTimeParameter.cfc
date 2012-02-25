@@ -1,4 +1,4 @@
-component DateTimeParameterStrategy {
+component DateTimeParameter {
 
 	// translation from accepted dateparts to ColdFusion dateparts
 	variables.dateparts = {

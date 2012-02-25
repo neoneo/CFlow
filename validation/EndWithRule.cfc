@@ -1,4 +1,4 @@
-component EndWithRule extends="StringCompareRule" {
+component EndWithRule extends="StringRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
 

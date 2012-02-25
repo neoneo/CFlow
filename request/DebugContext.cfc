@@ -18,25 +18,29 @@ component DebugContext extends="Context" {
 
 	// FACTORY METHODS ============================================================================
 
-	public Task function createInvokeTask(required string controllerName, required string methodName) {
+	public DebugTask function createInvokeTask(required string controllerName, required string methodName) {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);
 
 		return new DebugTask(task, arguments);
 	}
 
-	public Task function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
+	public DebugTask function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
 
 		var task = super.createDispatchTask(argumentCollection = arguments);
 
 		return new DebugTask(task, arguments);
 	}
 
-	public Task function createRenderTask(required string template) {
+	public DebugTask function createRenderTask(required string template) {
 
 		var task = super.createRenderTask(argumentCollection = arguments);
 
 		return new DebugTask(task, arguments);
+	}
+
+	public RedirectDebugTask function createRedirectTask(required string url, boolean permanent = false) {
+		return new RedirectDebugTask(arguments.url, arguments.permanent);
 	}
 
 	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
@@ -163,7 +167,7 @@ component DebugContext extends="Context" {
 		var response = arguments.event.getResponse();
 		response.clear();
 		renderDebugOutput(arguments.event);
-		response.render();
+		response.write();
 		abort;
 
 	}

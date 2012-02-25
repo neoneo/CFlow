@@ -1,4 +1,4 @@
-component MinimumNumericRule extends="NumericParameterRule" {
+component MinimumNumericRule extends="NumericRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
 

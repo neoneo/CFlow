@@ -1,4 +1,4 @@
-component MinimumDateTimeRule extends="DateTimeParameterRule" {
+component MinimumDateTimeRule extends="DateTimeRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
 

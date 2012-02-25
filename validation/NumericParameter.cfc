@@ -1,4 +1,4 @@
-component NumericParameterStrategy extends="StringParameterStrategy" {
+component NumericParameter extends="StringParameter" {
 
 	public void function setValue(required string expression, boolean evaluate = false) {
 

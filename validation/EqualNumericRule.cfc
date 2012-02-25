@@ -1,4 +1,4 @@
-component EqualNumericRule extends="NumericParameterRule" {
+component EqualNumericRule extends="NumericRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
 

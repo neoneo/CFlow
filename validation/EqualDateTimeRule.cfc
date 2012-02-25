@@ -1,4 +1,4 @@
-component EqualDateTimeRule extends="DateTimeParameterRule" {
+component EqualDateTimeRule extends="DateTimeRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
 

@@ -4,7 +4,7 @@
  * The getValue() method accepts a data struct that provides context for the expression (if evaluated), and returns the result.
  * If no evaluation should occur, this component just stores and returns the expression as is.
  **/
-component StringParameterStrategy {
+component StringParameter {
 
 	public void function setValue(required string expression, boolean evaluate = false) {
 

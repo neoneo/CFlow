@@ -1,14 +1,10 @@
 /**
- * Checks whether the field value is an element in the given set.
+ * Checks whether the field value is an element in the set.
  **/
-component ElementRule implements="Rule" {
-
-	public void function init(required array set) {
-		variables.set = arguments.set;
-	}
+component ElementRule extends="SetRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
-		return ArrayContains(variables.set, arguments.data[arguments.fieldName]);
+		return isElement(arguments.data[arguments.fieldName], getParameterValue());
 	}
 
 }

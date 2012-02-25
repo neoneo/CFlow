@@ -44,6 +44,10 @@ component Event {
 		return variables.canceled;
 	}
 
+	public void function abort() {
+		abort;
+	}
+
 	public struct function getProperties() {
 
 		var properties = {};

@@ -30,15 +30,39 @@ component DebugEvent extends="Event" {
 
 	}
 
+	public void function abort() {
+
+		record("cflow.aborted");
+		// aborting means that no more output is written
+		variables.response.clear();
+
+	}
+
+	public boolean function isAborted() {
+
+		// the messages array is shared among all the event objects created during processing
+		// since we need to know if some event aborted, we check that array for its last message
+		var aborted = false;
+		var size = ArrayLen(variables.messages);
+		if (size > 0) {
+			aborted = variables.messages[size].message == "cflow.aborted";
+		}
+
+		return aborted;
+	}
+
 	public void function record(required string message, struct metadata = {}) {
 
-		ArrayAppend(variables.messages, {
-			message = arguments.message,
-			metadata = arguments.metadata,
-			target = getTarget(),
-			event = getType(),
-			tickcount = GetTickCount()
-		});
+		// we only accept messages if the event is not aborted, because in effect the whole request cycle should have ended already (we're only mimicking this for debugging)
+		if (!isAborted()) {
+			ArrayAppend(variables.messages, {
+				message = arguments.message,
+				metadata = arguments.metadata,
+				target = getTarget(),
+				event = getType(),
+				tickcount = GetTickCount()
+			});
+		}
 
 	}
 

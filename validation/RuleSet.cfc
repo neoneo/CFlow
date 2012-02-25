@@ -2,19 +2,20 @@ component RuleSet {
 
 	variables.rules = [];
 
-	public void function addRule(required Rule rule, required string message) {
+	public void function addRule(required Rule rule, required string message, boolean silent = false) {
 
 		ArrayAppend(variables.rules, {
 			instance = arguments.rule,
-			message = arguments.message
-			});
+			message = arguments.message,
+			silent = arguments.silent
+		});
 
 	}
 
 	public void function addRuleSet(required RuleSet ruleSet) {
 
 		if (ArrayIsEmpty(variables.rules)) {
-			throw(type = "cflow.validation", message = "At least one Rule must exist before a RuleSet can be added");
+			throw(type = "cflow.validation", message = "At least one rule must exist before a ruleset can be added");
 		}
 		// put the rule set on the last array item
 		variables.rules[ArrayLen(variables.rules)].set = arguments.ruleSet;
@@ -38,7 +39,9 @@ component RuleSet {
 				}
 			} else {
 				// not passed
-				ArrayAppend(messages, rule.message);
+				if (!rule.silent) {
+					ArrayAppend(messages, rule.message);
+				}
 			}
 
 		}

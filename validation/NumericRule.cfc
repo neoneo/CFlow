@@ -1,9 +1,9 @@
-component StringParameterRule implements="Rule" {
+component NumericRule implements="Rule" {
 
 	public void function init(required string value, boolean evaluate = false) {
 
-		variables.parameterStrategy = new StringParameterStrategy();
-		variables.parameterStrategy.setValue(arguments.value, arguments.evaluate);
+		variables.parameter = new NumericParameter();
+		variables.parameter.setValue(arguments.value, arguments.evaluate);
 
 	}
 
@@ -12,7 +12,7 @@ component StringParameterRule implements="Rule" {
 	}
 
 	private numeric function getParameterValue(required struct data) {
-		return variables.parameterStrategy.getValue(arguments.data);
+		return variables.parameter.getValue(arguments.data);
 	}
 
 }

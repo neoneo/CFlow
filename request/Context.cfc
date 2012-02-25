@@ -205,15 +205,15 @@ component Context accessors="true" {
 
 	// FACTORY METHODS ============================================================================
 
-	public Task function createInvokeTask(required string controllerName, required string methodName) {
+	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {
 		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
 	}
 
-	public Task function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
+	public DispatchTask function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
 		return new DispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
 	}
 
-	public Task function createRenderTask(required string template) {
+	public RenderTask function createRenderTask(required string template) {
 
 		var templateLocation = arguments.template;
 		if (Len(getViewMapping()) > 0) {
@@ -223,7 +223,11 @@ component Context accessors="true" {
 		return new RenderTask(templateLocation);
 	}
 
-	public Task function createPhaseTask() {
+	public RedirectTask function createRedirectTask(required string url, boolean permanent = false) {
+		return new RedirectTask(arguments.url, arguments.permanent);
+	}
+
+	public PhaseTask function createPhaseTask() {
 		return new PhaseTask();
 	}
 

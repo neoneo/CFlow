@@ -1,4 +1,4 @@
-component EqualStringRule extends="StringCompareRule" {
+component EqualStringRule extends="StringRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
 

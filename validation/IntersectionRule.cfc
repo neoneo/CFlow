@@ -1,23 +1,20 @@
 /**
- * Checks whether the field contains a set that has a non-empty intersection with the given set.
- * In other words, at least one element from the field set must appear in the given set.
+ * Checks whether the field contains a set that has a non-empty intersection with the set parameter.
+ * In other words, at least one element from the field set must appear in the set parameter.
  **/
-component IntersectionRule implements="Rule" {
-
-	public void function init(required array set, string delimiter = ",") {
-		variables.set = arguments.set;
-		variables.delimiter = arguments.delimiter;
-	}
+component IntersectionRule extends="SetRule" {
 
 	public boolean function test(required struct data, required string fieldName) {
 
 		var result = false;
-		var set = ListToArray(arguments.data[arguments.fieldName], variables.delimiter);
+
+		var set = toArray(arguments.data[arguments.fieldName]);
 		var size = ArrayLen(set);
+		var compareSet = getParameterValue();
 
 		var i = 1;
 		while (!result && i <= size) {
-			if (ArrayContains(variables.set, set[i])) {
+			if (isElement(set[i], compareSet)) {
 				result = true;
 			}
 			i++;

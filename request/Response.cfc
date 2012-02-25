@@ -17,9 +17,10 @@
 component Response accessors="true" {
 
 	property name="type" type="string" default="HTML";
-	property name="writeKey" type="string" default="";
+	property name="contentKey" type="string" default="";
 
 	include "../static/content.cfm"; // include the content() function, that calls cfcontent to set the content type
+	include "../static/header.cfm"; // the same for cfheader
 
 	public void function init() {
 
@@ -30,43 +31,48 @@ component Response accessors="true" {
 		};
 		variables.contents = [];
 		variables.keys = [];
-		variables.contentTypeSet = false;
+		variables.headers = [];
 
 	}
 
-	public void function write(required any content, string key = getWriteKey()) {
+	public void function append(required any content, string key = getContentKey()) {
+
 		ArrayAppend(variables.contents, arguments.content);
 		ArrayAppend(variables.keys, arguments.key);
+
+	}
+
+	public void function addHeader(required string name, required string value) {
+
+		ArrayAppend(variables.headers, {
+			name: arguments.name,
+			value: arguments.value
+		});
+
 	}
 
 	/**
-	 * Default implementation for rendering html and json.
+	 * Default implementation for writing html and json.
 	 **/
-	public void function render(string key = "") {
+	public void function write(string key = "", boolean clearContents = true) {
 
 		var result = "";
-		var outputContents = variables.contents;
+		var writeContents = variables.contents;
 
 		if (Len(arguments.key) > 0) {
-			outputContents = [];
+			writeContents = [];
 
 			for (var i = 1; i <= ArrayLen(variables.keys); i++) {
 				if (variables.keys[i] == arguments.key) {
-					ArrayAppend(outputContents, variables.contents[i]);
+					ArrayAppend(writeContents, variables.contents[i]);
 				}
 			}
-		}
-
-		if (!variables.contentTypeSet) {
-			// set the content header
-			content(variables.contentTypes[getType()]);
-			variables.contentTypeSet = true;
 		}
 
 		switch (getType()) {
 			case "html":
 			case "text":
-				for (var content in outputContents) {
+				for (var content in writeContents) {
 					if (IsSimpleValue(content)) {
 						result &= content;
 					}
@@ -75,15 +81,29 @@ component Response accessors="true" {
 			case "json":
 				// if there is 1 element in the content, serialize that
 				// if there are more, serialize the whole array
-				if (ArrayLen(outputContents) == 1) {
-					result = SerializeJSON(outputContents[1]);
+				if (ArrayLen(writeContents) == 1) {
+					result = SerializeJSON(writeContents[1]);
 				} else {
-					result = SerializeJSON(outputContents);
+					result = SerializeJSON(writeContents);
 				}
 				break;
 		}
 
 		WriteOutput(result);
+
+		if (arguments.clearContents) {
+			clear(arguments.key);
+		}
+
+	}
+
+	public void function writeHeaders() {
+
+		content(variables.contentTypes[getType()]);
+		for (var header in variables.headers) {
+			header(header.name, header.value);
+		}
+
 	}
 
 	public void function clear(string key = "") {

@@ -34,12 +34,16 @@ component XmlReader {
 
 	public void function register(required Context context) {
 
-		// set task defaults to tasks that have been read where needed
-		setDefaults();
+		// set task defaults to tasks where needed
+		setDefaultControllers();
+		setDefaultTargets();
+		setTemplateDirectories(false); // for start, before, after, and end tasks only
+
 		// process all include nodes
 		compileIncludes();
-		// it is possible that invoke tasks are included without a controller, so set them
-		setDefaultControllers();
+
+		setDefaultControllers(); // it is possible that invoke tasks are included without a controller, so invoke once more
+		setTemplateDirectories(true); // for event tasks
 		// throw away the abstract targets
 		removeAbstractTargets();
 
@@ -63,7 +67,6 @@ component XmlReader {
 			tasks = tasks.events;
 			// tasks is now a struct where keys are event types
 			for (var type in tasks) {
-
 				// loop over the tasks for this event and create subtasks
 				for (var task in tasks[type]) {
 					// register the task for the given event
@@ -263,59 +266,69 @@ component XmlReader {
 	}
 
 	/**
-	 * Sets default controllers and targets for tasks that have not specified them, as well as adds the target name to template paths.
+	 * Sets the controllers explicitly to each invoke task, if possible.
 	 **/
-	private void function setDefaults() {
-
-		var tasks = JavaCast("null", 0);
-		var task = JavaCast("null", 0);
-		var target = JavaCast("null", 0);
-
-		setDefaultControllers();
+	private void function setDefaultControllers() {
 
 		for (var name in variables.tasks) {
-			target = variables.tasks[name];
+			var target = variables.tasks[name];
 
-			// for dispatch task with no target use the current target
-			tasks = StructFindValue(target, "dispatch", "all");
-			for (task in tasks) {
-				if (!StructKeyExists(task.owner, "target")) {
-					task.owner["target"] = name;
+			// if a default controller was specified, set it on all invoke tasks that have no controller
+			if (StructKeyExists(variables.defaultControllers, name)) {
+				// find all tasks that have no controller specified
+				var tasks = StructFindValue(target, "invoke", "all");
+				for (var task in tasks) {
+					if (!StructKeyExists(task.owner, "controller")) {
+						// explicitly set the controller
+						task.owner["controller"] = variables.defaultControllers[name];
+					}
 				}
-
-				if (task.owner.target eq name && (task.path contains ".before[" or task.path contains ".after[")) {
-					// event is dispatched to the current target in the before or after phase; this will lead to an infinite loop so must be prohibited
-					throw(type = "cflow", message = "Dispatching event '#task.owner.event#' to the current target '#name#' in before or after phases causes an infinite loop");
-				}
-			}
-
-			tasks = StructFindValue(target, "render", "all");
-			for (task in tasks) {
-				// look for templates in a directory with the target name
-				task.owner.template = name & "/" & task.owner.template;
 			}
 		}
 
 	}
 
-	private void function setDefaultControllers() {
-
-		var tasks = JavaCast("null", 0);
-		var task = JavaCast("null", 0);
-		var target = JavaCast("null", 0);
+	/**
+	 * Sets default targets for dispatch tasks that have not specified it.
+	 **/
+	private void function setDefaultTargets() {
 
 		for (var name in variables.tasks) {
-			target = variables.tasks[name];
+			var target = variables.tasks[name];
 
-			// if a default controller was specified, set it on all invoke tasks that have no controller
-			if (StructKeyExists(variables.defaultControllers, name)) {
-				// find all tasks that have no controller specified
-				tasks = StructFindValue(target, "invoke", "all");
-				for (task in tasks) {
-					if (!StructKeyExists(task.owner, "controller")) {
-						// explicitly set the controller
-						task.owner["controller"] = variables.defaultControllers[name];
-					}
+			// for dispatch task with no target use the current target
+			var tasks = StructFindValue(target, "dispatch", "all");
+			for (var task in tasks) {
+				if (!StructKeyExists(task.owner, "target")) {
+					task.owner["target"] = name;
+				}
+
+				if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[")) {
+					// event is dispatched to the current target in the before or after phase; this will lead to an infinite loop
+					throw(type = "cflow", message = "Dispatching event '#task.owner.event#' to the current target '#name#' in before or after phases causes an infinite loop");
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Modifies the template name so it uses the target name as the directory (within the view mapping).
+	 * The boolean argument specifies if the change is applied to render tasks in event phases (true) or in the other phases (false).
+	 * This is important when targets with render tasks are included.
+	 * If the render task is defined in an event, the receiving target has to implement that view.
+	 * If the render task is defined elsewhere, the originating target has to implement it.
+	 **/
+	private void function setTemplateDirectories(required boolean eventPhase) {
+
+		for (var name in variables.tasks) {
+			var target = variables.tasks[name];
+
+			var tasks = StructFindValue(target, "render", "all");
+			for (task in tasks) {
+				if (arguments.eventPhase && task.path contains ".events." || !arguments.eventPhase && task.path does not contain ".events.") {
+					// prepend the target name as the directory name
+					task.owner.template = name & "/" & task.owner.template;
 				}
 			}
 		}
@@ -349,6 +362,13 @@ component XmlReader {
 					break;
 				case "render":
 					instance = arguments.context.createRenderTask(arguments.task.template);
+					break;
+				case "redirect":
+					var permanent = false;
+					if (StructKeyExists(arguments.task, "permanent")) {
+						permanent = arguments.task.permanent;
+					}
+					instance = arguments.context.createRedirectTask(arguments.task.url, permanent);
 					break;
 			}
 

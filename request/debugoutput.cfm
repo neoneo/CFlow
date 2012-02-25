@@ -111,6 +111,8 @@
 						<cfcase value="cflow.endtasks">End</cfcase>
 						<cfcase value="cflow.eventtasks">Event</cfcase>
 						<cfcase value="cflow.eventcanceled">Event #data.element.target#.#data.element.event# canceled</cfcase>
+						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.url#">#metadata.url#</a></cfcase>
+						<cfcase value="cflow.aborted">Request aborted</cfcase>
 						<cfcase value="cflow.task">
 							<cfswitch expression="#type#">
 								<cfcase value="InvokeTask">Invoke #metadata.controllerName#.#metadata.methodName#</cfcase>
@@ -197,6 +199,12 @@
 	#cflow {
 		font-family: Verdana, sans-serif;
 		font-size: 9pt;
+		color: black;
+	}
+
+	#cflow a {
+		text-decoration: underline;
+		color: black;
 	}
 
 	#cflow > h1 {
@@ -207,7 +215,7 @@
 	#cflow ul {
 		list-style-type: none;
 		margin: 0;
-		padding: 0 12px 0 12px;
+		padding: 0 12px;
 	}
 
 	#cflow li {
@@ -241,20 +249,20 @@
 
 	#cflow .phase > .data {
 		background-color: rgb(204, 255, 51);
-		font-weight: bold;
 	}
 
-	#cflow .task > .message {
+	#cflow .task > .message,
+	#cflow .redirect > .message {
 		background-color: rgb(153, 153, 255);
-		font-weight: normal;
 	}
 
 	#cflow .task > .data {
 		background-color: rgb(204, 204, 255);
-		font-weight: normal;
 	}
 
-	#cflow .eventcanceled > .message, #cflow .eventwithouttasks > .message {
+	#cflow .eventcanceled > .message,
+	#cflow .eventwithouttasks > .message,
+	#cflow .aborted > .message {
 		background-color: rgb(255, 102, 0);
 	}
 

@@ -39,8 +39,8 @@ component DebugContext extends="Context" {
 		return new DebugTask(task, arguments);
 	}
 
-	public RedirectDebugTask function createRedirectTask(required string url, boolean permanent = false) {
-		return new RedirectDebugTask(arguments.url, arguments.permanent);
+	public RedirectDebugTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
+		return new RedirectDebugTask(arguments.type, arguments.parameters, arguments.permanent, getRequestManager());
 	}
 
 	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {

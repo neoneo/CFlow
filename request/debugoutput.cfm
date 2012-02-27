@@ -210,6 +210,7 @@
 	#cflow > h1 {
 		font-weight: bold;
 		font-size: 12pt;
+		padding: 0 12px;
 	}
 
 	#cflow ul {

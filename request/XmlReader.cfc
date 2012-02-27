@@ -34,17 +34,33 @@ component XmlReader {
 
 	public void function register(required Context context) {
 
-		// set task defaults to tasks where needed
+		// set task defaults to tasks where needed:
+
+		// set all invoke tasks' controllers to the default controller of the target
+		// if no default controller is given, wait until after the includes are processed
 		setDefaultControllers();
-		setDefaultTargets();
-		setTemplateDirectories(false); // for start, before, after, and end tasks only
+
+		// use the target as the template directory name for start, before, after, and end tasks only (argument false)
+		setTemplateDirectories(false);
 
 		// process all include nodes
 		compileIncludes();
 
-		setDefaultControllers(); // it is possible that invoke tasks are included without a controller, so invoke once more
-		setTemplateDirectories(true); // for event tasks
+		// if an included target has no default controller defined, the corresponding invoke tasks have no controller yet (unless defined on the task itself)
+		// so once again traverse all invoke tasks to check for ones without a controller, and set it to the defaultcontroller of the (receiving) target
+		// if the receiving target has no defaultcontroller, an exception will be thrown (later)
+		setDefaultControllers();
+
+		// all dispatch and redirect tasks without a target will go to the target that owns the event
+		setDefaultDispatchTargets();
+		setDefaultRedirectTargets();
+
+		// use the target name as the directory name for event tasks
+		// so an included event will look for its views in the receiving target's directory
+		setTemplateDirectories(true);
+
 		// throw away the abstract targets
+		// if we don't do this, the framework will try to create objects, which is unnecessary, and might result in exceptions
 		removeAbstractTargets();
 
 		var phases = ["start", "end", "before", "after"];
@@ -291,7 +307,7 @@ component XmlReader {
 	/**
 	 * Sets default targets for dispatch tasks that have not specified it.
 	 **/
-	private void function setDefaultTargets() {
+	private void function setDefaultDispatchTargets() {
 
 		for (var name in variables.tasks) {
 			var target = variables.tasks[name];
@@ -303,11 +319,17 @@ component XmlReader {
 					task.owner["target"] = name;
 				}
 
-				if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[")) {
-					// event is dispatched to the current target in the before or after phase; this will lead to an infinite loop
-					throw(type = "cflow", message = "Dispatching event '#task.owner.event#' to the current target '#name#' in before or after phases causes an infinite loop");
+				// this check is done for all dispatch tasks:
+				if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".instead[") {
+					// event is *always* dispatched to the current target in the before or after phase; this will lead to an infinite loop
+					throw(
+						type = "cflow",
+						message = "Dispatching event '#task.owner.event#' to the current target '#name#' will cause an infinite loop",
+						detail = "Do not define dispatch tasks without a target in the before or after phases, unless the task is run conditionally"
+					);
 				}
 			}
+
 		}
 
 	}
@@ -331,6 +353,39 @@ component XmlReader {
 					task.owner.template = name & "/" & task.owner.template;
 				}
 			}
+		}
+
+	}
+
+	/**
+	 * Sets default targets for redirect tasks that have not specified it.
+	 **/
+	private void function setDefaultRedirectTargets() {
+
+		for (var name in variables.tasks) {
+			var target = variables.tasks[name];
+
+			// for dispatch task with no target use the current target
+			var tasks = StructFindValue(target, "redirect", "all");
+			for (var task in tasks) {
+				// do nothing if the redirect is to a fixed url, or if it has a target already
+				if (!StructKeyExists(task.owner, "url")) {
+					if (!StructKeyExists(task.owner, "target")) {
+						task.owner["target"] = name;
+					}
+
+					// this check is done for all redirect tasks:
+					if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".instead[") {
+						// redirect *always* to the current target outside the event phase; this will lead to an infinite loop
+						throw(
+							type = "cflow",
+							message = "Redirecting to event '#task.owner.event#' on the current target '#name#' will cause an infinite loop",
+							detail = "Do not define redirect tasks without a target outside the event phase, unless the task is run conditionally"
+						);
+					}
+				}
+			}
+
 		}
 
 	}
@@ -368,7 +423,26 @@ component XmlReader {
 					if (StructKeyExists(arguments.task, "permanent")) {
 						permanent = arguments.task.permanent;
 					}
-					instance = arguments.context.createRedirectTask(arguments.task.url, permanent);
+
+					var parameters = StructCopy(arguments.task);
+					StructDelete(parameters, "permanent");
+					StructDelete(parameters, "type");
+
+					// there are two types of redirects: to an event and to a url
+					// depending on the type, the constructor expects different parameters
+					var type = "event";
+					if (StructKeyExists(arguments.task, "url")) {
+						// the redirect should be to the url defined here
+						type = "url";
+					} else {
+						// we have a redirect to an event
+						// if there is a parameters attribute present, convert the value to an array
+						if (StructKeyExists(parameters, "parameters")) {
+							parameters.parameters = ListToArray(parameters.parameters);
+						}
+					}
+
+					instance = arguments.context.createRedirectTask(type, parameters, permanent);
 					break;
 			}
 

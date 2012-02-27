@@ -16,9 +16,10 @@
 
 component RenderTask implements="Task" {
 
-	public void function init(required string template) {
+	public void function init(required string template, required RequestManager requestManager) {
 
 		variables.template = arguments.template;
+		variables.requestManager = arguments.requestManager;
 
 	}
 
@@ -46,6 +47,14 @@ component RenderTask implements="Task" {
 		// depending on the content key is not thread safe, so we pass the key explicitly
 		response.append(content, variables.template);
 
+	}
+
+	/**
+	 * Shorthand for accessing the writeUrl() method on the request manager.
+	 * This method is available in views.
+	 **/
+	private string function writeUrl(required string target, required string event, struct parameters) {
+		return variables.requestManager.writeUrl(argumentCollection = arguments);
 	}
 
 }

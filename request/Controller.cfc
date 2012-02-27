@@ -36,7 +36,7 @@ component Controller {
 		}
 
 		// the dispatch task cancels our event if it fails, but we want the controller to do that (or not)
-		// so we pass a clone of the task
+		// so we pass a clone to the task
 		return variables.dispatchTasks[targetName][arguments.type].run(arguments.event.clone());
 	}
 

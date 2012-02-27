@@ -14,17 +14,10 @@
    limitations under the License.
 */
 
-component RedirectDebugTask extends="RedirectTask" {
+interface {
 
-	public void function run(required Event event) {
+	public Response function handleRequest();
 
-		// we just record the fact that normally a redirect should occur right now
-		arguments.event.record("cflow.redirect", {
-			url = obtainUrl(arguments.event)
-		});
-		// abort the rest of the flow
-		arguments.event.abort();
-
-	}
+	public string function writeUrl(required string target, required string event, struct parameters);
 
 }

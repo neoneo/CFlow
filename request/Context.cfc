@@ -17,10 +17,9 @@
 component Context accessors="true" {
 
 	property name="implicitTasks" type="boolean" default="false";
-	property name="defaultTarget" type="string" default="";
-	property name="defaultEvent" type="string" default="";
 	property name="controllerMapping" type="string" default="";
 	property name="viewMapping" type="string" default="";
+	property name="requestManager" type="RequestManager";
 
 	variables.controllers = {}; // controllers are static, so we need only one instance of each
 	variables.tasks = {
@@ -31,32 +30,21 @@ component Context accessors="true" {
 		after = {}
 	};
 
-	/**
-	 * Default request handling implementation.
-	 *
-	 * The parameter values in the url and form scopes are collected as properties for the event.
-	 * The target and event parameters are used to dispatch the corresponding event.
-	 * If no target or event parameters are present, the default values for these parameters are used.
-	 **/
+	// just create an instance of the default request manager
+	// if it is not needed, it will be garbage collected
+	// assuming this will only occur once in the life of the application, it's not a big cost
+	variables.requestManager = new DefaultRequestManager(this);
+
+	public void function setDefaultTarget(required string targetName) {
+		getRequestManager().setDefaultTarget(arguments.targetName);
+	}
+
+	public void function setDefaultEvent(required string eventType) {
+		getRequestManager().setDefaultEvent(arguments.eventType);
+	}
+
 	public Response function handleRequest() {
-
-		var properties = StructCopy(url);
-		StructAppend(properties, form, false);
-
-		var targetName = "";
-		var eventType = "";
-		if (StructKeyExists(properties, "target")) {
-			targetName = properties.target;
-		} else {
-			targetName = getDefaultTarget();
-		}
-		if (StructKeyExists(properties, "event")) {
-			eventType = properties.event;
-		} else {
-			eventType = getDefaultEvent();
-		}
-
-		return handleEvent(targetName, eventType, properties);
+		return getRequestManager().handleRequest();
 	}
 
 	/**
@@ -220,11 +208,22 @@ component Context accessors="true" {
 			templateLocation = getViewMapping() & "/" & arguments.template;
 		}
 
-		return new RenderTask(templateLocation);
+		return new RenderTask(templateLocation, getRequestManager());
 	}
 
-	public RedirectTask function createRedirectTask(required string url, boolean permanent = false) {
-		return new RedirectTask(arguments.url, arguments.permanent);
+	/**
+	 * Creates a RedirectTask.
+	 *
+	 * @param	{String}	type		the redirect type: url or event
+	 * @param	{Struct}	parameters	the parameters specific to the type of redirect (see below)
+	 * @param	{Boolean}	permanent	whether the redirect is permanent or not [false]
+	 *
+	 * Redirect types:
+	 * url		The parameters struct should have a url key that contains the explicit url to redirect to
+	 * event	The parameters struct should have target and event keys, and may have additional keys that are used as url parameters
+	 **/
+	public RedirectTask function createRedirectTask(required any type, required any parameters, boolean permanent = false) {
+		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestManager());
 	}
 
 	public PhaseTask function createPhaseTask() {

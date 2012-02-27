@@ -10,8 +10,7 @@ component StringParameter {
 
 		variables.evaluate = arguments.evaluate;
 		if (arguments.evaluate) {
-			// interpret all alphanumeric strings as variable names, present in the arguments.data struct in getValue()
-			variables.expression = Trim(REReplaceNoCase(" " & arguments.expression & " ", " ([a-z_]+[a-z0-9_]*) ", " arguments.data.\1 ", "all"));
+			variables.expression = new Evaluator(arguments.expression);
 		} else {
 			variables.expression = arguments.expression;
 		}
@@ -23,7 +22,7 @@ component StringParameter {
 		var value = JavaCast("null", 0);
 
 		if (variables.evaluate) {
-			value = Evaluate(variables.expression);
+			value = variables.expression.execute(arguments.data);
 		} else {
 			value = variables.expression;
 		}

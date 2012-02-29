@@ -201,8 +201,8 @@ component Context accessors="true" {
 		return new DispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
 	}
 
-	public RenderTask function createRenderTask(required string template) {
-		return new RenderTask(arguments.template, getViewMapping(), getRequestManager());
+	public RenderTask function createRenderTask(required string view) {
+		return new RenderTask(arguments.view, getViewMapping(), getRequestManager());
 	}
 
 	/**

@@ -32,7 +32,7 @@ component DebugContext extends="Context" {
 		return new DebugTask(task, arguments);
 	}
 
-	public DebugTask function createRenderTask(required string template) {
+	public DebugTask function createRenderTask(required string view) {
 
 		var task = super.createRenderTask(argumentCollection = arguments);
 

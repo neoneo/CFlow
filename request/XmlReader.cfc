@@ -40,8 +40,8 @@ component XmlReader {
 		// if no default controller is given, wait until after the includes are processed
 		setDefaultControllers();
 
-		// use the target as the template directory name for start, before, after, and end tasks only (argument false)
-		setTemplateDirectories(false);
+		// use the target as the view directory name for start, before, after, and end tasks only (argument false)
+		setViewDirectories(false);
 
 		// process all include nodes
 		compileIncludes();
@@ -57,7 +57,7 @@ component XmlReader {
 
 		// use the target name as the directory name for event tasks
 		// so an included event will look for its views in the receiving target's directory
-		setTemplateDirectories(true);
+		setViewDirectories(true);
 
 		// throw away the abstract targets
 		// if we don't do this, the framework will try to create objects, which is unnecessary, and might result in exceptions
@@ -335,13 +335,13 @@ component XmlReader {
 	}
 
 	/**
-	 * Modifies the template name so it uses the target name as the directory (within the view mapping).
+	 * Modifies the view name so it uses the target name as the directory (within the view mapping).
 	 * The boolean argument specifies if the change is applied to render tasks in event phases (true) or in the other phases (false).
 	 * This is important when targets with render tasks are included.
 	 * If the render task is defined in an event, the receiving target has to implement that view.
 	 * If the render task is defined elsewhere, the originating target has to implement it.
 	 **/
-	private void function setTemplateDirectories(required boolean eventPhase) {
+	private void function setViewDirectories(required boolean eventPhase) {
 
 		for (var name in variables.tasks) {
 			var target = variables.tasks[name];
@@ -350,7 +350,7 @@ component XmlReader {
 			for (task in tasks) {
 				if (arguments.eventPhase && task.path contains ".events." || !arguments.eventPhase && task.path does not contain ".events.") {
 					// prepend the target name as the directory name
-					task.owner.template = name & "/" & task.owner.template;
+					task.owner.view = name & "/" & task.owner.view;
 				}
 			}
 		}
@@ -416,7 +416,7 @@ component XmlReader {
 					instance = arguments.context.createDispatchTask(arguments.task.target, arguments.task.event);
 					break;
 				case "render":
-					instance = arguments.context.createRenderTask(arguments.task.template);
+					instance = arguments.context.createRenderTask(arguments.task.view);
 					break;
 				case "redirect":
 					var permanent = false;

@@ -16,15 +16,15 @@
 
 component RenderTask implements="Task" {
 
-	public void function init(required string template, string mapping = "", RequestManager requestManager) {
+	public void function init(required string view, string mapping = "", RequestManager requestManager) {
 
-		variables.template = arguments.template;
+		variables.view = arguments.view;
 		if (Len(mapping) > 0) {
 			// prepend the given mapping
-			variables.template = mapping & "/" & variables.template;
+			variables.view = mapping & "/" & variables.view;
 		}
-		// use the template without the mapping for the response key
-		variables.key = arguments.template;
+		// use the view without the mapping for the response key
+		variables.key = arguments.view;
 
 		variables.requestManager = arguments.requestManager;
 
@@ -38,17 +38,17 @@ component RenderTask implements="Task" {
 		return true;
 	}
 
-	private void function render(required struct properties, required Response response) {
+	private void function render(required struct data, required Response response) {
 
-		// create the following variables for use within the template
-		var properties = arguments.properties;
+		// create the following variables for use within the view
+		var data = arguments.data;
 		var response = arguments.response;
 
 		// set the content key, so that response.append() calls without a key argument will write to this view
 		response.setContentKey(variables.key);
 
 		savecontent variable="local.content" {
-			include variables.template & ".cfm";
+			include variables.view & ".cfm";
 		}
 
 		// depending on the content key is not thread safe, so we pass the key explicitly

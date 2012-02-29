@@ -43,8 +43,23 @@ component RedirectTask implements="Task" {
 
 				// handle runtime parameters if present
 				if (StructKeyExists(variables.parameters, "parameters")) {
-					// this should be an array of parameter names that have to be evaluated at runtime
-					variables.runtimeParameters = variables.parameters.parameters;
+					// this should be an array of parameters to be evaluated at runtime
+					// they can have the form '<name1> = <name2>', where name1 gives the name of the parameter and name2 gives the value (if it exists on the event)
+					// so convert them all to the same form
+					var runtimeParameters = [];
+					for (var parameter in variables.parameters.parameters) {
+						var runtimeParameter = {};
+						if (ListLen(parameter, "=") > 1) {
+							runtimeParameter.name = Trim(ListFirst(parameter, "="));
+							runtimeParameter.value = Trim(ListLast(parameter, "="));
+						} else {
+							// name and value are the same
+							runtimeParameter.name = Trim(parameter);
+							runtimeParameter.value = Trim(parameter);
+						}
+						ArrayAppend(runtimeParameters, runtimeParameter);
+					}
+					variables.runtimeParameters = runtimeParameters;
 					StructDelete(variables.parameters, "parameters");
 				} else {
 					// no runtime parameters
@@ -78,8 +93,8 @@ component RedirectTask implements="Task" {
 			// this means we have to append runtime parameters onto the url
 			var parameters = StructCopy(variables.parameters);
 			for (var parameter in variables.runtimeParameters) {
-				if (StructKeyExists(arguments.event, parameter)) {
-					parameters[parameter] = arguments.event[parameter];
+				if (StructKeyExists(arguments.event, parameter.value)) {
+					parameters[parameter.name] = arguments.event[parameter.value];
 				}
 			}
 			urlString = variables.requestManager.writeUrl(variables.target, variables.event, parameters);

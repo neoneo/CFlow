@@ -123,7 +123,7 @@
 									Dispatch #metadata.targetName#.#metadata.eventType#
 									<cfset dispatchTask = true>
 								</cfcase>
-								<cfcase value="RenderTask">Render #metadata.template#</cfcase>
+								<cfcase value="RenderTask">Render #metadata.view#</cfcase>
 							</cfswitch>
 						</cfcase>
 						<cfcase value="cflow.exception">
@@ -188,7 +188,7 @@
 	</cffunction>
 
 	<!--- construct the task hierarchy --->
-	<cfset messages = properties._messages>
+	<cfset messages = data._messages>
 	<cfset index = 1>
 	<cfset result = []>
 	<cfloop condition="index lte ArrayLen(messages)">

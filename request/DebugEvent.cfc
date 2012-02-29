@@ -51,17 +51,20 @@ component DebugEvent extends="Event" {
 		return aborted;
 	}
 
-	public void function record(required string message, struct metadata = {}) {
+	public void function record(required string message, any metadata) {
 
 		// we only accept messages if the event is not aborted, because in effect the whole request cycle should have ended already (we're only mimicking this for debugging)
 		if (!isAborted()) {
-			ArrayAppend(variables.messages, {
+			var message = {
 				message = arguments.message,
-				metadata = arguments.metadata,
 				target = getTarget(),
 				event = getType(),
 				tickcount = GetTickCount()
-			});
+			};
+			if (StructKeyExists(arguments, "metadata")) {
+				message.metadata = arguments.metadata;
+			}
+			ArrayAppend(variables.messages, message);
 		}
 
 	}

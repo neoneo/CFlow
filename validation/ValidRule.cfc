@@ -1,7 +1,9 @@
 component ValidRule implements="Rule" {
 
 	public void function init(required string type) {
+
 		variables.type = arguments.type;
+
 	}
 
 	public boolean function test(required struct data, required string fieldName) {

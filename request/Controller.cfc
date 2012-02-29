@@ -32,12 +32,12 @@ component Controller {
 			variables.dispatchTasks[targetName] = {};
 		}
 		if (!StructKeyExists(variables.dispatchTasks[targetName], arguments.type)) {
+			// pass false to the factory method: we don't want the current event to be canceled if the dispatched event is canceled
+			// the controller implementation should be able to choose to do that
 			variables.dispatchTasks[targetName][arguments.type] = variables.context.createDispatchTask(targetName, arguments.type, false);
 		}
 
-		// the dispatch task cancels our event if it fails, but we want the controller to do that (or not)
-		// so we pass a clone to the task
-		return variables.dispatchTasks[targetName][arguments.type].run(arguments.event.clone());
+		return variables.dispatchTasks[targetName][arguments.type].run(arguments.event);
 	}
 
 }

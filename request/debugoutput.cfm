@@ -80,7 +80,10 @@
 		<cfset var child = "">
 		<cfset var content = "">
 		<cfset var message = data.element.message>
-		<cfset var metadata = data.element.metadata>
+		<cfif StructKeyExists(data.element, "metadata")>
+			<cfset var metadata = data.element.metadata>
+		</cfif>
+
 		<cfset var renderChildren = false>
 		<cfset var renderException = false>
 		<cfset var dumpMetadata = false>
@@ -137,7 +140,7 @@
 						<span class="duration">#data.duration#</span>
 					</cfif>
 				</div>
-				<cfset dumpMetadata = dumpMetadata and not StructIsEmpty(metadata)>
+				<cfset dumpMetadata = dumpMetadata and StructKeyExists(local, "metadata")>
 				<cfset renderChildren = StructKeyExists(data, "children") and not ArrayIsEmpty(data.children)>
 				<cfif dumpMetadata or renderChildren or renderException>
 					<cfset grandchildren = 0><!--- count children of children, so that we can report back if a dispatch task didn't have any tasks (children are phase, so we need the grandchildren) --->
@@ -199,18 +202,13 @@
 	#cflow {
 		font-family: Verdana, sans-serif;
 		font-size: 9pt;
-		color: black;
-	}
-
-	#cflow a {
-		text-decoration: underline;
-		color: black;
+		color: #000;
 	}
 
 	#cflow > h1 {
 		font-weight: bold;
 		font-size: 12pt;
-		padding: 0 12px;
+		padding: 2px 16px;
 	}
 
 	#cflow ul {
@@ -230,13 +228,13 @@
 	}
 
 	#cflow .message, #cflow .data {
-		border: 1px solid black;
+		border: 1px solid #000;
 		padding: 2px;
 	}
 
 	#cflow .message {
 		overflow: hidden;
-		background-color: rgb(255, 178, 0);
+		background-color: #ffb200;
 	}
 
 	#cflow .data {
@@ -244,37 +242,46 @@
 	}
 
 	#cflow .phase > .message {
-		background-color: rgb(153, 204, 51);
+		background-color: #9c3;
 		font-weight: bold;
 	}
 
 	#cflow .phase > .data {
-		background-color: rgb(204, 255, 51);
+		background-color: #cf3;
 	}
 
-	#cflow .task > .message,
+	#cflow .task > .message {
+		background-color: #99f;
+	}
+
+	#cflow .redirect a {
+		text-decoration: underline;
+		color: #fff;
+	}
+
 	#cflow .redirect > .message {
-		background-color: rgb(153, 153, 255);
+		background-color: #666;
+		color: #fff;
 	}
 
 	#cflow .task > .data {
-		background-color: rgb(204, 204, 255);
+		background-color: #ccf;
 	}
 
 	#cflow .eventcanceled > .message,
 	#cflow .eventwithouttasks > .message,
 	#cflow .aborted > .message {
-		background-color: rgb(255, 102, 0);
+		background-color: #f60;
 	}
 
 	#cflow .exception > .message {
-		background-color: rgb(220, 50, 47);
+		background-color: #dc322f;
 		font-weight: bold;
-		color: white;
+		color: #fff;
 	}
 
 	#cflow .exception > .data {
-		background-color: rgb(255, 204, 0);
+		background-color: #fc0;
 	}
 
 	#cflow .exception h2 {
@@ -317,7 +324,7 @@
 	cflow.node.addEventListener("mouseover", function (e) {
 		var listItem = cflow.getActiveListItem(e.target);
 		if (listItem) {
-			listItem.style.borderColor = "red";
+			listItem.style.borderColor = "#f00";
 		}
 	}, false);
 

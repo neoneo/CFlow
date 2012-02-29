@@ -16,6 +16,14 @@
 
 component DispatchTask extends="ComplexTask" {
 
+	/**
+	 * Constructor.
+	 *
+	 * @param	{Context}	context			the context of the application
+	 * @param	{String}	targetName		the target of the event to dispatch
+	 * @param	{String}	eventType		the type of the event to dispatch
+	 * @param	{Boolean}	cancelFailed	if true, cancels the originating event if the dispatched event is canceled
+	 **/
 	public void function init(required Context context, required string targetName, required string eventType, boolean cancelFailed = true) {
 
 		variables.context = arguments.context;

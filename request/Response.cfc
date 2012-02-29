@@ -62,6 +62,7 @@ component Response accessors="true" {
 		if (Len(arguments.key) > 0) {
 			writeContents = [];
 
+			// keys are not unique
 			for (var i = 1; i <= ArrayLen(variables.keys); i++) {
 				if (variables.keys[i] == arguments.key) {
 					ArrayAppend(writeContents, variables.contents[i]);
@@ -78,6 +79,7 @@ component Response accessors="true" {
 					}
 				}
 				break;
+
 			case "json":
 				// if there is 1 element in the content, serialize that
 				// if there are more, serialize the whole array

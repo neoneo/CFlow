@@ -16,9 +16,16 @@
 
 component RenderTask implements="Task" {
 
-	public void function init(required string template, required RequestManager requestManager) {
+	public void function init(required string template, string mapping = "", RequestManager requestManager) {
 
 		variables.template = arguments.template;
+		if (Len(mapping) > 0) {
+			// prepend the given mapping
+			variables.template = mapping & "/" & variables.template;
+		}
+		// use the template without the mapping for the response key
+		variables.key = arguments.template;
+
 		variables.requestManager = arguments.requestManager;
 
 	}
@@ -37,15 +44,15 @@ component RenderTask implements="Task" {
 		var properties = arguments.properties;
 		var response = arguments.response;
 
-		// set the content key, so that any response.append() calls will write to this view
-		response.setContentKey(variables.template);
+		// set the content key, so that response.append() calls without a key argument will write to this view
+		response.setContentKey(variables.key);
 
 		savecontent variable="local.content" {
 			include variables.template & ".cfm";
 		}
 
 		// depending on the content key is not thread safe, so we pass the key explicitly
-		response.append(content, variables.template);
+		response.append(content, variables.key);
 
 	}
 

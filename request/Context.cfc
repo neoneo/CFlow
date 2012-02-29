@@ -202,13 +202,7 @@ component Context accessors="true" {
 	}
 
 	public RenderTask function createRenderTask(required string template) {
-
-		var templateLocation = arguments.template;
-		if (Len(getViewMapping()) > 0) {
-			templateLocation = getViewMapping() & "/" & arguments.template;
-		}
-
-		return new RenderTask(templateLocation, getRequestManager());
+		return new RenderTask(arguments.template, getViewMapping(), getRequestManager());
 	}
 
 	/**
@@ -222,7 +216,7 @@ component Context accessors="true" {
 	 * url		The parameters struct should have a url key that contains the explicit url to redirect to
 	 * event	The parameters struct should have target and event keys, and may have additional keys that are used as url parameters
 	 **/
-	public RedirectTask function createRedirectTask(required any type, required any parameters, boolean permanent = false) {
+	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestManager());
 	}
 

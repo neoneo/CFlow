@@ -5,7 +5,7 @@ component EndWithRule extends="StringRule" {
 		var compareValue = getParameterValue(arguments.data);
 		var value = Right(arguments.data[arguments.fieldName], Len(compareValue));
 
-		return compareValues(value, parameterValue);
+		return compareValues(value, compareValue);
 	}
 
 }

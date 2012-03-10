@@ -172,8 +172,8 @@ component XmlReader {
 		StructAppend(task, arguments.node.xmlAttributes);
 
 		// for invoke and dispatch tasks, there can be child tasks that are to be executed if an event is canceled
-		if (ArrayContains(["invoke", "dispatch"], task.type)) {
-			task["instead"] = getTasksFromChildNodes(arguments.node);
+		if (ArrayContains(["invoke", "dispatch", "evaluate"], task.type)) {
+			task["sub"] = getTasksFromChildNodes(arguments.node);
 		}
 
 		return task;
@@ -320,7 +320,7 @@ component XmlReader {
 				}
 
 				// this check is done for all dispatch tasks:
-				if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".instead[") {
+				if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
 					// event is *always* dispatched to the current target in the before or after phase; this will lead to an infinite loop
 					throw(
 						type = "cflow",
@@ -375,7 +375,7 @@ component XmlReader {
 					}
 
 					// this check is done for all redirect tasks:
-					if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".instead[") {
+					if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
 						// redirect *always* to the current target outside the event phase; this will lead to an infinite loop
 						throw(
 							type = "cflow",
@@ -412,12 +412,15 @@ component XmlReader {
 					}
 					instance = arguments.context.createInvokeTask(arguments.task.controller, arguments.task.method);
 					break;
+
 				case "dispatch":
 					instance = arguments.context.createDispatchTask(arguments.task.target, arguments.task.event);
 					break;
+
 				case "render":
 					instance = arguments.context.createRenderTask(arguments.task.view);
 					break;
+
 				case "redirect":
 					var permanent = false;
 					if (StructKeyExists(arguments.task, "permanent")) {
@@ -444,12 +447,16 @@ component XmlReader {
 
 					instance = arguments.context.createRedirectTask(type, parameters, permanent);
 					break;
+
+				case "evaluate":
+					instance = arguments.context.createEvaluateTask(arguments.task.condition);
+					break;
 			}
 
-			// if there are instead tasks, they will become subtasks of the current task
-			if (StructKeyExists(arguments.task, "instead")) {
-				for (var insteadTask in arguments.task.instead) {
-					instance.addSubtask(createTask(arguments.context, insteadTask));
+			// check for subtasks
+			if (StructKeyExists(arguments.task, "sub")) {
+				for (var subtask in arguments.task.sub) {
+					instance.addSubtask(createTask(arguments.context, subtask));
 				}
 			}
 		}

@@ -43,6 +43,13 @@ component DebugContext extends="Context" {
 		return new RedirectDebugTask(arguments.type, arguments.parameters, arguments.permanent, getRequestManager());
 	}
 
+	public DebugTask function createEvaluateTask(required string condition) {
+
+		var task = super.createEvaluateTask(argumentCollection = arguments);
+
+		return new DebugTask(task, arguments);
+	}
+
 	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
 
 		var properties = JavaCast("null", 0);

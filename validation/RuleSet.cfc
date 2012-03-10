@@ -12,6 +12,10 @@ component RuleSet {
 
 	}
 
+	/**
+	 * Adds the given rule set to the last rule of this rule set.
+	 * The rule set being added is only evaluated when this last rule is passed.
+	 **/
 	public void function addRuleSet(required RuleSet ruleSet) {
 
 		if (ArrayIsEmpty(variables.rules)) {

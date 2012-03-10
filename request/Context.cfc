@@ -220,6 +220,10 @@ component Context accessors="true" {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestManager());
 	}
 
+	public EvaluateTask function createEvaluateTask(required string condition) {
+		return new EvaluateTask(arguments.condition);
+	}
+
 	public PhaseTask function createPhaseTask() {
 		return new PhaseTask();
 	}

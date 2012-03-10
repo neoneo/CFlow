@@ -10,7 +10,7 @@ component IntersectionRule extends="SetRule" {
 
 		var set = toArray(arguments.data[arguments.fieldName]);
 		var size = ArrayLen(set);
-		var compareSet = getParameterValue();
+		var compareSet = getParameterValue(arguments.data);
 
 		var i = 1;
 		while (!result && i <= size) {

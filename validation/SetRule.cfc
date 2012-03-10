@@ -24,9 +24,9 @@ component SetRule implements="Rule" {
 	}
 
 	/**
-	 * Determines wheter a set is a subset of another.
+	 * Determines whether a set is a subset of another.
 	 **/
-	private boolean isSubset(required array set, required array superset) {
+	private boolean function isSubset(required array set, required array superset) {
 
 		var size = ArrayLen(arguments.set);
 
@@ -42,7 +42,7 @@ component SetRule implements="Rule" {
 	/**
 	 * Determines whether the value is an element of the set.
 	 **/
-	private boolean isElement(required string value, required array set) {
+	private boolean function isElement(required string value, required array set) {
 
 		var result = false;
 

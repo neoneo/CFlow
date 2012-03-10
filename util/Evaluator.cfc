@@ -3,7 +3,7 @@ component Evaluator {
 	public void function init(required string expression) {
 
 		// replace all ColdFusion operators by their script counterparts
-		var result = ReplaceList(arguments.expression," eq , lt , lte , gt , gte , neq , not , and , or , mod "," == , < , <= , > , >= , != , ! , && , || , % ");
+		var result = ReplaceList(" " & arguments.expression & " ", " eq , lt , lte , gt , gte , neq , not , and , or , mod "," == , < , <= , > , >= , != ,!, && , || , % ");
 		// add spaces between parentheses so it's easy to discriminate between variables and function names or arguments
 		result = ReplaceList(result, "(,)", "( , )");
 		result = Replace(result, ",", " , ", "all"); // surround commas with spaces too

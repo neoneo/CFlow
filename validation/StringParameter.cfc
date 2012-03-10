@@ -10,7 +10,7 @@ component StringParameter {
 
 		variables.evaluate = arguments.evaluate;
 		if (arguments.evaluate) {
-			variables.expression = new Evaluator(arguments.expression);
+			variables.expression = new cflow.util.Evaluator(arguments.expression);
 		} else {
 			variables.expression = arguments.expression;
 		}

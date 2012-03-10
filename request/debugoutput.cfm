@@ -124,6 +124,7 @@
 									<cfset dispatchTask = true>
 								</cfcase>
 								<cfcase value="RenderTask">Render #metadata.view#</cfcase>
+								<cfcase value="EvaluateTask">Evaluate #metadata.condition#</cfcase>
 							</cfswitch>
 						</cfcase>
 						<cfcase value="cflow.exception">

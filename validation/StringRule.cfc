@@ -29,4 +29,8 @@ component StringRule implements="Rule" {
 		return result;
 	}
 
+	private boolean function getMatchCase() {
+		return variables.matchCase;
+	}
+
 }

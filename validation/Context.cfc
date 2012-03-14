@@ -122,11 +122,11 @@ component Context {
 	}
 
 	public MinimumCountRule function createMinimumCountRule(required string value, boolean evaluate = false) {
-		return new MinimumCountRule(arguments.value, arguments.evaluate, arguments.matchCase);
+		return new MinimumCountRule(arguments.value, arguments.evaluate);
 	}
 
 	public MaximumCountRule function createMaximumCountRule(required string value, boolean evaluate = false) {
-		return new MaximumCountRule(arguments.value, arguments.evaluate, arguments.matchCase);
+		return new MaximumCountRule(arguments.value, arguments.evaluate);
 	}
 
 }

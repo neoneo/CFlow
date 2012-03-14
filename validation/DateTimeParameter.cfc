@@ -40,7 +40,7 @@ component DateTimeParameter {
 			variables.datepart = variables.dateparts[Right(incrementUnit, 1)]; // read the ColdFusion datepart to use in the DateAdd() function
 			variables.increment = Val(sign & incrementUnit);
 		} else {
-			throw(type = "cflow.validation", message = "Expression '#arguments.expression#' is not a valid date/time expression", detail = "If you pass in date strings, use slashes as the datepart separator");
+			Throw(type = "cflow.validation", message = "Expression '#arguments.expression#' is not a valid date/time expression", detail = "If you pass in date strings, use slashes as the datepart separator");
 		}
 
 	}

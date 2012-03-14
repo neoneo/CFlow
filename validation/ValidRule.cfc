@@ -13,11 +13,16 @@ component ValidRule implements="Rule" {
 
 		switch (variables.type) {
 
+			case "numeric":
 			case "integer":
-			case "float":
+				if (IsNumeric(value)) {
+					value = Val(value);
+				} else if (LSIsNumeric(value)) {
+					value = LSParseNumber(value);
+				}
 				result = IsValid(variables.type, value);
 				if (result) {
-					arguments.data[arguments.fieldName] = Val(value);
+					arguments.data[arguments.fieldName] = value;
 				}
 				break;
 
@@ -30,12 +35,18 @@ component ValidRule implements="Rule" {
 				break;
 
 			case "time":
-				value = ListChangeDelims(value, ":", ".");
+				value = ListChangeDelims(value, ":", "."); // also accept . as a delimiter
 			case "date":
 			case "datetime":
-				result = LSIsDate(value);
+				if (IsDate(value)) {
+					result = true;
+					value = ParseDateTime(value);
+				} else if (LSIsDate(value)) {
+					result = true;
+					value = LSParseDateTime(value);
+				}
 				if (result) {
-					arguments.data[arguments.fieldName] = LSParseDateTime(value);
+					arguments.data[arguments.fieldName] = value;
 				}
 				break;
 

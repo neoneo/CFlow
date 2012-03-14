@@ -14,7 +14,9 @@
    limitations under the License.
 */
 
-component XmlReader {
+component XmlReader accessors="true" {
+
+	property name="context" type="Context" getter="false";
 
 	variables.tasks = {}; // lists of tasks per target
 	variables.abstractTargetNames = []; // list of targets that are abstract
@@ -32,7 +34,7 @@ component XmlReader {
 		return variables.tasks;
 	}
 
-	public void function register(required Context context) {
+	public void function register() {
 
 		// set task defaults to tasks where needed:
 
@@ -75,7 +77,7 @@ component XmlReader {
 				if (StructKeyExists(tasks, phase)) {
 					for (var task in tasks[phase]) {
 						// register the task for the current phase under the target name
-						arguments.context.register(createTask(arguments.context, task), phase, name);
+						variables.context.register(createTask(variables.context, task), phase, name);
 					}
 				}
 			}
@@ -86,7 +88,7 @@ component XmlReader {
 				// loop over the tasks for this event and create subtasks
 				for (var task in tasks[type]) {
 					// register the task for the given event
-					arguments.context.register(createTask(arguments.context, task), "event", name, type);
+					variables.context.register(createTask(variables.context, task), "event", name, type);
 				}
 			}
 		}
@@ -100,16 +102,15 @@ component XmlReader {
 	private void function readFile(required string path) {
 
 		var content = FileRead(arguments.path);
-		var xmlDocument = XmlParse(content, false); //, "cflow.xsd");
+		var xmlDocument = XmlParse(content, false);
 
 		// the root element can be targets or target
 		switch (xmlDocument.xmlRoot.xmlName) {
 			case "targets":
 				// get all targets and create task definitions
 				var targets = xmlDocument.xmlRoot.xmlChildren;
-				var count = ArrayLen(targets);
-				for (var i = 1; i <= count; i++) {
-					getTasksFromTargetNode(targets[i]);
+				for (var target in targets) {
+					getTasksFromTargetNode(target);
 				}
 				break;
 
@@ -183,10 +184,9 @@ component XmlReader {
 
 		var tasks = [];
 		var childNodes = arguments.node.xmlChildren;
-		var count = ArrayLen(childNodes);
-		// it looks like Railo doesn't loop over an xml node list like an array with for .. in
-		for (var i = 1; i <= count; i++) {
-			ArrayAppend(tasks, getTaskFromNode(childNodes[i]));
+
+		for (var childNode in childNodes) {
+			ArrayAppend(tasks, getTaskFromNode(childNode));
 		}
 
 		return tasks;
@@ -207,7 +207,7 @@ component XmlReader {
 				for (var include in includes) {
 					// get the tasks that belong to this include
 					if (!StructKeyExists(variables.tasks, include.target)) {
-						throw(type = "cflow", message = "Included target '#include.target#' not found");
+						Throw(type = "cflow.request", message = "Included target '#include.target#' not found");
 					}
 					var includeTarget = variables.tasks[include.target];
 					// if the target has includes, we have to wait until those are resolved
@@ -220,7 +220,7 @@ component XmlReader {
 									// the owner key contains a reference to the original tasks struct, so we can modify it
 									target.owner.events[include.event] = Duplicate(includeTarget.events[include.event]);
 								} else {
-									throw(type = "cflow", message = "Event '#include.event#' not found in included target '#include.target#'");
+									Throw(type = "cflow.request", message = "Event '#include.event#' not found in included target '#include.target#'");
 								}
 							}
 						} else {
@@ -273,7 +273,7 @@ component XmlReader {
 
 			count--;
 			if (count < 0) {
-				throw(type = "cflow", message = "Circular reference detected in includes");
+				Throw(type = "cflow.request", message = "Circular reference detected in includes");
 			}
 
 			targets = StructFindKey(variables.tasks, "includes", "all");
@@ -322,8 +322,8 @@ component XmlReader {
 				// this check is done for all dispatch tasks:
 				if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
 					// event is *always* dispatched to the current target in the before or after phase; this will lead to an infinite loop
-					throw(
-						type = "cflow",
+					Throw(
+						type = "cflow.request",
 						message = "Dispatching event '#task.owner.event#' to the current target '#name#' will cause an infinite loop",
 						detail = "Do not define dispatch tasks without a target in the before or after phases, unless the task is run conditionally"
 					);
@@ -377,8 +377,8 @@ component XmlReader {
 					// this check is done for all redirect tasks:
 					if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
 						// redirect *always* to the current target outside the event phase; this will lead to an infinite loop
-						throw(
-							type = "cflow",
+						Throw(
+							type = "cflow.request",
 							message = "Redirecting to event '#task.owner.event#' on the current target '#name#' will cause an infinite loop",
 							detail = "Do not define redirect tasks without a target outside the event phase, unless the task is run conditionally"
 						);
@@ -408,7 +408,7 @@ component XmlReader {
 			switch (arguments.task.type) {
 				case "invoke":
 					if (!StructKeyExists(arguments.task, "controller")) {
-						throw(type = "cflow", message = "No controller associated with invoke task for method '#arguments.task.method#'");
+						Throw(type = "cflow.request", message = "No controller associated with invoke task for method '#arguments.task.method#'");
 					}
 					instance = arguments.context.createInvokeTask(arguments.task.controller, arguments.task.method);
 					break;

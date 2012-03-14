@@ -2,12 +2,16 @@ component RuleSet {
 
 	variables.rules = [];
 
-	public void function addRule(required Rule rule, required string message, boolean silent = false) {
+	/**
+	 * Adds a Rule to the RuleSet.
+	 **/
+	public void function addRule(required Rule rule, required string message, boolean silent = false, string mask = "") {
 
 		ArrayAppend(variables.rules, {
 			instance = arguments.rule,
 			message = arguments.message,
-			silent = arguments.silent
+			silent = arguments.silent,
+			mask = arguments.mask
 		});
 
 	}
@@ -19,24 +23,24 @@ component RuleSet {
 	public void function addRuleSet(required RuleSet ruleSet) {
 
 		if (ArrayIsEmpty(variables.rules)) {
-			throw(type = "cflow.validation", message = "At least one rule must exist before a ruleset can be added");
+			Throw(type = "cflow.validation", message = "At least one rule must exist before a ruleset can be added");
 		}
 		// put the rule set on the last array item
 		variables.rules[ArrayLen(variables.rules)].set = arguments.ruleSet;
 
 	}
 
-	public array function validate(required struct data) {
+	public array function validate(required struct data, required string fieldName) {
 
 		var messages = []; // collection of error messages
 
 		for (var rule in variables.rules) {
-			var result = rule.instance.test(arguments.data);
+			var result = rule.instance.test(arguments.data, arguments.fieldName);
 			if (result) {
 				// the rule is passed; if there is a rule set, validate its rules
 				if (StructKeyExists(rule, "set")) {
 					// concatenate any resulting messages on the current messages array
-					var setMessages = rule.set.validate(arguments.data);
+					var setMessages = rule.set.validate(arguments.data, arguments.fieldName);
 					for (var message in setMessages) {
 						ArrayAppend(messages, message);
 					}
@@ -44,10 +48,13 @@ component RuleSet {
 			} else {
 				// not passed
 				if (!rule.silent) {
-					ArrayAppend(messages, rule.message);
+					var message = rule.message;
+					if (message contains "%value%") {
+						message = Replace(message, "%value%", rule.instance.formatParameterValue(arguments.data, rule.mask));
+					}
+					ArrayAppend(messages, message);
 				}
 			}
-
 		}
 
 		return messages;

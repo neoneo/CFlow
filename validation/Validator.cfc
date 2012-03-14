@@ -3,17 +3,25 @@ component Validator {
 	variables.ruleSets = {};
 	variables.names = [];
 
-	public void function addRuleSet(required RuleSet ruleSet, required string name, array mustPass = []) {
+	public void function addRuleSet(required RuleSet ruleSet, required string name, string fieldName = "", array mustPass = []) {
+
+		var fieldName = arguments.fieldName;
+		if (Len(fieldName) == 0) {
+			fieldName = arguments.name;
+		}
+
 		variables.ruleSets[arguments.name] = {
 			instance = arguments.ruleSet,
+			field = fieldName,
 			mustPass = arguments.mustPass
 		};
 		ArrayAppend(variables.names, arguments.name);
+
 	}
 
-	public struct function validate(required struct data) {
+	public Result function validate(required struct data) {
 
-		var messages = {};
+		var result = new Result();
 
 		for (var name in variables.names) {
 			var info = variables.ruleSets[name];
@@ -34,11 +42,12 @@ component Validator {
 			}
 
 			if (perform) {
-				messages[name] = info.instance.validate(arguments.data);
+				var messages = info.instance.validate(arguments.data, info.field);
+				result.addMessages(info.field, messages);
 			}
 		}
 
-		return messages;
+		return result;
 	}
 
 }

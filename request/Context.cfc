@@ -105,7 +105,7 @@ component Context accessors="true" {
 
 			case "event":
 				if (!StructKeyExists(arguments, "eventType")) {
-					throw(type = "cflow", message = "Event type is required when registering tasks for the event phase");
+					Throw(type = "cflow.request", message = "Event type is required when registering tasks for the event phase");
 				}
 				if (!StructKeyExists(variables.tasks.event, arguments.targetName)) {
 					variables.tasks.event[arguments.targetName] = {};
@@ -117,7 +117,7 @@ component Context accessors="true" {
 				break;
 
 			default:
-				throw(type = "cflow", message = "Unknown phase '#arguments.phase#'");
+				Throw(type = "cflow.request", message = "Unknown phase '#arguments.phase#'");
 				break;
 		}
 

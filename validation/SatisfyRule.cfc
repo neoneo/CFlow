@@ -6,7 +6,7 @@ component SatisfyRule implements="Rule" {
 
 	}
 
-	public boolean function test(required struct data) {
+	public boolean function test(required struct data, required string fieldName) {
 		return variables.evaluator.execute(arguments.data);
 	}
 

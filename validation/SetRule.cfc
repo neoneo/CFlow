@@ -12,7 +12,11 @@ component SetRule implements="Rule" {
 	}
 
 	public boolean function test(required struct data, required string fieldName) {
-		throw(type = "cflow.notimplemented", message = "Not implemented");
+		Throw(type = "cflow.notimplemented", message = "Not implemented");
+	}
+
+	public string function formatParameterValue(required struct data, string mask = "") {
+		return ArrayToList(getParameterValue(arguments.data), ", ");
 	}
 
 	private array function getParameterValue(required struct data) {

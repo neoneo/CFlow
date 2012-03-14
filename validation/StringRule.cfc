@@ -9,7 +9,11 @@ component StringRule implements="Rule" {
 	}
 
 	public boolean function test(required struct data, required string fieldName) {
-		throw(type = "cflow.notimplemented", message = "Not implemented");
+		Throw(type = "cflow.notimplemented", message = "Not implemented");
+	}
+
+	public string function formatParameterValue(required struct data, required string mask) {
+		return getParameterValue(arguments.data);
 	}
 
 	private string function getParameterValue(required struct data) {

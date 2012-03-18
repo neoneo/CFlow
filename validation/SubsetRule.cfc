@@ -3,8 +3,8 @@
  **/
 component SubsetRule extends="SetRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
-		return isSubset(toArray(arguments.data[arguments.fieldName]), getParameterValue(arguments.data));
+	public boolean function test(required struct data) {
+		return isSubset(toArray(getValue(arguments.data)), getParameterValue(arguments.data));
 	}
 
 }

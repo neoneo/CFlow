@@ -31,10 +31,7 @@ component Validator {
 				// rule sets in the mustPass array must have been passed (and therefore tested)
 				perform = true;
 				for (var name in info.mustPass) {
-					// the name must occur in the messages struct, and must be an empty array
-					// if the name is not in the messages struct, the rule set has not been tested
-					// if the name is there, but the array is not empty, the rule set has failed tests
-					if (!StructKeyExists(messages, name) || !ArrayIsEmpty(messages[name])) {
+					if (!result.isPassed(name)) {
 						perform = false;
 						break;
 					}

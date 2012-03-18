@@ -32,46 +32,48 @@ component XmlReader accessors="true" {
 
 		var ruleSetNodes = arguments.node.xmlChildren; // ruleset nodes
 		for (var ruleSetNode in ruleSetNodes) {
-			var ruleSet = variables.context.createRuleSet();
-			createRulesFromChildNodes(ruleSetNode, ruleSet);
-
 			var ruleSetName = ruleSetNode.xmlAttributes.name;
-			var fieldName = ruleSetName; // if no field attribute is present, we take the rule set name for the field name
+			var fieldName = ruleSetName; // if no field attribute is present, we use the rule set name for the field name
 			if (StructKeyExists(ruleSetNode.xmlAttributes, "field")) {
 				fieldName = ruleSetNode.xmlAttributes.field;
 			}
-			var mustPass = [];
+			var mustPass = []; // array of rule set names to pass before this rule set is processed
 			if (StructKeyExists(ruleSetNode.xmlAttributes, "mustpass")) {
 				mustPass = ListToArray(ruleSetNode.xmlAttributes.mustpass);
 			}
+
+			var ruleSet = variables.context.createRuleSet();
+			createRulesFromChildNodes(ruleSetNode, ruleSet, fieldName);
 
 			validator.addRuleSet(ruleSet, ruleSetName, fieldName, mustPass);
 		}
 
 	}
 
-	private void function createRulesFromChildNodes(required xml node, required RuleSet ruleSet, datatype = "string") {
+	private void function createRulesFromChildNodes(required xml node, required RuleSet ruleSet, required string fieldName, datatype = "string") {
 
 		// if we encounter a valid rule, we change the datatype so we can create rules specific to the datatype
-		// this mechanism is based on the assumption that there will be only one valid rule
 		var datatype = arguments.datatype;
 
 		var ruleNodes = arguments.node.xmlChildren;
 		for (var ruleNode in ruleNodes) {
-			var silent = StructKeyExists(ruleNode.xmlAttributes, "silent") && ruleNode.xmlAttributes.silent;
+			var xmlAttributes = ruleNode.xmlAttributes;
+
 			var message = "";
-			if (StructKeyExists(ruleNode.xmlAttributes, "message")) {
-				message = ruleNode.xmlAttributes.message;
+			if (StructKeyExists(xmlAttributes, "message")) {
+				message = xmlAttributes.message;
+				silent = false;
 			}
 			var mask = "";
-			if (StructKeyExists(ruleNode.xmlAttributes, "mask")) {
-				mask = ruleNode.xmlAttributes.mask;
+			if (StructKeyExists(xmlAttributes, "mask")) {
+				mask = xmlAttributes.mask;
 			}
 
-			var rule = createRuleFromNode(ruleNode, datatype);
+			var rule = createRuleFromNode(ruleNode, arguments.fieldName, datatype);
+
 			// check if this is a valid rule; if so, remember the datatype for further rules
-			if (IsInstanceOf(rule, "ValidRule")) {
-				switch (ruleNode.xmlAttributes.type) {
+			if (ruleNode.xmlName == "valid") {
+				switch (xmlAttributes.type) {
 
 					case "integer":
 					case "numeric":
@@ -91,19 +93,29 @@ component XmlReader accessors="true" {
 				}
 			}
 
-			arguments.ruleSet.addRule(rule, message, silent, mask);
+			arguments.ruleSet.addRule(rule, message, mask);
 			if (!ArrayIsEmpty(ruleNode.xmlChildren)) {
 				// this rule has child rules, to be tested when the rule passes
-				var ruleSet = variables.context.createRuleSet();
-				createRulesFromChildNodes(ruleNode, ruleSet, datatype);
-				// by adding the rule set immediately after the rule, the containg rule set knows that the rule set contains child rules
+				// create a RuleSet or an ApplyRuleSet
+				// an ApplySet is a RuleSet that tests its rules against all elements in a given set, as opposed to only a single value
+				var ruleSet = JavaCast("null", 0);
+				if (ruleNode.xmlName == "apply" || IsInstanceOf(arguments.ruleSet, "ApplyRuleSet")) {
+					ruleSet = variables.context.createApplyRuleSet();
+					// the ApplyRuleSet needs the field name to access the set to test against
+					ruleSet.setField(arguments.fieldName);
+				} else {
+					ruleSet = variables.context.createRuleSet();
+				}
+
+				createRulesFromChildNodes(ruleNode, ruleSet, arguments.fieldName, datatype);
+				// by adding the rule set immediately after the rule, the containg rule set knows that the rule contains child rules
 				arguments.ruleSet.addRuleSet(ruleSet);
 			}
 		}
 
 	}
 
-	private Rule function createRuleFromNode(required xml node, datatype = "string") {
+	private Rule function createRuleFromNode(required xml node, required string fieldName, datatype = "string") {
 
 		var ruleType = arguments.node.xmlName;
 		// check if it is a negation; in this case the node name starts with "not-"
@@ -115,12 +127,14 @@ component XmlReader accessors="true" {
 
 		var xmlAttributes = arguments.node.xmlAttributes;
 		var eval = StructKeyExists(xmlAttributes, "evaluate") && xmlAttributes.evaluate;
-		var matchCase = StructKeyExists(xmlAttributes, "matchcase") && xmlAttributes.matchcase;
+		var caseSensitive = StructKeyExists(xmlAttributes, "caseSensitive") && xmlAttributes.caseSensitive;
 
 		var rule = JavaCast("null", 0);
 
 		switch (ruleType) {
 			case "exist":
+			case "apply":
+				// ApplyRuleSet is a RuleSet, so we return a simple rule after which we can add the ApplyRuleSet
 				rule = variables.context.createExistRule();
 				break;
 
@@ -137,15 +151,15 @@ component XmlReader accessors="true" {
 				break;
 
 			case "contain":
-				rule = variables.context.createContainRule(xmlAttributes.value, eval, matchCase);
+				rule = variables.context.createContainRule(xmlAttributes.value, eval, caseSensitive);
 				break;
 
 			case "endwidth":
-				rule = variables.context.createEndWithRule(xmlAttributes.value, eval, matchCase);
+				rule = variables.context.createEndWithRule(xmlAttributes.value, eval, caseSensitive);
 				break;
 
 			case "startwith":
-				rule = variables.context.createStartWithRule(xmlAttributes.value, eval, matchCase);
+				rule = variables.context.createStartWithRule(xmlAttributes.value, eval, caseSensitive);
 				break;
 
 			case "match":
@@ -153,19 +167,23 @@ component XmlReader accessors="true" {
 				break;
 
 			case "element":
-				rule = variables.context.createElementRule(xmlAttributes.set, eval, matchCase);
+				rule = variables.context.createElementRule(xmlAttributes.set, eval, caseSensitive);
 				break;
 
 			case "intersection":
-				rule = variables.context.createIntersectionRule(xmlAttributes.set, eval, matchCase);
+				rule = variables.context.createIntersectionRule(xmlAttributes.set, eval, caseSensitive);
 				break;
 
 			case "subset":
-				rule = variables.context.createSubsetRule(xmlAttributes.set, eval, matchCase);
+				rule = variables.context.createSubsetRule(xmlAttributes.set, eval, caseSensitive);
 				break;
 
 			case "superset":
-				rule = variables.context.createSupersetRule(xmlAttributes.set, eval, matchCase);
+				rule = variables.context.createSupersetRule(xmlAttributes.set, eval, caseSensitive);
+				break;
+
+			case "distinct":
+				rule = variables.context.createDistinctRule(caseSensitive);
 				break;
 
 			case "equal":
@@ -173,7 +191,7 @@ component XmlReader accessors="true" {
 					// create a rule depending on the datatype
 					switch (arguments.datatype) {
 						case "string":
-							rule = variables.context.createEqualStringRule(xmlAttributes.value, eval, matchCase);
+							rule = variables.context.createEqualStringRule(xmlAttributes.value, eval, caseSensitive);
 							break;
 
 						case "numeric":
@@ -185,7 +203,7 @@ component XmlReader accessors="true" {
 							break;
 					}
 				} else if (StructKeyExists(xmlAttributes, "set")) {
-					rule = variables.context.createEqualSetRule(xmlAttributes.set, eval, matchCase);
+					rule = variables.context.createEqualSetRule(xmlAttributes.set, eval, caseSensitive);
 				}
 				break;
 
@@ -234,7 +252,7 @@ component XmlReader accessors="true" {
 				var argumentCollection = {};
 				// workaround for Railo bug 1798, can't use StructCopy to copy xml structs
 				for (var attribute in xmlAttributes) {
-					if (!ArrayContains(["message", "silent", "component"], attribute)) {
+					if (!ArrayContains(["message", "silent", "component", "field", "usevalue"], attribute)) {
 						argumentCollection[attribute] = xmlAttributes[attribute];
 					}
 				}
@@ -247,8 +265,24 @@ component XmlReader accessors="true" {
 			Throw(type = "cflow.validation", message = "Invalid rule '#arguments.node.xmlName#'");
 		}
 
-		if (negation) {
-			rule = variables.context.createNegateRule(rule);
+		// tell the rule how to obtain the value to test
+		// by default it is the field name of the rule set, passed in as the fieldName argument
+		// a field or usevalue attribute on the rule node overrides this, field takes precedence
+		if (StructKeyExists(xmlAttributes, "field")) {
+			// field contains the field name to get the value from
+			rule.setField(xmlAttributes.field);
+		} else if (StructKeyExists(xmlAttributes, "usevalue")) {
+			// usevalue contains an explicit value to use
+			rule.setValue(xmlAttributes.usevalue);
+		} else {
+			// default: use the fieldName passed in
+			rule.setField(arguments.fieldName);
+		}
+
+		if (ruleType != "apply") {
+			if (negation) {
+				rule = variables.context.createNegateRule(rule);
+			}
 		}
 
 		return rule;

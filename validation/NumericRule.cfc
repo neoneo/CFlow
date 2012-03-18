@@ -1,14 +1,8 @@
-component NumericRule implements="Rule" {
+component NumericRule extends="Rule" {
 
 	public void function init(required string value, boolean evaluate = false) {
-
 		variables.parameter = new NumericParameter();
 		variables.parameter.setValue(arguments.value, arguments.evaluate);
-
-	}
-
-	public boolean function test(required struct data, required string fieldName) {
-		Throw(type = "cflow.notimplemented", message = "Not implemented");
 	}
 
 	public string function formatParameterValue(required struct data, required string mask) {

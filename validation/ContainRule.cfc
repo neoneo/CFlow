@@ -1,12 +1,12 @@
 component ContainRule extends="StringRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
+	public boolean function test(required struct data) {
 
-		var value = arguments.data[arguments.fieldName];
+		var value = getValue(arguments.data);
 		var compareValue = getParameterValue(arguments.data);
 		var result = false;
 
-		if (getMatchCase()) {
+		if (getCaseSensitive()) {
 			result = Find(compareValue, value) > 0;
 		} else {
 			result = value contains compareValue;

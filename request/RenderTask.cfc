@@ -16,7 +16,7 @@
 
 component RenderTask implements="Task" {
 
-	public void function init(required string view, string mapping = "", RequestManager requestManager) {
+	public void function init(required string view, string mapping = "", RequestStrategy requestStrategy) {
 
 		variables.view = arguments.view;
 		if (Len(mapping) > 0) {
@@ -26,7 +26,7 @@ component RenderTask implements="Task" {
 		// use the view without the mapping for the response key
 		variables.key = arguments.view;
 
-		variables.requestManager = arguments.requestManager;
+		variables.requestStrategy = arguments.requestStrategy;
 
 	}
 
@@ -61,7 +61,7 @@ component RenderTask implements="Task" {
 	 * This method is available in views.
 	 **/
 	private string function writeUrl(required string target, required string event, struct parameters) {
-		return variables.requestManager.writeUrl(argumentCollection = arguments);
+		return variables.requestStrategy.writeUrl(argumentCollection = arguments);
 	}
 
 }

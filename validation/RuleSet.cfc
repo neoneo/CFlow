@@ -5,12 +5,12 @@ component RuleSet {
 	/**
 	 * Adds a Rule to the RuleSet.
 	 **/
-	public void function addRule(required Rule rule, required string message, boolean silent = false, string mask = "") {
+	public void function addRule(required Rule rule, string message = "", string mask = "") {
 
 		ArrayAppend(variables.rules, {
 			instance = arguments.rule,
 			message = arguments.message,
-			silent = arguments.silent,
+			silent = Len(arguments.message) == 0,
 			mask = arguments.mask
 		});
 
@@ -30,17 +30,17 @@ component RuleSet {
 
 	}
 
-	public array function validate(required struct data, required string fieldName) {
+	public array function validate(required struct data) {
 
 		var messages = []; // collection of error messages
 
 		for (var rule in variables.rules) {
-			var result = rule.instance.test(arguments.data, arguments.fieldName);
+			var result = testRule(rule.instance, arguments.data);
 			if (result) {
 				// the rule is passed; if there is a rule set, validate its rules
 				if (StructKeyExists(rule, "set")) {
 					// concatenate any resulting messages on the current messages array
-					var setMessages = rule.set.validate(arguments.data, arguments.fieldName);
+					var setMessages = rule.set.validate(arguments.data);
 					for (var message in setMessages) {
 						ArrayAppend(messages, message);
 					}
@@ -58,6 +58,10 @@ component RuleSet {
 		}
 
 		return messages;
+	}
+
+	private boolean function testRule(required Rule rule, required struct data) {
+		 return rule.test(arguments.data);
 	}
 
 }

@@ -1,49 +1,46 @@
 component Result {
 
-	variables.messages = {};
+	variables.messages = collection(); // we use an argument collection, because it keeps the order of the keys that are added
+	variables.passed = true;
 
-	public void function addMessages(required string fieldName, required array messages) {
+	public void function addMessages(required string name, required array messages) {
 
+		variables.messages[arguments.name] = arguments.messages;
 		if (!ArrayIsEmpty(arguments.messages)) {
-			// there can be multiple calls using the same field name
-			if (!StructKeyExists(variables.messages, arguments.fieldName)) {
-				variables.messages[arguments.fieldName] = arguments.messages;
-			} else {
-				// append the messages on the existing array
-				for (var message in arguments.messages) {
-					ArrayAppend(variables.messages[arguments.fieldName], message);
-				}
-			}
+			variables.passed = false;
 		}
 
 	}
 
-	public boolean function isPassed(string fieldName) {
+	public boolean function isPassed(string name) {
 
-		var passed = true;
-		if (!StructKeyExists(arguments, "fieldName")) {
-			passed = StructIsEmpty(variables.messages);
-		} else {
-			passed = StructKeyExists(variables.messages, arguments.fieldName);
+		var passed = variables.passed;
+		if (StructKeyExists(arguments, "name")) {
+			// the rules must have been tested (so the struct key exists), and must have resulted in 0 messages
+			passed = StructKeyExists(variables.messages, arguments.name) && ArrayIsEmpty(variables.messages[arguments.name]);
 		}
 
 		return passed;
 	}
 
-	public array function getFieldNames() {
+	public array function getNames() {
 		return StructKeyArray(variables.messages);
 	}
 
-	public array function getMessages(required string fieldName) {
+	public array function getMessages(required string name) {
 
 		var messages = JavaCast("null", 0);
-		if (StructKeyExists(variables.messages, arguments.fieldName)) {
-			messages = variables.messages[arguments.fieldName];
+		if (StructKeyExists(variables.messages, arguments.name)) {
+			messages = variables.messages[arguments.name];
 		} else {
 			messages = [];
 		}
 
 		return messages;
+	}
+
+	private array function collection() {
+		return arguments;
 	}
 
 }

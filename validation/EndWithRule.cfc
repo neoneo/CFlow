@@ -1,9 +1,9 @@
 component EndWithRule extends="StringRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
+	public boolean function test(required struct data) {
 
 		var compareValue = getParameterValue(arguments.data);
-		var value = Right(arguments.data[arguments.fieldName], Len(compareValue));
+		var value = Right(getValue(arguments.data), Len(compareValue));
 
 		return compareValues(value, compareValue);
 	}

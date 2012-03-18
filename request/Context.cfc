@@ -19,7 +19,7 @@ component Context accessors="true" {
 	property name="implicitTasks" type="boolean" default="false";
 	property name="controllerMapping" type="string" default="";
 	property name="viewMapping" type="string" default="";
-	property name="requestManager" type="RequestManager";
+	property name="requestStrategy" type="RequestStrategy";
 
 	variables.controllers = {}; // controllers are static, so we need only one instance of each
 	variables.tasks = {
@@ -33,18 +33,10 @@ component Context accessors="true" {
 	// just create an instance of the default request manager
 	// if it is not needed, it will be garbage collected
 	// assuming this will only occur once in the life of the application, it's not a big cost
-	variables.requestManager = new DefaultRequestManager(this);
-
-	public void function setDefaultTarget(required string targetName) {
-		getRequestManager().setDefaultTarget(arguments.targetName);
-	}
-
-	public void function setDefaultEvent(required string eventType) {
-		getRequestManager().setDefaultEvent(arguments.eventType);
-	}
+	variables.requestStrategy = new DefaultRequestStrategy(this);
 
 	public Response function handleRequest() {
-		return getRequestManager().handleRequest();
+		return getRequestStrategy().handleRequest();
 	}
 
 	/**
@@ -202,7 +194,7 @@ component Context accessors="true" {
 	}
 
 	public RenderTask function createRenderTask(required string view) {
-		return new RenderTask(arguments.view, getViewMapping(), getRequestManager());
+		return new RenderTask(arguments.view, getViewMapping(), getRequestStrategy());
 	}
 
 	/**
@@ -217,7 +209,7 @@ component Context accessors="true" {
 	 * event	The parameters struct should have target and event keys, and may have additional keys that are used as url parameters
 	 **/
 	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
-		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestManager());
+		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
 	public EvaluateTask function createEvaluateTask(required string condition) {

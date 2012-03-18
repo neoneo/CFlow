@@ -40,7 +40,7 @@ component DebugContext extends="Context" {
 	}
 
 	public RedirectDebugTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
-		return new RedirectDebugTask(arguments.type, arguments.parameters, arguments.permanent, getRequestManager());
+		return new RedirectDebugTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
 	public DebugTask function createEvaluateTask(required string condition) {

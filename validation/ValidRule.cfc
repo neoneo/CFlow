@@ -1,15 +1,17 @@
-component ValidRule implements="Rule" {
+component ValidRule extends="Rule" {
 
 	public void function init(required string type) {
-
 		variables.type = arguments.type;
-
 	}
 
-	public boolean function test(required struct data, required string fieldName) {
+	public void function setField(required string fieldName) {
+		variables.fieldName = arguments.fieldName;
+	}
+
+	public boolean function test(required struct data) {
 
 		var result = false;
-		var value = arguments.data[arguments.fieldName];
+		var value = arguments.data[variables.fieldName];
 
 		switch (variables.type) {
 
@@ -22,7 +24,7 @@ component ValidRule implements="Rule" {
 				}
 				result = IsValid(variables.type, value);
 				if (result) {
-					arguments.data[arguments.fieldName] = value;
+					arguments.data[variables.fieldName] = value;
 				}
 				break;
 
@@ -46,7 +48,7 @@ component ValidRule implements="Rule" {
 					value = LSParseDateTime(value);
 				}
 				if (result) {
-					arguments.data[arguments.fieldName] = value;
+					arguments.data[variables.fieldName] = value;
 				}
 				break;
 
@@ -56,10 +58,6 @@ component ValidRule implements="Rule" {
 
 			case "color":
 				result = IsValid("regex", value,"^([0-9A-Fa-f]){6}$");
-				break;
-
-			default:
-				result = IsInstanceOf(value, getParameter());
 				break;
 
 		}

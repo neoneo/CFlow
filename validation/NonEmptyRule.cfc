@@ -1,7 +1,11 @@
-component NonEmptyRule implements="Rule" {
+component NonEmptyRule extends="Rule" {
 
-	public boolean function test(required struct data, required string fieldName) {
-		return Len(arguments.data[arguments.fieldName]) > 0;
+	public void function setField(required string fieldName) {
+		variables.fieldName = arguments.fieldName;
+	}
+
+	public boolean function test(required struct data) {
+		return Len(arguments.data[variables.fieldName]) > 0;
 	}
 
 }

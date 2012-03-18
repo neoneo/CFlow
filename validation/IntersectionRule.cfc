@@ -4,11 +4,11 @@
  **/
 component IntersectionRule extends="SetRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
+	public boolean function test(required struct data) {
 
 		var result = false;
 
-		var set = toArray(arguments.data[arguments.fieldName]);
+		var set = toArray(getValue(arguments.data));
 		var size = ArrayLen(set);
 		var compareSet = getParameterValue(arguments.data);
 

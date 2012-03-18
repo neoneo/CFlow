@@ -1,10 +1,10 @@
 component EqualSetRule extends="SetRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
+	public boolean function test(required struct data) {
 
 		var result = false;
 
-		var set = toArray(arguments.data[arguments.fieldName]);
+		var set = toArray(getValue(arguments.data));
 		var compareSet = getParameterValue(arguments.data);
 
 		// we only reckon with sets that have unique values, so the number of elements of both sets is the same

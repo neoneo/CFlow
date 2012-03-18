@@ -1,8 +1,8 @@
 component EqualDateTimeRule extends="DateTimeRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
+	public boolean function test(required struct data) {
 
-		var value = arguments.data[arguments.fieldName];
+		var value = getValue(arguments.data);
 		var compareValue = getParameterValue(arguments.data);
 
 		return DateCompare(value, compareValue) == 0;

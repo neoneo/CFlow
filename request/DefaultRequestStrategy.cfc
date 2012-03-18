@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component DefaultRequestManager implements="RequestManager" accessors="true" {
+component DefaultRequestStrategy implements="RequestStrategy" accessors="true" {
 
 	property name="defaultTarget" type="string" default="";
 	property name="defaultEvent" type="string" default="";

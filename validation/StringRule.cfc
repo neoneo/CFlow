@@ -1,15 +1,11 @@
-component StringRule implements="Rule" {
+component StringRule extends="Rule" {
 
-	public void function init(required string value, boolean evaluate = false, boolean matchCase = false) {
+	public void function init(required string value, boolean evaluate = false, boolean caseSensitive = false) {
 
 		variables.parameter = new StringParameter();
 		variables.parameter.setValue(arguments.value, arguments.evaluate);
-		variables.matchCase = arguments.matchCase;
+		variables.caseSensitive = arguments.caseSensitive;
 
-	}
-
-	public boolean function test(required struct data, required string fieldName) {
-		Throw(type = "cflow.notimplemented", message = "Not implemented");
 	}
 
 	public string function formatParameterValue(required struct data, required string mask) {
@@ -24,7 +20,7 @@ component StringRule implements="Rule" {
 
 		var result = false;
 
-		if (variables.matchCase) {
+		if (variables.caseSensitive) {
 			result = Compare(arguments.value1, arguments.value2) == 0;
 		} else {
 			result = CompareNoCase(arguments.value1, arguments.value2) == 0;
@@ -33,8 +29,8 @@ component StringRule implements="Rule" {
 		return result;
 	}
 
-	private boolean function getMatchCase() {
-		return variables.matchCase;
+	private boolean function getCaseSensitive() {
+		return variables.caseSensitive;
 	}
 
 }

@@ -19,6 +19,10 @@ component Context {
 		return new RuleSet();
 	}
 
+	public ApplyRuleSet function createApplyRuleSet() {
+		return new ApplyRuleSet();
+	}
+
 	// GENERAL RULES ------------------------------------------------------------------------------
 
 	public ExistRule function createExistRule() {
@@ -43,20 +47,20 @@ component Context {
 
 	// STRING RULES -------------------------------------------------------------------------------
 
-	public EqualStringRule function createEqualStringRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new EqualStringRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public EqualStringRule function createEqualStringRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new EqualStringRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
-	public ContainRule function createContainRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new ContainRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public ContainRule function createContainRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new ContainRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
-	public EndWithRule function createEndWithRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new EndWithRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public EndWithRule function createEndWithRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new EndWithRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
-	public StartWithRule function createStartWithRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new StartWithRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public StartWithRule function createStartWithRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new StartWithRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
 	public MatchRule function createMatchRule(required string pattern) {
@@ -101,24 +105,28 @@ component Context {
 
 	// SET RULES ----------------------------------------------------------------------------------
 
-	public ElementRule function createElementRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new ElementRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public ElementRule function createElementRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new ElementRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
-	public EqualSetRule function createEqualSetRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new EqualSetRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public EqualSetRule function createEqualSetRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new EqualSetRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
-	public IntersectionRule function createIntersectionRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new IntersectionRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public IntersectionRule function createIntersectionRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new IntersectionRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
-	public SubsetRule function createSubsetRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new SubsetRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public SubsetRule function createSubsetRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new SubsetRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
 	}
 
-	public SupersetRule function createSupersetRule(required string value, boolean evaluate = false, boolean matchCase = false) {
-		return new SupersetRule(arguments.value, arguments.evaluate, arguments.matchCase);
+	public SupersetRule function createSupersetRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+		return new SupersetRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	}
+
+	public ValidSetRule function createValidSetRule(required string type) {
+		return new ValidSetRule(arguments.type);
 	}
 
 	public MinimumCountRule function createMinimumCountRule(required string value, boolean evaluate = false) {
@@ -127,6 +135,10 @@ component Context {
 
 	public MaximumCountRule function createMaximumCountRule(required string value, boolean evaluate = false) {
 		return new MaximumCountRule(arguments.value, arguments.evaluate);
+	}
+
+	public DistinctRule function createDistinctRule(boolean caseSensitive = false) {
+		return new DistinctRule(arguments.caseSensitive);
 	}
 
 }

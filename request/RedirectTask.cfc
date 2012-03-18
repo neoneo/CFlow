@@ -16,7 +16,7 @@
 
 component RedirectTask implements="Task" {
 
-	public void function init(required string type, required struct parameters = {}, boolean permanent = false, RequestManager requestManager) {
+	public void function init(required string type, required struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
 
 		switch (arguments.type) {
 			case "url":
@@ -31,7 +31,7 @@ component RedirectTask implements="Task" {
 				variables.generate = true; // do we have to generate the url at runtime?
 
 				// the request manager should be present, as well as some keys in the parameters struct
-				variables.requestManager = arguments.requestManager;
+				variables.requestStrategy = arguments.requestStrategy;
 				variables.target = arguments.parameters.target;
 				variables.event = arguments.parameters.event;
 				// any other keys in the parameters struct are (fixed) url parameters
@@ -64,7 +64,7 @@ component RedirectTask implements="Task" {
 				} else {
 					// no runtime parameters
 					// the url is always the same, so we can generate it now
-					variables.urlString = arguments.requestManager.writeUrl(arguments.parameters.target, arguments.parameters.event, variables.parameters);
+					variables.urlString = arguments.requestStrategy.writeUrl(arguments.parameters.target, arguments.parameters.event, variables.parameters);
 					variables.generate = false;
 				}
 				break;
@@ -97,7 +97,7 @@ component RedirectTask implements="Task" {
 					parameters[parameter.name] = arguments.event[parameter.value];
 				}
 			}
-			urlString = variables.requestManager.writeUrl(variables.target, variables.event, parameters);
+			urlString = variables.requestStrategy.writeUrl(variables.target, variables.event, parameters);
 		}
 
 		return urlString;

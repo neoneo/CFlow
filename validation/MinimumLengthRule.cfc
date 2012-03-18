@@ -1,7 +1,7 @@
 component MinimumLengthRule extends="NumericRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
-		return Len(arguments.data[arguments.fieldName]) >= getParameterValue(arguments.data);
+	public boolean function test(required struct data) {
+		return Len(getValue(arguments.data)) >= getParameterValue(arguments.data);
 	}
 
 }

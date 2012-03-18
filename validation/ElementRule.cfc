@@ -3,8 +3,8 @@
  **/
 component ElementRule extends="SetRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
-		return isElement(arguments.data[arguments.fieldName], getParameterValue(arguments.data));
+	public boolean function test(required struct data) {
+		return isElement(getValue(arguments.data), getParameterValue(arguments.data));
 	}
 
 }

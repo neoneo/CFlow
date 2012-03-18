@@ -1,8 +1,8 @@
 component EqualNumericRule extends="NumericRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
+	public boolean function test(required struct data) {
 
-		var value = arguments.data[arguments.fieldName];
+		var value = getValue(arguments.data);
 		var compareValue = getParameterValue(arguments.data);
 
 		return value == compareValue;

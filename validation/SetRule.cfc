@@ -1,18 +1,14 @@
 /**
  * Abstract implementation for rules that act on sets (arrays).
  **/
-component SetRule implements="Rule" {
+component SetRule extends="Rule" {
 
-	public void function init(required string value, boolean evaluate = false, boolean matchCase = false) {
+	public void function init(required string value, boolean evaluate = false, boolean caseSensitive = false) {
 
 		variables.parameter = new SetParameter();
 		variables.parameter.setValue(arguments.value, arguments.evaluate);
-		variables.matchCase = arguments.matchCase;
+		variables.caseSensitive = arguments.caseSensitive;
 
-	}
-
-	public boolean function test(required struct data, required string fieldName) {
-		Throw(type = "cflow.notimplemented", message = "Not implemented");
 	}
 
 	public string function formatParameterValue(required struct data, string mask = "") {
@@ -21,10 +17,6 @@ component SetRule implements="Rule" {
 
 	private array function getParameterValue(required struct data) {
 		return variables.parameter.getValue(arguments.data);
-	}
-
-	private array function toArray(required string value) {
-		return ListToArray(arguments.value);
 	}
 
 	/**
@@ -50,7 +42,7 @@ component SetRule implements="Rule" {
 
 		var result = false;
 
-		if (variables.matchCase) {
+		if (variables.caseSensitive) {
 			result = ArrayFind(arguments.set, arguments.value) > 0;
 		} else {
 			result = ArrayFindNoCase(arguments.set, arguments.value) > 0;

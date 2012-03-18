@@ -1,4 +1,4 @@
-component NumericParameter extends="StringParameter" {
+component NumericParameter extends="Parameter" {
 
 	public void function setValue(required string expression, boolean evaluate = false) {
 

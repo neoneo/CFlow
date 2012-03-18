@@ -3,9 +3,9 @@
  **/
 component SupersetRule extends="SetRule" {
 
-	public boolean function test(required struct data, required string fieldName) {
+	public boolean function test(required struct data) {
 		// the parameter set should be a subset of the set in the field
-		return isSubset(getParameterValue(arguments.data), toArray(arguments.data[arguments.fieldName]));
+		return isSubset(getParameterValue(arguments.data), toArray(getValue(arguments.data)));
 	}
 
 }

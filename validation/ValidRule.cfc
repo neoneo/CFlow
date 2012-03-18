@@ -4,14 +4,10 @@ component ValidRule extends="Rule" {
 		variables.type = arguments.type;
 	}
 
-	public void function setField(required string fieldName) {
-		variables.fieldName = arguments.fieldName;
-	}
-
 	public boolean function test(required struct data) {
 
 		var result = false;
-		var value = arguments.data[variables.fieldName];
+		var value = arguments.data[getField()];
 
 		switch (variables.type) {
 

@@ -5,14 +5,14 @@ component Validator {
 
 	public void function addRuleSet(required RuleSet ruleSet, required string name, string fieldName = "", array mustPass = []) {
 
-		var fieldName = arguments.fieldName;
-		if (Len(fieldName) == 0) {
-			fieldName = arguments.name;
+		local.fieldName = arguments.fieldName;
+		if (Len(local.fieldName) == 0) {
+			local.fieldName = arguments.name;
 		}
 
 		variables.ruleSets[arguments.name] = {
 			instance = arguments.ruleSet,
-			field = fieldName,
+			field = local.fieldName,
 			mustPass = arguments.mustPass
 		};
 		ArrayAppend(variables.names, arguments.name);

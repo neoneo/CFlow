@@ -4,11 +4,11 @@ component XmlReader accessors="true" {
 
 	public void function read(required string path) {
 
-		var path = ExpandPath(arguments.path);
-		var list = DirectoryList(path, true, "name", "*.xml");
+		local.path = ExpandPath(arguments.path);
+		local.list = DirectoryList(local.path, true, "name", "*.xml");
 
-		for (var fileName in list) {
-			readFile(path & "/" & fileName);
+		for (var fileName in local.list) {
+			readFile(local.path & "/" & fileName);
 		}
 
 	}
@@ -53,7 +53,7 @@ component XmlReader accessors="true" {
 	private void function createRulesFromChildNodes(required xml node, required RuleSet ruleSet, required string fieldName, datatype = "string") {
 
 		// if we encounter a valid rule, we change the datatype so we can create rules specific to the datatype
-		var datatype = arguments.datatype;
+		local.datatype = arguments.datatype;
 
 		var ruleNodes = arguments.node.xmlChildren;
 		for (var ruleNode in ruleNodes) {
@@ -69,7 +69,7 @@ component XmlReader accessors="true" {
 				mask = xmlAttributes.mask;
 			}
 
-			var rule = createRuleFromNode(ruleNode, arguments.fieldName, datatype);
+			var rule = createRuleFromNode(ruleNode, arguments.fieldName, local.datatype);
 
 			// check if this is a valid rule; if so, remember the datatype for further rules
 			if (ruleNode.xmlName == "valid") {
@@ -77,17 +77,17 @@ component XmlReader accessors="true" {
 
 					case "integer":
 					case "numeric":
-						datatype = "numeric";
+						local.datatype = "numeric";
 						break;
 
 					case "time":
 					case "date":
 					case "datetime":
-						datatype = "datetime";
+						local.datatype = "datetime";
 						break;
 
 					default:
-						datatype = "string";
+						local.datatype = "string";
 						break;
 
 				}
@@ -96,20 +96,25 @@ component XmlReader accessors="true" {
 			arguments.ruleSet.addRule(rule, message, mask);
 			if (!ArrayIsEmpty(ruleNode.xmlChildren)) {
 				// this rule has child rules, to be tested when the rule passes
-				// create a RuleSet or an ApplyRuleSet
-				// an ApplySet is a RuleSet that tests its rules against all elements in a given set, as opposed to only a single value
-				var ruleSet = JavaCast("null", 0);
-				if (ruleNode.xmlName == "apply" || IsInstanceOf(arguments.ruleSet, "ApplyRuleSet")) {
-					ruleSet = variables.context.createApplyRuleSet();
+				// create a RuleSet or an EachRuleSet
+				// an EachRuleSet is a RuleSet that tests its rules against all elements in a given set, as opposed to only a single value
+				//var ruleSet = JavaCast("null", 0);
+				if (ruleNode.xmlName == "each") {
+					// check the aggregate attribute
+					var aggregate = false;
+					if (StructKeyExists(ruleNode.xmlAttributes, "aggregate")) {
+						aggregate = ruleNode.xmlAttributes.aggregate;
+					}
+					local.ruleSet = variables.context.createEachRuleSet(aggregate);
 					// the ApplyRuleSet needs the field name to access the set to test against
-					ruleSet.setField(arguments.fieldName);
+					local.ruleSet.setField(arguments.fieldName);
 				} else {
-					ruleSet = variables.context.createRuleSet();
+					local.ruleSet = variables.context.createRuleSet();
 				}
 
-				createRulesFromChildNodes(ruleNode, ruleSet, arguments.fieldName, datatype);
+				createRulesFromChildNodes(ruleNode, local.ruleSet, arguments.fieldName, local.datatype);
 				// by adding the rule set immediately after the rule, the containg rule set knows that the rule contains child rules
-				arguments.ruleSet.addRuleSet(ruleSet);
+				arguments.ruleSet.addRuleSet(local.ruleSet);
 			}
 		}
 
@@ -133,8 +138,8 @@ component XmlReader accessors="true" {
 
 		switch (ruleType) {
 			case "exist":
-			case "apply":
-				// ApplyRuleSet is a RuleSet, so we return a simple rule after which we can add the ApplyRuleSet
+			case "each":
+				// EachRuleSet is a RuleSet, so we return a simple rule after which we can add the EachRuleSet
 				rule = variables.context.createExistRule();
 				break;
 
@@ -252,7 +257,7 @@ component XmlReader accessors="true" {
 				var argumentCollection = {};
 				// workaround for Railo bug 1798, can't use StructCopy to copy xml structs
 				for (var attribute in xmlAttributes) {
-					if (!ArrayContains(["message", "silent", "component", "field", "usevalue"], attribute)) {
+					if (!ArrayContains(["message", "silent", "component", "field"], attribute)) {
 						argumentCollection[attribute] = xmlAttributes[attribute];
 					}
 				}
@@ -267,19 +272,16 @@ component XmlReader accessors="true" {
 
 		// tell the rule how to obtain the value to test
 		// by default it is the field name of the rule set, passed in as the fieldName argument
-		// a field or usevalue attribute on the rule node overrides this, field takes precedence
+		// a field attribute on the rule node overrides this
 		if (StructKeyExists(xmlAttributes, "field")) {
 			// field contains the field name to get the value from
 			rule.setField(xmlAttributes.field);
-		} else if (StructKeyExists(xmlAttributes, "usevalue")) {
-			// usevalue contains an explicit value to use
-			rule.setValue(xmlAttributes.usevalue);
 		} else {
 			// default: use the fieldName passed in
 			rule.setField(arguments.fieldName);
 		}
 
-		if (ruleType != "apply") {
+		if (ruleType != "each") {
 			if (negation) {
 				rule = variables.context.createNegateRule(rule);
 			}

@@ -222,20 +222,17 @@ component Context accessors="true" {
 
 	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
 
-		var properties = JavaCast("null", 0);
-		var response = JavaCast("null", 0);
-
 		// if event is an Event, we take the response from there
 		// if not, we expect a Response object in the arguments
 		if (IsInstanceOf(arguments.event, "Event")) {
-			properties = arguments.event.getProperties();
-			response = arguments.event.getResponse();
+			local.properties = arguments.event.getProperties();
+			local.response = arguments.event.getResponse();
 		} else {
-			properties = arguments.event;
-			response = arguments.response;
+			local.properties = arguments.event;
+			local.response = arguments.response;
 		}
 
-		return new Event(arguments.targetName, arguments.eventType, properties, response);
+		return new Event(arguments.targetName, arguments.eventType, local.properties, local.response);
 	}
 
 	private Response function createResponse() {

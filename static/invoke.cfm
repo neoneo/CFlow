@@ -14,12 +14,12 @@
    limitations under the License.
 --->
 
-<cffunction name="invoke" access="private" output="false" returntype="any">
+<cffunction name="invokeMethod" access="private" output="false" returntype="any">
 	<cfargument name="component" type="component" required="true">
 	<cfargument name="method" type="string" required="true">
-	<cfargument name="argumentCollection" type="struct" required="false" default="#{}#">
+	<cfargument name="parameters" type="struct" required="false" default="#{}#">
 
-	<cfinvoke component="#arguments.component#" method="#arguments.method#" argumentCollection="#arguments.argumentCollection#" returnvariable="local.result"></cfinvoke>
+	<cfinvoke component="#arguments.component#" method="#arguments.method#" argumentCollection="#arguments.parameters#" returnvariable="local.result"></cfinvoke>
 
 	<cfif StructKeyExists(local, "result")>
 		<cfreturn local.result>

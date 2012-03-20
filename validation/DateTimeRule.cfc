@@ -21,11 +21,6 @@ component DateTimeRule extends="Rule" {
 		return result;
 	}
 
-	public void function setValue(required any value) {
-		// make sure that the explicit value is a date/time object
-		super.setValue(ParseDateTime(arguments.value));
-	}
-
 	private date function getParameterValue(required struct data) {
 		return variables.parameter.getValue(arguments.data);
 	}

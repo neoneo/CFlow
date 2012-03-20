@@ -24,11 +24,11 @@ component XmlReader accessors="true" {
 
 	public struct function read(required string path) {
 
-		var path = ExpandPath(arguments.path);
-		var list = DirectoryList(path, true, "name", "*.xml");
+		local.path = ExpandPath(arguments.path);
+		local.list = DirectoryList(local.path, true, "name", "*.xml");
 
 		for (var fileName in list) {
-			readFile(path & "/" & fileName);
+			readFile(local.path & "/" & fileName);
 		}
 
 		return variables.tasks;

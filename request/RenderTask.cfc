@@ -41,18 +41,19 @@ component RenderTask implements="Task" {
 	private void function render(required struct data, required Response response) {
 
 		// create the following variables for use within the view
-		var data = arguments.data;
-		var response = arguments.response;
+		local.data = arguments.data;
+		local.response = arguments.response;
 
 		// set the content key, so that response.append() calls without a key argument will write to this view
 		response.setContentKey(variables.key);
 
+		var template = variables.view & ".cfm";
 		savecontent variable="local.content" {
-			include variables.view & ".cfm";
+			include template;
 		}
 
 		// depending on the content key is not thread safe, so we pass the key explicitly
-		response.append(content, variables.key);
+		response.append(local.content, variables.key);
 
 	}
 

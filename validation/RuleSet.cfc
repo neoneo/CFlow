@@ -35,22 +35,21 @@ component RuleSet {
 		var messages = []; // collection of error messages
 
 		for (var rule in variables.rules) {
-			var result = testRule(rule.instance, arguments.data);
-			if (result) {
+			if (rule.instance.test(arguments.data)) {
 				// the rule is passed; if there is a rule set, validate its rules
 				if (StructKeyExists(rule, "set")) {
 					// concatenate any resulting messages on the current messages array
-					var setMessages = rule.set.validate(arguments.data);
-					for (var message in setMessages) {
+					var result = rule.set.validate(arguments.data);
+					for (var message in result) {
 						ArrayAppend(messages, message);
 					}
 				}
 			} else {
-				// not passed
+				// not passed; ignore this fact if the rule is silent
 				if (!rule.silent) {
 					var message = rule.message;
-					if (message contains "%value%") {
-						message = Replace(message, "%value%", rule.instance.formatParameterValue(arguments.data, rule.mask));
+					if (message contains "__") {
+						message = Replace(message, "__", rule.instance.formatParameterValue(arguments.data, rule.mask));
 					}
 					ArrayAppend(messages, message);
 				}
@@ -58,10 +57,6 @@ component RuleSet {
 		}
 
 		return messages;
-	}
-
-	private boolean function testRule(required Rule rule, required struct data) {
-		 return rule.test(arguments.data);
 	}
 
 }

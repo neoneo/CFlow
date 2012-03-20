@@ -16,9 +16,9 @@
 
 component InvokeTask extends="ComplexTask" {
 
-	if (!StructKeyExists(GetFunctionList(), "invoke")) {
+	//if (!StructKeyExists(GetFunctionList(), "invoke")) {
 		include "../static/invoke.cfm";
-	}
+	//}
 
 	public void function init(required Controller controller, required string method) {
 
@@ -29,7 +29,7 @@ component InvokeTask extends="ComplexTask" {
 
 	public boolean function run(required Event event) {
 
-		Invoke(getController(), getMethod(), arguments);
+		invokeMethod(getController(), getMethod(), arguments);
 
 		var success = !arguments.event.isCanceled();
 		if (!success) {

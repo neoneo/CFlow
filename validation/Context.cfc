@@ -19,8 +19,8 @@ component Context {
 		return new RuleSet();
 	}
 
-	public ApplyRuleSet function createApplyRuleSet() {
-		return new ApplyRuleSet();
+	public EachRuleSet function createEachRuleSet(boolean aggregate = false) {
+		return new EachRuleSet(aggregate);
 	}
 
 	// GENERAL RULES ------------------------------------------------------------------------------

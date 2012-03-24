@@ -163,7 +163,8 @@ component DebugContext extends="Context" {
 			setViewMapping(viewMapping);
 		}
 
-		arguments.event._messages = arguments.event.getMessages(); // make the messages available to the view
+		arguments.event._debugoutput = new DebugOutputRenderer().render(arguments.event.getMessages());
+
 		task.run(arguments.event);
 
 	}

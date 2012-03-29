@@ -19,9 +19,9 @@ component RedirectDebugTask extends="RedirectTask" {
 	public void function run(required Event event) {
 
 		// we just record the fact that normally a redirect should occur right now
-		arguments.event.record("cflow.redirect", {
+		arguments.event.record({
 			url = obtainUrl(arguments.event)
-		});
+		}, "cflow.redirect");
 		// abort the rest of the flow
 		arguments.event.abort();
 

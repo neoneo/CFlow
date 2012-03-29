@@ -51,20 +51,27 @@ component DebugEvent extends="Event" {
 		return aborted;
 	}
 
-	public void function record(required string message, any metadata) {
+	public void function record(required any metadata, string message = "") {
 
 		// we only accept messages if the event is not aborted, because in effect the whole request cycle should have ended already (we're only mimicking this for debugging)
 		if (!isAborted()) {
-			var message = {
-				message = arguments.message,
+			// if the metadata is a simple value and message is not defined, we interpret metadata as the message
+			local.message = arguments.message;
+			if (IsSimpleValue(arguments.metadata) && Len(arguments.message) == 0) {
+				local.message = arguments.metadata;
+			} else {
+				local.metadata = arguments.metadata;
+			}
+			var transport = {
+				message = Len(local.message) > 0 ? local.message : "Dump",
 				target = getTarget(),
 				event = getType(),
 				tickcount = GetTickCount()
 			};
-			if (StructKeyExists(arguments, "metadata")) {
-				message.metadata = arguments.metadata;
+			if (StructKeyExists(local, "metadata")) {
+				transport.metadata = local.metadata;
 			}
-			ArrayAppend(variables.messages, message);
+			ArrayAppend(variables.messages, transport);
 		}
 
 	}

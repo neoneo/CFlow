@@ -32,11 +32,11 @@ component DebugTask implements="Task" {
 		success = true;
 
 		if (!arguments.event.isAborted()) {
-			arguments.event.record("cflow.task", variables.metadata);
+			arguments.event.record(variables.metadata, "cflow.task");
 
 			success = variables.task.run(arguments.event);
 
-			arguments.event.record("cflow.task", variables.metadata);
+			arguments.event.record(variables.metadata, "cflow.task");
 		}
 
 		return success;

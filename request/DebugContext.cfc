@@ -171,7 +171,7 @@ component DebugContext extends="Context" {
 
 	private void function handleException(required any exception, required Event event) {
 
-		arguments.event.record("cflow.exception", {exception: exception});
+		arguments.event.record({exception: exception}, "cflow.exception");
 		var response = arguments.event.getResponse();
 		response.clear();
 		renderDebugOutput(arguments.event);

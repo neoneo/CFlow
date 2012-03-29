@@ -1,92 +1,99 @@
+<!---
+   Copyright 2012 Neo Neo
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+--->
+
 <cfcomponent displayname="DebugOutputRenderer" output="false">
 
-	<cffunction name="render" access="public" output="false" returntype="string">
-		<cfargument name="messages" type="array" required="true">
+	<cfscript>
+	public string function render(required array messages) {
 
-		<cfset variables.index = 1>
-		<cfset variables.messages = arguments.messages>
+		variables.index = 1;
+		variables.messages = arguments.messages;
 
-		<!--- loop through the messages and reconstruct the task hierarchy --->
-		<!--- some tasks can contain children, but the messages array doesn't have this hierarchy --->
-		<cfset var result = []><!--- resulting messages array with hierarchy --->
-		<cfloop condition="variables.index lte ArrayLen(variables.messages)">
-			<cfset construct(result)>
-			<cfset variables.index++>
-		</cfloop>
-		<!--- total duration of execution --->
-		<cfset var duration = variables.messages[ArrayLen(variables.messages)].tickcount - variables.messages[1].tickcount>
+		// loop through the messages and reconstruct the task hierarchy
+		// some tasks can contain children, but the messages array doesn't have this hierarchy
+		var result = []; // resulting messages array with hierarchy
+		while (variables.index <= ArrayLen(variables.messages)) {
+			construct(result);
+			variables.index++;
+		}
+		// total duration of execution
+		var duration = variables.messages[ArrayLen(variables.messages)].tickcount - variables.messages[1].tickcount;
 
-		<cfoutput>
-		<cfsavecontent variable="local.content">
-		<h1>CFlow debugging information</h1>
-		<ul>
-		<cfloop array="#result#" index="child">
-			#renderMessage(child)#
-		</cfloop>
-		</ul>
-		<span class="total duration">#duration#</span>
-		</cfsavecontent>
-		</cfoutput>
+		var content = "<h1>CFlow debugging information</h1><ul>";
+		for (var child in result) {
+			content &= renderMessage(child);
+		}
+		content &= "</ul><span class=""total duration"">#duration#</span>";
 
-		<cfreturn local.content>
-	</cffunction>
+		return content;
+	}
 
-	<cffunction name="construct" access="private" output="false" returntype="struct" hint="Constructs the task hierarchy from the messages array.">
-		<cfargument name="children" type="array" required="true" hint="The array wherein to collect task data.">
+	private struct function construct(required array children) {
 
-		<cfset var data = {}>
-		<cfset ArrayAppend(arguments.children, data)>
+		var data = {};
+		ArrayAppend(arguments.children, data);
 
-		<cfset data.element = variables.messages[variables.index]><!--- we loop until we find the corresponding item --->
-		<!--- only certain messages can contain children --->
-		<cfif REFind("cflow\.(task|(start|before|after|end|event)tasks)", data.element.message) eq 1>
-			<cfset variables.index++>
-			<cfset data.children = []>
-			<cfloop condition="variables.index lte ArrayLen(variables.messages)">
-				<cfif structEquals(variables.messages[variables.index], data.element)>
-					<cfbreak>
-				</cfif>
-				<cfset construct(data.children)>
-				<cfset variables.index++>
-			</cfloop>
-			<!--- task duration --->
-			<!--- when debug is rendered when an exception is thrown, the array is not complete so we cannot assume that the element exists --->
-			<cfif ArrayLen(variables.messages) gte variables.index>
-				<cfset data.duration = variables.messages[variables.index].tickcount - data.element.tickcount>
-			</cfif>
-		</cfif>
+		data.element = variables.messages[variables.index]; // loop until we find the corresponding item
+		// only certain messages can contain children
+		if (REFind("cflow\.(task|(start|before|after|end|event)tasks)", data.element.message) == 1) {
+			variables.index++;
+			data.children = [];
+			while (variables.index <= ArrayLen(variables.messages)) {
+				if (structEquals(variables.messages[variables.index], data.element)) {
+					break;
+				}
+				construct(data.children);
+				variables.index++;
+			}
+			// task duration
+			// when debug is rendered when an exception is thrown, the array is not complete so we cannot assume that the element exists
+			if (ArrayLen(variables.messages) >= variables.index) {
+				data.duration = variables.messages[variables.index].tickcount - data.element.tickcount;
+			}
+		}
 
-		<cfreturn data>
-	</cffunction>
+		return data;
+	}
 
-	<cffunction name="structEquals" access="private" output="false" returntype="boolean">
-		<cfargument name="struct1" type="struct" required="true">
-		<cfargument name="struct2" type="struct" required="true">
+	private boolean function structEquals(required struct struct1, required struct struct2) {
 
-		<cfset var key = "">
-		<cfset var isEqual = true>
-		<cfloop collection="#arguments.struct1#" item="key">
-			<!--- ignore tickcount --->
-			<cfif key neq "tickcount">
-				<cfif StructKeyExists(arguments.struct2, key)>
-					<cfif IsSimpleValue(arguments.struct1[key])>
-						<cfset isEqual = arguments.struct1[key] eq arguments.struct2[key]>
-					<cfelse>
-						<!--- we expect this to be a struct --->
-						<cfset isEqual = structEquals(arguments.struct1[key], arguments.struct2[key])>
-					</cfif>
-				<cfelse>
-					<cfset isEqual = false>
-				</cfif>
+		var isEqual = true;
+		for (var key in arguments.struct1) {
+			// ignore tickcount
+			if (key != "tickcount") {
+				if (StructKeyExists(arguments.struct2, key)) {
+					if (IsSimpleValue(arguments.struct1[key])) {
+						isEqual = arguments.struct1[key] == arguments.struct2[key];
+					} else {
+						// we expect this to be a struct
+						isEqual = structEquals(arguments.struct1[key], arguments.struct2[key]);
+					}
+				} else {
+					isEqual = false;
+				}
 
-				<cfif not isEqual>
-					<cfbreak>
-				</cfif>
-			</cfif>
-		</cfloop>
+				if (!isEqual) {
+					break;
+				}
+			}
+		}
 
-		<cfreturn isEqual>
-	</cffunction>
+		return isEqual;
+	}
+	</cfscript>
 
 	<cffunction name="renderMessage" access="private" output="false" returntype="string">
 		<cfargument name="data" type="struct" required="true">

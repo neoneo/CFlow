@@ -14,6 +14,10 @@
    limitations under the License.
 --->
 
+<cfsavecontent variable="content">
+	<cfset response.write()>
+</cfsavecontent>
+<cfsavecontent variable="debugoutput">
 <style type="text/css">
 	#cflow {
 		font-family: Verdana, sans-serif;
@@ -161,3 +165,13 @@
 	}, false);
 
 </script>
+</cfsavecontent>
+<cfoutput>
+	<!--- put the debugoutput inside the body if applicable --->
+	<cfif response.getType() eq "HTML" and content contains "</body>">
+		#Replace(content, "</body>", debugoutput & "</body>")#
+	<cfelse>
+		#content#
+		#debugoutput#
+	</cfif>
+</cfoutput>

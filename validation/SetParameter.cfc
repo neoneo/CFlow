@@ -16,15 +16,15 @@
 
 component SetParameter extends="Parameter" {
 
-	variables.hasValue = false;
+	variables.hasValue = false; // whether an array was passed in
 
-	public void function setValue(required any value, boolean evaluate = false) {
+	public void function setValue(required any value) {
 
 		if (IsArray(arguments.value)) {
 			variables.value = arguments.value;
 			variables.hasValue = true;
 		} else {
-			super.setValue(arguments.value, arguments.evaluate);
+			super.setValue(arguments.value);
 		}
 
 	}

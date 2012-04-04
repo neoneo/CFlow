@@ -173,7 +173,7 @@ component XmlReader accessors="true" {
 		StructAppend(task, arguments.node.xmlAttributes);
 
 		// for invoke and dispatch tasks, there can be child tasks that are to be executed if an event is canceled
-		if (ArrayContains(["invoke", "dispatch", "evaluate"], task.type)) {
+		if (ArrayContains(["invoke", "dispatch", "if"], task.type)) {
 			task["sub"] = getTasksFromChildNodes(arguments.node);
 		}
 
@@ -294,9 +294,11 @@ component XmlReader accessors="true" {
 				// find all tasks that have no controller specified
 				var tasks = StructFindValue(target, "invoke", "all");
 				for (var task in tasks) {
-					if (!StructKeyExists(task.owner, "controller")) {
-						// explicitly set the controller
-						task.owner["controller"] = variables.defaultControllers[name];
+					if (task.owner.type == "invoke") {
+						if (!StructKeyExists(task.owner, "controller")) {
+							// explicitly set the controller
+							task.owner["controller"] = variables.defaultControllers[name];
+						}
 					}
 				}
 			}
@@ -315,8 +317,10 @@ component XmlReader accessors="true" {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "dispatch", "all");
 			for (var task in tasks) {
-				if (!StructKeyExists(task.owner, "target")) {
-					task.owner["target"] = name;
+				if (task.owner.type == "dispatch") {
+					if (!StructKeyExists(task.owner, "target")) {
+						task.owner["target"] = name;
+					}
 				}
 
 				// this check is done for all dispatch tasks:
@@ -348,9 +352,12 @@ component XmlReader accessors="true" {
 
 			var tasks = StructFindValue(target, "render", "all");
 			for (task in tasks) {
-				if (arguments.eventPhase && task.path contains ".events." || !arguments.eventPhase && task.path does not contain ".events.") {
-					// prepend the target name as the directory name
-					task.owner.view = name & "/" & task.owner.view;
+				if (task.owner.type == "render") {
+					if (arguments.eventPhase && task.path contains ".events." || !arguments.eventPhase && task.path does not contain ".events.") {
+					// check for the existence of a view attribute, as some other task could have an attribute with the value 'render'
+						// prepend the target name as the directory name
+						task.owner.view = name & "/" & task.owner.view;
+					}
 				}
 			}
 		}
@@ -368,20 +375,22 @@ component XmlReader accessors="true" {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "redirect", "all");
 			for (var task in tasks) {
-				// do nothing if the redirect is to a fixed url, or if it has a target already
-				if (!StructKeyExists(task.owner, "url")) {
-					if (!StructKeyExists(task.owner, "target")) {
-						task.owner["target"] = name;
-					}
+				if (task.owner.type == "redirect") {
+					// do nothing if the redirect is to a fixed url, or if it has a target already
+					if (!StructKeyExists(task.owner, "url")) {
+						if (!StructKeyExists(task.owner, "target")) {
+							task.owner["target"] = name;
+						}
 
-					// this check is done for all redirect tasks:
-					if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
-						// redirect *always* to the current target outside the event phase; this will lead to an infinite loop
-						Throw(
-							type = "cflow.request",
-							message = "Redirecting to event '#task.owner.event#' on the current target '#name#' will cause an infinite loop",
-							detail = "Do not define redirect tasks without a target outside the event phase, unless the task is run conditionally"
-						);
+						// this check is done for all redirect tasks:
+						if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
+							// redirect *always* to the current target outside the event phase; this will lead to an infinite loop
+							Throw(
+								type = "cflow.request",
+								message = "Redirecting to event '#task.owner.event#' on the current target '#name#' will cause an infinite loop",
+								detail = "Do not define redirect tasks without a target outside the event phase, unless the task is run conditionally"
+							);
+						}
 					}
 				}
 			}
@@ -448,8 +457,15 @@ component XmlReader accessors="true" {
 					instance = arguments.context.createRedirectTask(type, parameters, permanent);
 					break;
 
-				case "evaluate":
-					instance = arguments.context.createEvaluateTask(arguments.task.condition);
+				case "if":
+					instance = arguments.context.createIfTask(arguments.task.condition);
+					break;
+
+				case "set":
+					// the variable name is the first (and only) attribute
+					var name = ListFirst(StructKeyList(arguments.task));
+					var value = arguments.task[name];
+					instance = arguments.context.createSetTask(name, value);
 					break;
 			}
 

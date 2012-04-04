@@ -65,6 +65,7 @@ component RuleSet {
 				if (!rule.silent) {
 					var message = rule.message;
 					if (message contains "__") {
+						// the parameter value must be inserted at the spot indicated by the underscores
 						message = Replace(message, "__", rule.instance.formatParameterValue(arguments.data, rule.mask));
 					}
 					ArrayAppend(messages, message);

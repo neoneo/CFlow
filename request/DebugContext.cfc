@@ -43,9 +43,16 @@ component DebugContext extends="Context" {
 		return new RedirectDebugTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
-	public DebugTask function createEvaluateTask(required string condition) {
+	public DebugTask function createIfTask(required string condition) {
 
-		var task = super.createEvaluateTask(argumentCollection = arguments);
+		var task = super.createIfTask(argumentCollection = arguments);
+
+		return new DebugTask(task, arguments);
+	}
+
+	public DebugTask function createSetTask(required string name, required string value) {
+
+		var task = super.createSetTask(argumentCollection = arguments);
 
 		return new DebugTask(task, arguments);
 	}

@@ -63,94 +63,94 @@ component Context {
 
 	// STRING RULES -------------------------------------------------------------------------------
 
-	public EqualStringRule function createEqualStringRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new EqualStringRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public EqualStringRule function createEqualStringRule(required string value, boolean caseSensitive = false) {
+		return new EqualStringRule(arguments.value, arguments.caseSensitive);
 	}
 
-	public ContainRule function createContainRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new ContainRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public ContainRule function createContainRule(required string value, boolean caseSensitive = false) {
+		return new ContainRule(arguments.value, arguments.caseSensitive);
 	}
 
-	public EndWithRule function createEndWithRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new EndWithRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public EndWithRule function createEndWithRule(required string value, boolean caseSensitive = false) {
+		return new EndWithRule(arguments.value, arguments.caseSensitive);
 	}
 
-	public StartWithRule function createStartWithRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new StartWithRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public StartWithRule function createStartWithRule(required string value, boolean caseSensitive = false) {
+		return new StartWithRule(arguments.value, arguments.caseSensitive);
 	}
 
 	public MatchRule function createMatchRule(required string pattern) {
 		return new MatchRule(arguments.pattern);
 	}
 
-	public MinimumLengthRule function createMinimumLengthRule(required string value, boolean evaluate = false) {
-		return new MinimumLengthRule(arguments.value, arguments.evaluate);
+	public MinimumLengthRule function createMinimumLengthRule(required string value) {
+		return new MinimumLengthRule(arguments.value);
 	}
 
-	public MaximumLengthRule function createMaximumLengthRule(required string value, boolean evaluate = false) {
-		return new MaximumLengthRule(arguments.value, arguments.evaluate);
+	public MaximumLengthRule function createMaximumLengthRule(required string value) {
+		return new MaximumLengthRule(arguments.value);
 	}
 
 	// NUMERIC RULES ------------------------------------------------------------------------------
 
-	public EqualNumericRule function createEqualNumericRule(required string value, boolean evaluate = false) {
-		return new EqualNumericRule(arguments.value, arguments.evaluate);
+	public EqualNumericRule function createEqualNumericRule(required string value) {
+		return new EqualNumericRule(arguments.value);
 	}
 
-	public MinimumNumericRule function createMinimumNumericRule(required string value, boolean evaluate = false) {
-		return new MinimumNumericRule(arguments.value, arguments.evaluate);
+	public MinimumNumericRule function createMinimumNumericRule(required string value) {
+		return new MinimumNumericRule(arguments.value);
 	}
 
-	public MaximumNumericRule function createMaximumNumericRule(required string value, boolean evaluate = false) {
-		return new MaximumNumericRule(arguments.value, arguments.evaluate);
+	public MaximumNumericRule function createMaximumNumericRule(required string value) {
+		return new MaximumNumericRule(arguments.value);
 	}
 
 	// DATE/TIME RULES ----------------------------------------------------------------------------
 
-	public EqualDateTimeRule function createEqualDateTimeRule(required string value, boolean evaluate = false) {
-		return new EqualDateTimeRule(arguments.value, arguments.evaluate);
+	public EqualDateTimeRule function createEqualDateTimeRule(required string value) {
+		return new EqualDateTimeRule(arguments.value);
 	}
 
-	public MinimumDateTimeRule function createMinimumDateTimeRule(required string value, boolean evaluate = false) {
-		return new MinimumDateTimeRule(arguments.value, arguments.evaluate);
+	public MinimumDateTimeRule function createMinimumDateTimeRule(required string value) {
+		return new MinimumDateTimeRule(arguments.value);
 	}
 
-	public MaximumDateTimeRule function createMaximumDateTimeRule(required string value, boolean evaluate = false) {
-		return new MaximumDateTimeRule(arguments.value, arguments.evaluate);
+	public MaximumDateTimeRule function createMaximumDateTimeRule(required string value) {
+		return new MaximumDateTimeRule(arguments.value);
 	}
 
 	// SET RULES ----------------------------------------------------------------------------------
 
-	public ElementRule function createElementRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new ElementRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public ElementRule function createElementRule(required string value, boolean caseSensitive = false) {
+		return new ElementRule(arguments.value, arguments.caseSensitive);
 	}
 
-	public EqualSetRule function createEqualSetRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new EqualSetRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public EqualSetRule function createEqualSetRule(required string value, boolean caseSensitive = false) {
+		return new EqualSetRule(arguments.value, arguments.caseSensitive);
 	}
 
-	public IntersectionRule function createIntersectionRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new IntersectionRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public IntersectionRule function createIntersectionRule(required string value, boolean caseSensitive = false) {
+		return new IntersectionRule(arguments.value, arguments.caseSensitive);
 	}
 
-	public SubsetRule function createSubsetRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new SubsetRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public SubsetRule function createSubsetRule(required string value, boolean caseSensitive = false) {
+		return new SubsetRule(arguments.value, arguments.caseSensitive);
 	}
 
-	public SupersetRule function createSupersetRule(required string value, boolean evaluate = false, boolean caseSensitive = false) {
-		return new SupersetRule(arguments.value, arguments.evaluate, arguments.caseSensitive);
+	public SupersetRule function createSupersetRule(required string value, boolean caseSensitive = false) {
+		return new SupersetRule(arguments.value, arguments.caseSensitive);
 	}
 
 	public ValidSetRule function createValidSetRule(required string type) {
 		return new ValidSetRule(arguments.type);
 	}
 
-	public MinimumCountRule function createMinimumCountRule(required string value, boolean evaluate = false) {
-		return new MinimumCountRule(arguments.value, arguments.evaluate);
+	public MinimumCountRule function createMinimumCountRule(required string value) {
+		return new MinimumCountRule(arguments.value);
 	}
 
-	public MaximumCountRule function createMaximumCountRule(required string value, boolean evaluate = false) {
-		return new MaximumCountRule(arguments.value, arguments.evaluate);
+	public MaximumCountRule function createMaximumCountRule(required string value) {
+		return new MaximumCountRule(arguments.value);
 	}
 
 	public DistinctRule function createDistinctRule(boolean caseSensitive = false) {

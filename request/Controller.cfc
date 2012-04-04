@@ -14,7 +14,6 @@
    limitations under the License.
 */
 
-
 component Controller {
 
 	public void function init(required Context context) {
@@ -27,18 +26,13 @@ component Controller {
 
 	private boolean function dispatchEvent(required string type, required Event event) {
 
-		var targetName = arguments.event.getTarget();
-
-		if (!StructKeyExists(variables.dispatchTasks, targetName)) {
-			variables.dispatchTasks[targetName] = {};
-		}
-		if (!StructKeyExists(variables.dispatchTasks[targetName], arguments.type)) {
+		if (!StructKeyExists(variables.dispatchTasks, arguments.type)) {
 			// pass false to the factory method: we don't want the current event to be canceled if the dispatched event is canceled
 			// the controller implementation should be able to choose to do that
-			variables.dispatchTasks[targetName][arguments.type] = variables.context.createDispatchTask(targetName, arguments.type, false);
+			variables.dispatchTasks[arguments.type] = variables.context.createDispatchTask(arguments.event.getTarget(), arguments.type, false);
 		}
 
-		return variables.dispatchTasks[targetName][arguments.type].run(arguments.event);
+		return variables.dispatchTasks[arguments.type].run(arguments.event);
 	}
 
 }

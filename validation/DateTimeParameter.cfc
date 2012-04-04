@@ -29,13 +29,20 @@ component DateTimeParameter {
 		"l" = "l"
 	};
 
-	public void function setValue(required string expression, boolean evaluate = false) {
+	public void function setValue(required string expression) {
 
 		// the expression can be a date, a variable name or a date arithmetic expression
 		// an arithmetic expression should be of the form [date or date variable] [+ or -] [number and unit]
 		// explicit dates should use slashes
 
-		var date = Trim(ListFirst(arguments.expression, "+-"));
+		// a percentage sign is not needed for this parameter, but to be consequent its use is allowed
+		// just remove it
+		local.expression = arguments.expression;
+		if (Left(local.expression) == "%") {
+			RemoveChars(local.expression, 1, 1);
+		}
+
+		var date = Trim(ListFirst(local.expression, "+-"));
 		if (IsDate(date)) {
 			variables.date = ParseDateTime(date);
 			variables.evaluate = false;
@@ -44,19 +51,23 @@ component DateTimeParameter {
 			variables.evaluate = true;
 		}
 
-		var partCount = ListLen(arguments.expression, "+-");
+		var partCount = ListLen(local.expression, "+-");
 		// this should be 1 or 2
 		if (partCount == 1) {
 			// no date arithmetic
 			variables.arithmetic = false;
 		} else if (partCount == 2) {
 			variables.arithmetic = true;
-			var sign = Mid(arguments.expression, FindOneOf("+-", arguments.expression, Len(date)), 1); // start looking for + or - after the date value
-			var incrementUnit = Trim(ListLast(arguments.expression, "+-"));
+			var sign = Mid(local.expression, FindOneOf("+-", local.expression, Len(date)), 1); // start looking for + or - after the date value
+			var incrementUnit = Trim(ListLast(local.expression, "+-"));
 			variables.datepart = variables.dateparts[Right(incrementUnit, 1)]; // read the ColdFusion datepart to use in the DateAdd() function
 			variables.increment = Val(sign & incrementUnit);
 		} else {
-			Throw(type = "cflow.validation", message = "Expression '#arguments.expression#' is not a valid date/time expression", detail = "If you pass in date strings, use slashes as the datepart separator");
+			Throw(
+				type = "cflow.validation",
+				message = "Expression '#local.expression#' is not a valid date/time expression",
+				detail = "If you pass in date strings, use slashes as the datepart separator"
+			);
 		}
 
 	}

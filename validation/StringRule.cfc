@@ -16,10 +16,10 @@
 
 component StringRule extends="Rule" {
 
-	public void function init(required string value, boolean evaluate = false, boolean caseSensitive = false) {
+	public void function init(required string value, boolean caseSensitive = false) {
 
 		variables.parameter = new StringParameter();
-		variables.parameter.setValue(arguments.value, arguments.evaluate);
+		variables.parameter.setValue(arguments.value);
 		variables.caseSensitive = arguments.caseSensitive;
 
 	}

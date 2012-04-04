@@ -19,9 +19,9 @@ component RenderTask implements="Task" {
 	public void function init(required string view, string mapping = "", RequestStrategy requestStrategy) {
 
 		variables.view = arguments.view;
-		if (Len(mapping) > 0) {
+		if (Len(arguments.mapping) > 0) {
 			// prepend the given mapping
-			variables.view = mapping & "/" & variables.view;
+			variables.view = arguments.mapping & "/" & variables.view;
 		}
 		// use the view without the mapping for the response key
 		variables.key = arguments.view;
@@ -40,8 +40,8 @@ component RenderTask implements="Task" {
 
 	private void function render(required struct data, required Response response) {
 
-		// create the following variables for use within the view
-		local.data = arguments.data;
+		// create variables for use within the view
+		StructAppend(local, arguments.data, true);
 		local.response = arguments.response;
 
 		// set the content key, so that response.append() calls without a key argument will write to this view

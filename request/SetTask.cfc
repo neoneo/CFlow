@@ -14,10 +14,20 @@
    limitations under the License.
 */
 
-component NumericParameter extends="Parameter" {
+component SetTask implements="Task" {
 
-	public numeric function getValue(required struct data) {
-		return Val(super.getValue(arguments.data));
+	public void function init(required string name, required string value) {
+
+		variables.name = arguments.name;
+		variables.value = arguments.value;
+
+	}
+
+	public boolean function run(required Event event) {
+
+		arguments.event[variables.name] = variables.value;
+
+		return true;
 	}
 
 }

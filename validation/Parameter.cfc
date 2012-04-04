@@ -16,19 +16,29 @@
 
 /**
  * Abstracts access to parameter values.
- * The setValue() method accepts any string expression, and a boolean that indicates whether to evaluate that expression.
+ * The setValue() method accepts any string expression. If the expression begins with a %, the expression (less the %) will be evaluated.
  * The getValue() method accepts a data struct that provides context for the expression (if evaluated), and returns the result.
  * If no evaluation should occur, this component just stores and returns the expression as is.
  **/
 component Parameter {
 
-	public void function setValue(required string expression, boolean evaluate = false) {
+	public void function setValue(required string expression) {
 
-		variables.evaluate = arguments.evaluate;
-		if (arguments.evaluate) {
-			variables.expression = new cflow.util.Evaluator(arguments.expression);
+		variables.evaluate = false;
+
+		local.expression = arguments.expression;
+		if (Left(local.expression, 1) == "%") {
+			variables.evaluate = true;
+			RemoveChars(local.expression, 1, 1);
+			if (Left(local.expression, 1) == "%") {
+				variables.evaluate = false;
+			}
+		}
+
+		if (variables.evaluate) {
+			variables.expression = new cflow.util.Evaluator(local.expression);
 		} else {
-			variables.expression = arguments.expression;
+			variables.expression = local.expression;
 		}
 
 	}

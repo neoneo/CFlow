@@ -212,8 +212,12 @@ component Context accessors="true" {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
-	public EvaluateTask function createEvaluateTask(required string condition) {
-		return new EvaluateTask(arguments.condition);
+	public IfTask function createIfTask(required string condition) {
+		return new IfTask(arguments.condition);
+	}
+
+	public SetTask function createSetTask(required string name, required string value) {
+		return new SetTask(arguments.name, arguments.value);
 	}
 
 	public PhaseTask function createPhaseTask() {

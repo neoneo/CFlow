@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component EvaluateTask extends="ComplexTask" {
+component IfTask extends="ComplexTask" {
 
 	public void function init(required string condition) {
 

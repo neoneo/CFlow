@@ -16,10 +16,10 @@
 
 component DateTimeRule extends="Rule" {
 
-	public void function init(required string value, boolean evaluate = false) {
+	public void function init(required string value) {
 
 		variables.parameter = new DateTimeParameter();
-		variables.parameter.setValue(arguments.value, arguments.evaluate);
+		variables.parameter.setValue(arguments.value);
 
 	}
 

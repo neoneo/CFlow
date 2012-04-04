@@ -147,7 +147,6 @@ component XmlReader accessors="true" {
 		}
 
 		var xmlAttributes = arguments.node.xmlAttributes;
-		var eval = StructKeyExists(xmlAttributes, "evaluate") && xmlAttributes.evaluate;
 		var caseSensitive = StructKeyExists(xmlAttributes, "caseSensitive") && xmlAttributes.caseSensitive;
 
 		var rule = JavaCast("null", 0);
@@ -172,15 +171,15 @@ component XmlReader accessors="true" {
 				break;
 
 			case "contain":
-				rule = variables.context.createContainRule(xmlAttributes.value, eval, caseSensitive);
+				rule = variables.context.createContainRule(xmlAttributes.value, caseSensitive);
 				break;
 
 			case "endwidth":
-				rule = variables.context.createEndWithRule(xmlAttributes.value, eval, caseSensitive);
+				rule = variables.context.createEndWithRule(xmlAttributes.value, caseSensitive);
 				break;
 
 			case "startwith":
-				rule = variables.context.createStartWithRule(xmlAttributes.value, eval, caseSensitive);
+				rule = variables.context.createStartWithRule(xmlAttributes.value, caseSensitive);
 				break;
 
 			case "match":
@@ -188,19 +187,19 @@ component XmlReader accessors="true" {
 				break;
 
 			case "element":
-				rule = variables.context.createElementRule(xmlAttributes.set, eval, caseSensitive);
+				rule = variables.context.createElementRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "intersection":
-				rule = variables.context.createIntersectionRule(xmlAttributes.set, eval, caseSensitive);
+				rule = variables.context.createIntersectionRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "subset":
-				rule = variables.context.createSubsetRule(xmlAttributes.set, eval, caseSensitive);
+				rule = variables.context.createSubsetRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "superset":
-				rule = variables.context.createSupersetRule(xmlAttributes.set, eval, caseSensitive);
+				rule = variables.context.createSupersetRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "distinct":
@@ -212,19 +211,19 @@ component XmlReader accessors="true" {
 					// create a rule depending on the datatype
 					switch (arguments.datatype) {
 						case "string":
-							rule = variables.context.createEqualStringRule(xmlAttributes.value, eval, caseSensitive);
+							rule = variables.context.createEqualStringRule(xmlAttributes.value, caseSensitive);
 							break;
 
 						case "numeric":
-							rule = variables.context.createEqualNumericRule(xmlAttributes.value, eval);
+							rule = variables.context.createEqualNumericRule(xmlAttributes.value);
 							break;
 
 						case "datetime":
-							rule = variables.context.createEqualDateTimeRule(xmlAttributes.value, eval);
+							rule = variables.context.createEqualDateTimeRule(xmlAttributes.value);
 							break;
 					}
 				} else if (StructKeyExists(xmlAttributes, "set")) {
-					rule = variables.context.createEqualSetRule(xmlAttributes.set, eval, caseSensitive);
+					rule = variables.context.createEqualSetRule(xmlAttributes.set, caseSensitive);
 				}
 				break;
 
@@ -234,17 +233,17 @@ component XmlReader accessors="true" {
 					switch (arguments.datatype) {
 						case "numeric":
 						case "string":
-							rule = variables.context.createMinimumNumericRule(xmlAttributes.value, eval);
+							rule = variables.context.createMinimumNumericRule(xmlAttributes.value);
 							break;
 
 						case "datetime":
-							rule = variables.context.createMinimumDateTimeRule(xmlAttributes.value, eval);
+							rule = variables.context.createMinimumDateTimeRule(xmlAttributes.value);
 							break;
 					}
 				} else if (StructKeyExists(xmlAttributes, "length")) {
-					rule = variables.context.createMinimumLengthRule(xmlAttributes.length, eval);
+					rule = variables.context.createMinimumLengthRule(xmlAttributes.length);
 				} else if (StructKeyExists(xmlAttributes, "count")) {
-					rule = variables.context.createMinimumCountRule(xmlAttributes.count, eval);
+					rule = variables.context.createMinimumCountRule(xmlAttributes.count);
 				}
 				break;
 
@@ -254,17 +253,17 @@ component XmlReader accessors="true" {
 					switch (arguments.datatype) {
 						case "numeric":
 						case "string":
-							rule = variables.context.createMaximumNumericRule(xmlAttributes.value, eval);
+							rule = variables.context.createMaximumNumericRule(xmlAttributes.value);
 							break;
 
 						case "datetime":
-							rule = variables.context.createMaximumDateTimeRule(xmlAttributes.value, eval);
+							rule = variables.context.createMaximumDateTimeRule(xmlAttributes.value);
 							break;
 					}
 				} else if (StructKeyExists(xmlAttributes, "length")) {
-					rule = variables.context.createMaximumLengthRule(xmlAttributes.length, eval);
+					rule = variables.context.createMaximumLengthRule(xmlAttributes.length);
 				} else if (StructKeyExists(xmlAttributes, "count")) {
-					rule = variables.context.createMaximumCountRule(xmlAttributes.count, eval);
+					rule = variables.context.createMaximumCountRule(xmlAttributes.count);
 				}
 				break;
 

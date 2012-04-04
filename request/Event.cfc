@@ -63,7 +63,8 @@ component Event {
 	public void function setProperties(required struct properties) {
 
 		for (var property in arguments.properties) {
-			if (!StructKeyExists(this, property) || !IsCustomFunction(this[property])) {
+			// the property could be null, so check for that too
+			if (StructKeyExists(arguments.properties, property) && (!StructKeyExists(this, property) || !IsCustomFunction(this[property]))) {
 				this[property] = arguments.properties[property];
 			}
 		}

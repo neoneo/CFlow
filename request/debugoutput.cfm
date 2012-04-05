@@ -115,7 +115,7 @@
 
 <cfoutput>
 <div id="cflow">
-	#data._debugoutput#
+	#_debugoutput#
 </div>
 </cfoutput>
 

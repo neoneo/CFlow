@@ -16,6 +16,8 @@
 
 component DebugContext extends="Context" {
 
+	variables.debugOutputRenderer = new DebugOutputRenderer();
+
 	// FACTORY METHODS ============================================================================
 
 	public DebugTask function createInvokeTask(required string controllerName, required string methodName) {
@@ -177,7 +179,7 @@ component DebugContext extends="Context" {
 			setViewMapping(viewMapping);
 		}
 
-		arguments.event._debugoutput = new DebugOutputRenderer().render(arguments.event.getMessages());
+		arguments.event._debugoutput = variables.debugOutputRenderer.render(arguments.event.getMessages());
 
 		task.run(arguments.event);
 

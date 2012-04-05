@@ -85,6 +85,10 @@ component RedirectTask implements="Task" {
 		return true;
 	}
 
+	public string function getType() {
+		return "redirect";
+	}
+
 	private string function obtainUrl(required Event event) {
 
 		var urlString = variables.urlString;

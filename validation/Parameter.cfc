@@ -29,7 +29,7 @@ component Parameter {
 		local.expression = arguments.expression;
 		if (Left(local.expression, 1) == "%") {
 			variables.evaluate = true;
-			RemoveChars(local.expression, 1, 1);
+			local.expression = RemoveChars(local.expression, 1, 1);
 			if (Left(local.expression, 1) == "%") {
 				variables.evaluate = false;
 			}

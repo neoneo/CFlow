@@ -50,6 +50,11 @@ component DispatchTask extends="ComplexTask" {
 		return success;
 	}
 
+	public string function getType() {
+		return "dispatch";
+	}
+
+
 	private Context function getContext() {
 		return variables.context;
 	}

@@ -18,4 +18,6 @@ interface {
 
 	public boolean function run(required Event event);
 
+	public string function getType();
+
 }

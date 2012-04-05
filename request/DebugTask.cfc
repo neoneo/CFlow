@@ -22,8 +22,8 @@ component DebugTask implements="Task" {
 	public void function init(required Task task, required struct metadata) {
 
 		variables.task = arguments.task;
-		variables.metadata = arguments.metadata;
-		StructAppend(variables.metadata, {type = GetMetaData(variables.task).name});
+		variables.metadata = StructCopy(arguments.metadata);
+		variables.metadata.type = getType();
 
 	}
 
@@ -40,6 +40,10 @@ component DebugTask implements="Task" {
 		}
 
 		return success;
+	}
+
+	public string function getType() {
+		return variables.task.getType();
 	}
 
 	public void function addSubtask(required Task task) {

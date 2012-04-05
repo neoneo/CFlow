@@ -22,6 +22,8 @@ component XmlReader accessors="true" {
 	variables.abstractTargetNames = []; // list of targets that are abstract
 	variables.defaultControllers = {}; // default controllers per target
 
+	variables.complexTaskTypes = ["invoke", "dispatch", "if", "else"]; // complex tasks are tasks that can contain other tasks
+
 	public struct function read(required string path) {
 
 		local.path = ExpandPath(arguments.path);
@@ -172,8 +174,8 @@ component XmlReader accessors="true" {
 		// we assume the xml is correct, so we can just append the attributes
 		StructAppend(task, arguments.node.xmlAttributes);
 
-		// for invoke and dispatch tasks, there can be child tasks that are to be executed if an event is canceled
-		if (ArrayContains(["invoke", "dispatch", "if"], task.type)) {
+		// for complex tasks, there can be child tasks that are to be executed if an event is canceled
+		if (ArrayContains(variables.complexTaskTypes, task.type)) {
 			task["sub"] = getTasksFromChildNodes(arguments.node);
 		}
 
@@ -459,6 +461,11 @@ component XmlReader accessors="true" {
 
 				case "if":
 					instance = arguments.context.createIfTask(arguments.task.condition);
+					break;
+
+				case "else":
+					var condition = StructKeyExists(arguments.task, "condition") ? arguments.task.condition : "";
+					instance = arguments.context.createElseTask(condition);
 					break;
 
 				case "set":

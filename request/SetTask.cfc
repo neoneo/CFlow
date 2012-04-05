@@ -30,4 +30,8 @@ component SetTask implements="Task" {
 		return true;
 	}
 
+	public string function getType() {
+		return "set";
+	}
+
 }

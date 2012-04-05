@@ -38,6 +38,10 @@ component RenderTask implements="Task" {
 		return true;
 	}
 
+	public string function getType() {
+		return "render";
+	}
+
 	private void function render(required struct data, required Response response) {
 
 		// create variables for use within the view

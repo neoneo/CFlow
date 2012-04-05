@@ -14,36 +14,34 @@
    limitations under the License.
 */
 
-component IfTask extends="ComplexTask" {
+component ElseTask extends="IfTask" {
 
-	public void function init(required string condition) {
-		variables.evaluator = new cflow.util.Evaluator(arguments.condition);
-	}
+	public void function init(string condition = "") {
 
-	public void function addSubtask(required Task task) {
-
-		if (arguments.task.getType() == "else") {
-			// there can only be one ElseTask
-			variables.elseTask = arguments.task;
+		if (Len(arguments.condition) > 0) {
+			super.init(arguments.condition);
+			variables.hasCondition = true;
 		} else {
-			super.addSubtask(arguments.task);
+			variables.hasCondition = false;
 		}
 
 	}
 
 	public boolean function run(required Event event) {
 
-		if (variables.evaluator.execute(arguments.event)) {
+		if (!variables.hasCondition) {
+			// the subtasks have to run unconditionally
 			runSubtasks(arguments.event);
-		} else if (StructKeyExists(variables, "elseTask")) {
-			variables.elseTask.run(arguments.event);
+		} else {
+			// conditional running of subtasks, which is implemented in the superclass
+			super.run(arguments.event);
 		}
 
 		return true;
 	}
 
 	public string function getType() {
-		return "if";
+		return "else";
 	}
 
 }

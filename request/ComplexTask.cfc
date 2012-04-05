@@ -25,6 +25,10 @@ component ComplexTask implements="Task" {
 		Throw(type = "cflow.notimplemented", message = "Not implemented");
 	}
 
+	public string function getType() {
+		Throw(type = "cflow.notimplemented", message = "Not implemented");
+	}
+
 	public void function addSubtask(required Task task) {
 		ArrayAppend(variables.subtasks, arguments.task);
 	}

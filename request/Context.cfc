@@ -216,6 +216,10 @@ component Context accessors="true" {
 		return new IfTask(arguments.condition);
 	}
 
+	public ElseTask function createElseTask(string condition = "") {
+		return new ElseTask(arguments.condition);
+	}
+
 	public SetTask function createSetTask(required string name, required string value) {
 		return new SetTask(arguments.name, arguments.value);
 	}

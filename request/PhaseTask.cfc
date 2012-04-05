@@ -23,4 +23,9 @@ component PhaseTask extends="ComplexTask" {
 		return runSubtasks(arguments.event);
 	}
 
+	public string function getType() {
+		return "phase";
+	}
+
+
 }

@@ -50,6 +50,13 @@ component DebugContext extends="Context" {
 		return new DebugTask(task, arguments);
 	}
 
+	public DebugTask function createElseTask(string condition = "") {
+
+		var task = super.createElseTask(argumentCollection = arguments);
+
+		return new DebugTask(task, arguments);
+	}
+
 	public DebugTask function createSetTask(required string name, required string value) {
 
 		var task = super.createSetTask(argumentCollection = arguments);

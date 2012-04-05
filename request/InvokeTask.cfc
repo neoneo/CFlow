@@ -41,6 +41,11 @@ component InvokeTask extends="ComplexTask" {
 		return success;
 	}
 
+	public string function getType() {
+		return "invoke";
+	}
+
+
 	private Controller function getController() {
 		return variables.controller;
 	}

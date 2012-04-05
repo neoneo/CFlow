@@ -114,9 +114,7 @@
 		<cfif ListFirst(message, ".") eq "cflow">
 			<cfset className = ListRest(message, ".")>
 			<cfif message eq "cflow.task">
-				<cfset var type = ListLast(metadata.type, ".")>
-				<!--- cut off "Task" and make lower case --->
-				<cfset className &= " " & LCase(Left(type, Len(type) - 4))>
+				<cfset className &= " " & metadata.type>
 			<cfelseif REFind("cflow\.(start|before|after|end|event)tasks", message) eq 1>
 				<cfset className &= " phase">
 			</cfif>
@@ -138,14 +136,15 @@
 						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.url#">#metadata.url#</a></cfcase>
 						<cfcase value="cflow.aborted">Request aborted</cfcase>
 						<cfcase value="cflow.task">
-							<cfswitch expression="#type#">
-								<cfcase value="InvokeTask">Invoke #metadata.controllerName#.#metadata.methodName#</cfcase>
-								<cfcase value="DispatchTask">
+							<cfswitch expression="#metadata.type#">
+								<cfcase value="invoke">Invoke #metadata.controllerName#.#metadata.methodName#</cfcase>
+								<cfcase value="dispatch">
 									Dispatch #metadata.targetName#.#metadata.eventType#
 									<cfset dispatchTask = true>
 								</cfcase>
-								<cfcase value="RenderTask">Render #metadata.view#</cfcase>
-								<cfcase value="IfTask">If #metadata.condition#</cfcase>
+								<cfcase value="render">Render #metadata.view#</cfcase>
+								<cfcase value="if">If #metadata.condition#</cfcase>
+								<cfcase value="else">Else<cfif Len(metadata.condition) gt 0> if #metadata.condition#</cfif></cfcase>
 							</cfswitch>
 						</cfcase>
 						<cfcase value="cflow.exception">

@@ -14,9 +14,11 @@
    limitations under the License.
 */
 
-component XmlReader accessors="true" {
+component XmlReader {
 
-	property name="context" type="Context" getter="false";
+	public void function init(required Context context) {
+		variables.context = arguments.context;
+	}
 
 	public void function read(required string path) {
 

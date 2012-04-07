@@ -36,16 +36,24 @@ component Context accessors="true" {
 	variables.requestStrategy = new DefaultRequestStrategy(this);
 
 	public Response function handleRequest() {
-		return getRequestStrategy().handleRequest();
+
+		var requestParameters = getRequestStrategy().collectParameters();
+		if (StructKeyExists(requestParameters, "parameters")) {
+			local.response = handleEvent(requestParameters.target, requestParameters.event, requestParameters.parameters);
+		} else {
+			local.response = handleEvent(requestParameters.target, requestParameters.event);
+		}
+
+		return local.response;
 	}
 
 	/**
 	 * Fires an event on the given target.
 	 **/
-	public Response function handleEvent(required string targetName, required string eventType, struct properties = {}) {
+	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
 		var response = createResponse();
-		var event = createEvent(arguments.targetName, arguments.eventType, arguments.properties, response);
+		var event = createEvent(arguments.targetName, arguments.eventType, arguments.parameters, response);
 
 		var success = runStartTasks(event);
 

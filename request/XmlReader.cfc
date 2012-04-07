@@ -14,15 +14,17 @@
    limitations under the License.
 */
 
-component XmlReader accessors="true" {
-
-	property name="context" type="Context" getter="false";
+component XmlReader {
 
 	variables.tasks = {}; // lists of tasks per target
 	variables.abstractTargetNames = []; // list of targets that are abstract
 	variables.defaultControllers = {}; // default controllers per target
 
 	variables.complexTaskTypes = ["invoke", "dispatch", "if", "else"]; // complex tasks are tasks that can contain other tasks
+
+	public void function init(required Context context) {
+		variables.context = arguments.context;
+	}
 
 	public struct function read(required string path) {
 
@@ -79,7 +81,7 @@ component XmlReader accessors="true" {
 				if (StructKeyExists(tasks, phase)) {
 					for (var task in tasks[phase]) {
 						// register the task for the current phase under the target name
-						variables.context.register(createTask(variables.context, task), phase, name);
+						variables.context.register(createTask(task), phase, name);
 					}
 				}
 			}
@@ -90,7 +92,7 @@ component XmlReader accessors="true" {
 				// loop over the tasks for this event and create subtasks
 				for (var task in tasks[type]) {
 					// register the task for the given event
-					variables.context.register(createTask(variables.context, task), "event", name, type);
+					variables.context.register(createTask(task), "event", name, type);
 				}
 			}
 		}
@@ -409,7 +411,7 @@ component XmlReader accessors="true" {
 
 	}
 
-	private Task function createTask(required Context context, struct task) {
+	private Task function createTask(struct task) {
 
 		var instance = JavaCast("null", 0);
 
@@ -421,15 +423,15 @@ component XmlReader accessors="true" {
 					if (!StructKeyExists(arguments.task, "controller")) {
 						Throw(type = "cflow.request", message = "No controller associated with invoke task for method '#arguments.task.method#'");
 					}
-					instance = arguments.context.createInvokeTask(arguments.task.controller, arguments.task.method);
+					instance = variables.context.createInvokeTask(arguments.task.controller, arguments.task.method);
 					break;
 
 				case "dispatch":
-					instance = arguments.context.createDispatchTask(arguments.task.target, arguments.task.event);
+					instance = variables.context.createDispatchTask(arguments.task.target, arguments.task.event);
 					break;
 
 				case "render":
-					instance = arguments.context.createRenderTask(arguments.task.view);
+					instance = variables.context.createRenderTask(arguments.task.view);
 					break;
 
 				case "redirect":
@@ -456,30 +458,30 @@ component XmlReader accessors="true" {
 						}
 					}
 
-					instance = arguments.context.createRedirectTask(type, parameters, permanent);
+					instance = variables.context.createRedirectTask(type, parameters, permanent);
 					break;
 
 				case "if":
-					instance = arguments.context.createIfTask(arguments.task.condition);
+					instance = variables.context.createIfTask(arguments.task.condition);
 					break;
 
 				case "else":
 					var condition = StructKeyExists(arguments.task, "condition") ? arguments.task.condition : "";
-					instance = arguments.context.createElseTask(condition);
+					instance = variables.context.createElseTask(condition);
 					break;
 
 				case "set":
 					// the variable name is the first (and only) attribute
 					var name = ListFirst(StructKeyList(arguments.task));
 					var expression = arguments.task[name];
-					instance = arguments.context.createSetTask(name, expression);
+					instance = variables.context.createSetTask(name, expression);
 					break;
 			}
 
 			// check for subtasks
 			if (StructKeyExists(arguments.task, "sub")) {
 				for (var subtask in arguments.task.sub) {
-					instance.addSubtask(createTask(arguments.context, subtask));
+					instance.addSubtask(createTask(subtask));
 				}
 			}
 		}

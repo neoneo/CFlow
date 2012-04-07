@@ -42,7 +42,7 @@ component Response accessors="true" {
 
 	}
 
-	public void function addHeader(required string name, required string value) {
+	public void function appendHeader(required string name, required string value) {
 
 		ArrayAppend(variables.headers, {
 			name: arguments.name,
@@ -83,11 +83,13 @@ component Response accessors="true" {
 			case "json":
 				// if there is 1 element in the content, serialize that
 				// if there are more, serialize the whole array
-				if (ArrayLen(writeContents) == 1) {
-					result = SerializeJSON(writeContents[1]);
-				} else {
-					result = SerializeJSON(writeContents);
+				var serializeContents = [];
+				for (var content in writeContents) {
+					if (!IsSimpleValue(content)) {
+						ArrayAppend(serializeContents, content);
+					}
 				}
+				result = ArrayLen(serializeContents) == 1 ? SerializeJSON(serializeContents[1]) : SerializeJSON(serializeContents);
 				break;
 		}
 

@@ -19,12 +19,6 @@ component DefaultRequestStrategy implements="RequestStrategy" accessors="true" {
 	property name="defaultTarget" type="string" default="";
 	property name="defaultEvent" type="string" default="";
 
-	public void function init(required Context context) {
-
-		variables.context = context;
-
-	}
-
 	public string function writeUrl(required string target, required string event, struct parameters) {
 
 		var urlString = "index.cfm?target=#arguments.target#&event=#arguments.event#";
@@ -39,32 +33,20 @@ component DefaultRequestStrategy implements="RequestStrategy" accessors="true" {
 	}
 
 	/**
-	 * Default request handling implementation.
-	 *
 	 * The parameter values in the url and form scopes are collected as properties for the event.
 	 * The target and event parameters are used to dispatch the corresponding event.
 	 * If no target or event parameters are present, the default values for these parameters are used.
 	 **/
-	public Response function handleRequest() {
+	public struct function collectParameters() {
 
-		var properties = StructCopy(url);
-		StructAppend(properties, form, false);
+		var parameters = StructCopy(url);
+		StructAppend(parameters, form, false);
 
-		var targetName = "";
-		var eventType = "";
-		if (StructKeyExists(properties, "target")) {
-			targetName = properties.target;
-		} else {
-			targetName = getDefaultTarget();
-		}
-		if (StructKeyExists(properties, "event")) {
-			eventType = properties.event;
-		} else {
-			eventType = getDefaultEvent();
-		}
-
-		// tell the context what to do
-		return variables.context.handleEvent(targetName, eventType, properties);
+		return {
+			target = StructKeyExists(parameters, "target") ? parameters.target : getDefaultTarget(),
+			event = StructKeyExists(parameters, "event") ? parameters.event : getDefaultEvent(),
+			parameters = parameters
+		};
 	}
 
 }

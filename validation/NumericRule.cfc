@@ -17,8 +17,7 @@
 component NumericRule extends="Rule" {
 
 	public void function init(required string value) {
-		variables.parameter = new NumericParameter();
-		variables.parameter.setValue(arguments.value);
+		variables.parameter = new NumericParameter(arguments.value);
 	}
 
 	public string function formatParameterValue(required struct data, required string mask) {

@@ -16,16 +16,16 @@
 
 component SetTask implements="Task" {
 
-	public void function init(required string name, required string value) {
+	public void function init(required string name, required string expression) {
 
 		variables.name = arguments.name;
-		variables.value = arguments.value;
+		variables.parameter = new cflow.util.Parameter(arguments.expression);
 
 	}
 
 	public boolean function run(required Event event) {
 
-		arguments.event[variables.name] = variables.value;
+		arguments.event[variables.name] = variables.parameter.getValue(arguments.event);
 
 		return true;
 	}

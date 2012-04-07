@@ -18,19 +18,23 @@ component Evaluator {
 
 	public void function init(required string expression) {
 
-		// replace all ColdFusion operators by their script counterparts
+		// replace ColdFusion operators by their script counterparts
 		var result = ReplaceList(arguments.expression, " eq , lt , lte , gt , gte , neq , not , and , or , mod ", " == , < , <= , > , >= , != ,!, && , || , % ");
 		// interpret remaining alphanumeric terms without a parenthesis as a field name (which will be available in arguments.data)
-		result = REReplaceNoCase(" " & result & " ", "([ (),])([a-z_]+[a-z0-9_]*)(?!\()([ (),])", "\1arguments.data.\2\3", "all");
+		// explanation:
+		// before the variable name there must be a space, or one of ( ) ,
+		// after the variable name there can be no (, to distinguish a variable from a global function
+		// after the variable name there must be a space, or one of ( ) , .
+		result = REReplaceNoCase(" " & result & " ", "([ (),])([a-z_]+[a-z0-9_]*)(?!\()([ (),\.])", "\1arguments.data.\2\3", "all");
 
-		variables.expression = result;
+		variables.expression = Trim(result);
 
 	}
 
 	/**
 	 * Returns the value of the expression after evaluation.
 	 **/
-	public any function execute(struct data) {
+	public any function execute(required struct data) {
 		return Evaluate(variables.expression);
 	}
 

@@ -17,11 +17,8 @@
 component StringRule extends="Rule" {
 
 	public void function init(required string value, boolean caseSensitive = false) {
-
-		variables.parameter = new StringParameter();
-		variables.parameter.setValue(arguments.value);
+		variables.parameter = new StringParameter(arguments.value);
 		variables.caseSensitive = arguments.caseSensitive;
-
 	}
 
 	public string function formatParameterValue(required struct data, required string mask) {

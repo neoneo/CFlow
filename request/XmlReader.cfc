@@ -471,8 +471,8 @@ component XmlReader accessors="true" {
 				case "set":
 					// the variable name is the first (and only) attribute
 					var name = ListFirst(StructKeyList(arguments.task));
-					var value = arguments.task[name];
-					instance = arguments.context.createSetTask(name, value);
+					var expression = arguments.task[name];
+					instance = arguments.context.createSetTask(name, expression);
 					break;
 			}
 

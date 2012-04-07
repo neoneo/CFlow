@@ -22,8 +22,13 @@ component IfTask extends="ComplexTask" {
 
 	public void function addSubtask(required Task task) {
 
-		if (arguments.task.getType() == "else") {
-			// there can only be one ElseTask
+		// the task is a subtask of this task as long as there is no else task
+		// if there is one, the task is passed to the else task (also if the task is another ElseTask)
+		// this mechanism results in a recursive if/ else structure
+		if (StructKeyExists(variables, "elseTask")) {
+			// add the subtask to the else task
+			variables.elseTask.addSubtask(arguments.task);
+		} else if (arguments.task.getType() == "else") {
 			variables.elseTask = arguments.task;
 		} else {
 			super.addSubtask(arguments.task);

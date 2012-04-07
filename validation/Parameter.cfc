@@ -14,46 +14,6 @@
    limitations under the License.
 */
 
-/**
- * Abstracts access to parameter values.
- * The setValue() method accepts any string expression. If the expression begins with a %, the expression (less the %) will be evaluated.
- * The getValue() method accepts a data struct that provides context for the expression (if evaluated), and returns the result.
- * If no evaluation should occur, this component just stores and returns the expression as is.
- **/
-component Parameter {
-
-	public void function setValue(required string expression) {
-
-		variables.evaluate = false;
-
-		local.expression = arguments.expression;
-		if (Left(local.expression, 1) == "%") {
-			variables.evaluate = true;
-			local.expression = RemoveChars(local.expression, 1, 1);
-			if (Left(local.expression, 1) == "%") {
-				variables.evaluate = false;
-			}
-		}
-
-		if (variables.evaluate) {
-			variables.expression = new cflow.util.Evaluator(local.expression);
-		} else {
-			variables.expression = local.expression;
-		}
-
-	}
-
-	public any function getValue(required struct data) {
-
-		var value = JavaCast("null", 0);
-
-		if (variables.evaluate) {
-			value = variables.expression.execute(arguments.data);
-		} else {
-			value = variables.expression;
-		}
-
-		return value;
-	}
+component Parameter extends="cflow.util.Parameter" {
 
 }

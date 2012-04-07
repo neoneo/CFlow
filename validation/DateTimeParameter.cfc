@@ -29,7 +29,7 @@ component DateTimeParameter {
 		"l" = "l"
 	};
 
-	public void function setValue(required string expression) {
+	public void function init(required string expression) {
 
 		// the expression can be a date, a variable name or a date arithmetic expression
 		// an arithmetic expression should be of the form [date or date variable] [+ or -] [number and unit]

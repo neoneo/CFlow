@@ -17,10 +17,7 @@
 component DateTimeRule extends="Rule" {
 
 	public void function init(required string value) {
-
-		variables.parameter = new DateTimeParameter();
-		variables.parameter.setValue(arguments.value);
-
+		variables.parameter = new DateTimeParameter(arguments.value);
 	}
 
 	public string function formatParameterValue(required struct data, required string mask) {

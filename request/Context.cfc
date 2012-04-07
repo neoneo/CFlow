@@ -220,8 +220,8 @@ component Context accessors="true" {
 		return new ElseTask(arguments.condition);
 	}
 
-	public SetTask function createSetTask(required string name, required string value) {
-		return new SetTask(arguments.name, arguments.value);
+	public SetTask function createSetTask(required string name, required string expression) {
+		return new SetTask(arguments.name, arguments.expression);
 	}
 
 	public PhaseTask function createPhaseTask() {

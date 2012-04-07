@@ -20,11 +20,8 @@
 component SetRule extends="Rule" {
 
 	public void function init(required string value, boolean caseSensitive = false) {
-
-		variables.parameter = new SetParameter();
-		variables.parameter.setValue(arguments.value);
+		variables.parameter = new SetParameter(arguments.value);
 		variables.caseSensitive = arguments.caseSensitive;
-
 	}
 
 	public string function formatParameterValue(required struct data, string mask = "") {

@@ -145,6 +145,7 @@
 								<cfcase value="render">Render #metadata.view#</cfcase>
 								<cfcase value="if">If #metadata.condition#</cfcase>
 								<cfcase value="else">Else<cfif Len(metadata.condition) gt 0> if #metadata.condition#</cfif></cfcase>
+								<cfcase value="set">Set #metadata.name# = #metadata.expression#</cfcase>
 							</cfswitch>
 						</cfcase>
 						<cfcase value="cflow.exception">

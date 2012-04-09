@@ -40,21 +40,13 @@ component XmlReader {
 
 	public void function register() {
 
-		// set task defaults to tasks where needed:
-
-		// set all invoke tasks' controllers to the default controller of the target
-		// if no default controller is given, wait until after the includes are processed
-		setDefaultControllers();
-
 		// use the target as the view directory name for start, before, after, and end tasks only (argument false)
 		setViewDirectories(false);
 
 		// process all include nodes
 		compileIncludes();
 
-		// if an included target has no default controller defined, the corresponding invoke tasks have no controller yet (unless defined on the task itself)
-		// so once again traverse all invoke tasks to check for ones without a controller, and set it to the defaultcontroller of the (receiving) target
-		// if the receiving target has no defaultcontroller, an exception will be thrown (later)
+		// set all invoke tasks' controllers without a controller to the default controller of the target
 		setDefaultControllers();
 
 		// all dispatch and redirect tasks without a target will go to the target that owns the event
@@ -325,17 +317,16 @@ component XmlReader {
 					if (!StructKeyExists(task.owner, "target")) {
 						task.owner["target"] = name;
 					}
+					// if the event goes to the same target, and is defined immediately in the before or after phase, this would cause an infinite loop
+					if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
+						Throw(
+							type = "cflow.request",
+							message = "Dispatching event '#task.owner.event#' to the current target '#name#' will cause an infinite loop",
+							detail = "Do not define dispatch tasks without a target in the before or after phases, unless the task is run conditionally"
+						);
+					}
 				}
 
-				// this check is done for all dispatch tasks:
-				if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
-					// event is *always* dispatched to the current target in the before or after phase; this will lead to an infinite loop
-					Throw(
-						type = "cflow.request",
-						message = "Dispatching event '#task.owner.event#' to the current target '#name#' will cause an infinite loop",
-						detail = "Do not define dispatch tasks without a target in the before or after phases, unless the task is run conditionally"
-					);
-				}
 			}
 
 		}
@@ -386,9 +377,8 @@ component XmlReader {
 							task.owner["target"] = name;
 						}
 
-						// this check is done for all redirect tasks:
+						// if the redirect goes to the same target and is defined outside the event phase, this would cause an infinite loop
 						if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
-							// redirect *always* to the current target outside the event phase; this will lead to an infinite loop
 							Throw(
 								type = "cflow.request",
 								message = "Redirecting to event '#task.owner.event#' on the current target '#name#' will cause an infinite loop",
@@ -472,7 +462,7 @@ component XmlReader {
 
 				case "set":
 					// the variable name is the first (and only) attribute
-					var name = ListFirst(StructKeyList(arguments.task));
+					var name = StructKeyArray(arguments.task)[1];
 					var expression = arguments.task[name];
 					instance = variables.context.createSetTask(name, expression);
 					break;

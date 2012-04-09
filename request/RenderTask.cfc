@@ -1,4 +1,4 @@
-/*
+<!---
    Copyright 2012 Neo Neo
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +12,11 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+--->
 
-component RenderTask implements="Task" {
+<cfcomponent displayname="RenderTask" implements="Task" output="false">
 
+	<cfscript>
 	public void function init(required string view, string mapping = "", RequestStrategy requestStrategy) {
 
 		variables.view = arguments.view;
@@ -32,7 +33,6 @@ component RenderTask implements="Task" {
 
 	public boolean function run(required Event event) {
 
-		// call render() in order to hide the event object
 		render(arguments.event.getProperties(), arguments.event.getResponse());
 
 		return true;
@@ -41,32 +41,22 @@ component RenderTask implements="Task" {
 	public string function getType() {
 		return "render";
 	}
+	</cfscript>
 
-	private void function render(required struct data, required Response response) {
+	<cffunction name="render" access="private" output="false" returntype="void">
+		<cfargument name="data" type="struct" required="true">
+		<cfargument name="response" type="Response" required="true">
 
-		// create variables for use within the view
-		StructAppend(local, arguments.data, true);
-		local.response = arguments.response;
+		<!--- set the content key, so that response.append() calls without a key argument will write to this view --->
+		<cfset arguments.response.setContentKey(variables.key)>
 
-		// set the content key, so that response.append() calls without a key argument will write to this view
-		response.setContentKey(variables.key);
+		<cfsavecontent variable="local.content">
+			<cfmodule template="render.cfm" view="#variables.view#.cfm" response="#arguments.response#" data="#arguments.data#" requeststrategy="#variables.requestStrategy#">
+		</cfsavecontent>
 
-		var template = variables.view & ".cfm";
-		savecontent variable="local.content" {
-			include template;
-		}
+		<!--- depending on the content key is not thread safe, so we pass the key explicitly --->
+		<cfset response.append(local.content, variables.key)>
 
-		// depending on the content key is not thread safe, so we pass the key explicitly
-		response.append(local.content, variables.key);
+	</cffunction>
 
-	}
-
-	/**
-	 * Shorthand for accessing the writeUrl() method on the request manager.
-	 * This method is available in views.
-	 **/
-	private string function writeUrl(required string target, required string event, struct parameters) {
-		return variables.requestStrategy.writeUrl(argumentCollection = arguments);
-	}
-
-}
+</cfcomponent>

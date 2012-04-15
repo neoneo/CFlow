@@ -45,8 +45,8 @@ component Response accessors="true" {
 	public void function appendHeader(required string name, required string value) {
 
 		ArrayAppend(variables.headers, {
-			name: arguments.name,
-			value: arguments.value
+			name = arguments.name,
+			value = arguments.value
 		});
 
 	}

@@ -214,7 +214,7 @@ component Context accessors="true" {
 	 *
 	 * Redirect types:
 	 * url		The parameters struct should have a url key that contains the explicit url to redirect to
-	 * event	The parameters struct should have target and event keys, and may have additional keys that are used as url parameters
+	 * event	The parameters struct should have target and event keys, and may have additional keys that are included as url parameters
 	 **/
 	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());

@@ -29,13 +29,27 @@ component Object {
 
 	public void function populate(required struct data) {
 
-		// data should have keys that map to property names
+		if (!variables._.populated) {
+			// set the modified flag to true, to prohibit equality checks in setProperty()
+			variables._.modified = true;
+		}
 
+		// data should have keys that map to property names
+		for (var key in arguments.data) {
+			// the value could be null
+			if (StructKeyExists(arguments.data, key)) {
+				setProperty(key, arguments.data[key]);
+			} else {
+				setProperty(key);
+			}
+		}
 
 		// the first call to this method does not make the object dirty unless it is a new object
-		variables._.modified = variables._.populated || !variables._.persisted;
-		variables._.populated = true;
-		variables._.persisted = StructKeyExists(variables, variables._.descriptor.key);
+		if (!variables._.populated) {
+			variables._.persisted = StructKeyExists(variables, variables._.descriptor.key);
+			variables._.modified = !variables._.persisted && !StructIsEmpty(arguments.data);
+			variables._.populated = true;
+		}
 
 	}
 
@@ -56,7 +70,6 @@ component Object {
 
 		// check if the call must be directed to a decorated object
 		if (StructKeyExists(descriptor, "decorates")) {
-			// descriptor.decorates is the name of the property that contains the object
 			instance = getProperty(descriptor.decorates.entity);
 			methodName = descriptor.decorates.method;
 		}
@@ -79,14 +92,7 @@ component Object {
 		if (!variables._.loaded && variables._.persisted) {
 			var result = variables._.entity.readById(variables[variables._.descriptor.key]);
 			// result is a struct where keys are property names
-			for (var key in result) {
-				// the value could be null
-				if (StructKeyExists(result, key)) {
-					setProperty(key, result[key]);
-				} else {
-					setProperty(key);
-				}
-			}
+			populate(result);
 			variables._.loaded = true;
 		}
 

@@ -21,10 +21,10 @@ component Object {
 		return variables._.modified;
 	}
 
-	public void function configure(required struct descriptor, required Factory factory) {
+	public void function configure(required struct descriptor, required Context context) {
 		variables._.descriptor = arguments.descriptor;
-		variables._.factory = arguments.factory;
-		variables._.entity = variables._.factory.getEntity(variables._.descriptor.entity);
+		variables._.context = arguments.context;
+		variables._.entity = variables._.context.getEntity(variables._.descriptor.entity);
 	}
 
 	public void function populate(required struct data) {
@@ -113,7 +113,7 @@ component Object {
 					variables._.modified = variables[arguments.name] != arguments.value;
 				} else {
 					// check for object equality
-					variables._modified = !variables[arguments.name].equals(arguments.value);
+					variables._.modified = !variables[arguments.name].equals(arguments.value);
 				}
 			} else {
 				// the object is modified if one is null and the other is not

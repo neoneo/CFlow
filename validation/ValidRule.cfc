@@ -52,12 +52,12 @@ component ValidRule extends="Rule" {
 				value = ListChangeDelims(value, ":", "."); // also accept . as a delimiter
 			case "date":
 			case "datetime":
-				if (IsDate(value)) {
-					result = true;
-					value = ParseDateTime(value);
-				} else if (LSIsDate(value)) {
+				if (LSIsDate(value)) {
 					result = true;
 					value = LSParseDateTime(value);
+				} else if (IsDate(value)) {
+					result = true;
+					value = ParseDateTime(value);
 				}
 				if (result) {
 					arguments.data[variables.fieldName] = value;

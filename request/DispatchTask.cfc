@@ -36,18 +36,20 @@ component DispatchTask extends="ComplexTask" {
 	public boolean function run(required Event event) {
 
 		// create a new event object with the properties of the event object that is passed in
-		var dispatch = getContext().createEvent(variables.targetName, variables.eventType, arguments.event); //.getProperties(), arguments.event.getResponse());
+		var dispatch = getContext().createEvent(variables.targetName, variables.eventType, arguments.event);
 
-		var success = getContext().dispatchEvent(dispatch);
+		getContext().dispatchEvent(dispatch);
+		var canceled = dispatch.isCanceled();
+		var aborted = dispatch.isAborted();
 
-		if (!success && variables.cancelFailed) {
-			if (hasSubtasks()) {
-				runSubtasks(arguments.event.clone());
+		if (canceled && !aborted) {
+			runSubtasks(arguments.event.clone());
+			if (variables.cancelFailed) {
+				arguments.event.cancel();
 			}
-			arguments.event.cancel();
 		}
 
-		return success;
+		return !canceled && !aborted;
 	}
 
 	public string function getType() {

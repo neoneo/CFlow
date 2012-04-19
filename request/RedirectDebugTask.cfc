@@ -16,7 +16,7 @@
 
 component RedirectDebugTask extends="RedirectTask" {
 
-	public void function run(required Event event) {
+	public boolean function run(required Event event) {
 
 		// we just record the fact that normally a redirect should occur right now
 		arguments.event.record({
@@ -25,6 +25,7 @@ component RedirectDebugTask extends="RedirectTask" {
 		// abort the rest of the flow
 		arguments.event.abort();
 
+		return false;
 	}
 
 }

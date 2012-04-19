@@ -46,8 +46,4 @@ component ComplexTask implements="Task" {
 		return success;
 	}
 
-	private boolean function hasSubtasks() {
-		return !ArrayIsEmpty(variables.subtasks);
-	}
-
 }

@@ -35,13 +35,7 @@ component Evaluator {
 	 * Returns the value of the expression after evaluation.
 	 **/
 	public any function execute(required struct data) {
-		try {
-
 		return Evaluate(variables.expression);
-		} catch (any e) {
-			writedump(variables.expression);
-			abort;
-		}
 	}
 
 }

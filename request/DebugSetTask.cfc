@@ -1,4 +1,4 @@
-/*
+<!---
    Copyright 2012 Neo Neo
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,29 +12,36 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+--->
 
-component SetTask implements="Task" {
+component DebugSetTask extends="SetTask" {
 
 	public void function init(required string name, required string expression, boolean overwrite = true) {
 
-		variables.name = arguments.name;
-		variables.parameter = new cflow.util.Parameter(arguments.expression);
-		variables.overwrite = arguments.overwrite;
+		variables.metadata = StructCopy(arguments);
+		variables.metadata.type = getType();
+		super.init(argumentCollection = arguments);
 
 	}
 
 	public boolean function run(required Event event) {
 
-		if (variables.overwrite || !StructKeyExists(arguments.event, variables.name)) {
-			arguments.event[variables.name] = variables.parameter.getValue(arguments.event);
+		success = true;
+
+		if (!arguments.event.isAborted()) {
+			var metadata = StructCopy(variables.metadata);
+			metadata.exists = StructKeyExists(arguments.event, variables.name);
+
+			arguments.event.record(metadata, "cflow.task");
+
+			success = super.run(arguments.event);
+			// get the result
+			metadata.value = arguments.event[variables.name];
+
+			arguments.event.record(metadata, "cflow.task");
 		}
 
-		return true;
-	}
-
-	public string function getType() {
-		return "set";
+		return success;
 	}
 
 }

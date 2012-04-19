@@ -145,7 +145,17 @@
 								<cfcase value="render">Render #metadata.view#</cfcase>
 								<cfcase value="if">If #metadata.condition#</cfcase>
 								<cfcase value="else">Else<cfif Len(metadata.condition) gt 0> if #metadata.condition#</cfif></cfcase>
-								<cfcase value="set">Set #metadata.name# = #metadata.expression#</cfcase>
+								<cfcase value="set">
+									<cfif not metadata.exists or metadata.overwrite>
+										Set #metadata.name# = #metadata.expression#
+										<cfif metadata.expression neq metadata.value>
+											<!--- evaluated expression --->
+											[#metadata.value#]
+										</cfif>
+									<cfelse>
+										(Set #metadata.name# = #metadata.expression#)
+									</cfif>
+								</cfcase>
 							</cfswitch>
 						</cfcase>
 						<cfcase value="cflow.exception">

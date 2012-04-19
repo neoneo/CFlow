@@ -59,31 +59,16 @@ component DebugContext extends="Context" {
 		return new DebugTask(task, arguments);
 	}
 
-	public DebugTask function createSetTask(required string name, required string expression) {
-
-		var task = super.createSetTask(argumentCollection = arguments);
-
-		return new DebugTask(task, arguments);
+	public DebugSetTask function createSetTask(required string name, required string expression, boolean overwrite = true) {
+		return new DebugSetTask(arguments.name, arguments.expression, arguments.overwrite);
 	}
 
-	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
+	package DebugEvent function createRootEvent(required string targetName, required string eventType, required struct properties, required Response response) {
+		return new DebugEvent(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
+	}
 
-		var properties = JavaCast("null", 0);
-		var response = JavaCast("null", 0);
-		var messages = JavaCast("null", 0);
-
-		// some code duplication from Context
-		if (IsInstanceOf(arguments.event, "Event")) {
-			properties = arguments.event.getProperties();
-			response = arguments.event.getResponse();
-			messages = arguments.event.getMessages();
-		} else {
-			properties = arguments.event;
-			response = arguments.response;
-			messages = [];
-		}
-
-		return new DebugEvent(arguments.targetName, arguments.eventType, properties, response, messages);
+	package DebugEvent function createEvent(required string targetName, required string eventType, required Event event) {
+		return new DebugEvent(arguments.targetName, arguments.eventType, arguments.event);
 	}
 
 	// TEMPLATE METHODS ===========================================================================
@@ -100,6 +85,10 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("cflow.starttasks");
 
+		if (arguments.event.isAborted()) {
+			renderDebugOutput(arguments.event);
+		}
+
 		return success;
 	}
 
@@ -115,6 +104,10 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("cflow.beforetasks");
 
+		if (arguments.event.isAborted()) {
+			renderDebugOutput(arguments.event);
+		}
+
 		return success;
 	}
 
@@ -129,6 +122,10 @@ component DebugContext extends="Context" {
 		}
 
 		arguments.event.record("cflow.aftertasks");
+
+		if (arguments.event.isAborted()) {
+			renderDebugOutput(arguments.event);
+		}
 
 		return success;
 	}
@@ -162,6 +159,10 @@ component DebugContext extends="Context" {
 		}
 
 		arguments.event.record("cflow.eventtasks");
+
+		if (arguments.event.isAborted()) {
+			renderDebugOutput(arguments.event);
+		}
 
 		return success;
 	}

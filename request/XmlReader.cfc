@@ -163,13 +163,13 @@ component XmlReader {
 	private struct function getTaskFromNode(required xml node) {
 
 		var task = {
-			"type" = arguments.node.xmlName
+			"$type" = arguments.node.xmlName
 		};
 		// we assume the xml is correct, so we can just append the attributes
 		StructAppend(task, arguments.node.xmlAttributes);
 
 		// for complex tasks, there can be child tasks that are to be executed if an event is canceled
-		if (ArrayContains(variables.complexTaskTypes, task.type)) {
+		if (ArrayContains(variables.complexTaskTypes, task.$type)) {
 			task["sub"] = getTasksFromChildNodes(arguments.node);
 		}
 
@@ -290,7 +290,7 @@ component XmlReader {
 				// find all tasks that have no controller specified
 				var tasks = StructFindValue(target, "invoke", "all");
 				for (var task in tasks) {
-					if (task.owner.type == "invoke") {
+					if (task.owner.$type == "invoke") {
 						if (!StructKeyExists(task.owner, "controller")) {
 							// explicitly set the controller
 							task.owner["controller"] = variables.defaultControllers[name];
@@ -313,7 +313,7 @@ component XmlReader {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "dispatch", "all");
 			for (var task in tasks) {
-				if (task.owner.type == "dispatch") {
+				if (task.owner.$type == "dispatch") {
 					if (!StructKeyExists(task.owner, "target")) {
 						task.owner["target"] = name;
 					}
@@ -347,7 +347,7 @@ component XmlReader {
 
 			var tasks = StructFindValue(target, "render", "all");
 			for (task in tasks) {
-				if (task.owner.type == "render") {
+				if (task.owner.$type == "render") {
 					if (arguments.eventPhase && task.path contains ".events." || !arguments.eventPhase && task.path does not contain ".events.") {
 					// check for the existence of a view attribute, as some other task could have an attribute with the value 'render'
 						// prepend the target name as the directory name
@@ -370,7 +370,7 @@ component XmlReader {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "redirect", "all");
 			for (var task in tasks) {
-				if (task.owner.type == "redirect") {
+				if (task.owner.$type == "redirect") {
 					// do nothing if the redirect is to a fixed url, or if it has a target already
 					if (!StructKeyExists(task.owner, "url")) {
 						if (!StructKeyExists(task.owner, "target")) {
@@ -408,7 +408,7 @@ component XmlReader {
 		if (!StructKeyExists(arguments, "task")) {
 			instance = arguments.context.createPhaseTask();
 		} else {
-			switch (arguments.task.type) {
+			switch (arguments.task.$type) {
 				case "invoke":
 					if (!StructKeyExists(arguments.task, "controller")) {
 						Throw(type = "cflow.request", message = "No controller associated with invoke task for method '#arguments.task.method#'");
@@ -432,7 +432,7 @@ component XmlReader {
 
 					var parameters = StructCopy(arguments.task);
 					StructDelete(parameters, "permanent");
-					StructDelete(parameters, "type");
+					StructDelete(parameters, "$type");
 
 					// there are two types of redirects: to an event and to a url
 					// depending on the type, the constructor expects different parameters
@@ -462,9 +462,13 @@ component XmlReader {
 
 				case "set":
 					// the variable name is the first (and only) attribute
-					var name = StructKeyArray(arguments.task)[1];
+					var attributes = StructCopy(arguments.task);
+					var overwrite = !StructKeyExists(arguments.task, "overwrite") || arguments.task.overwrite;
+					StructDelete(attributes, "$type");
+					StructDelete(attributes, "overwrite");
+					var name = ListFirst(StructKeyList(attributes));
 					var expression = arguments.task[name];
-					instance = variables.context.createSetTask(name, expression);
+					instance = variables.context.createSetTask(name, expression, overwrite);
 					break;
 			}
 

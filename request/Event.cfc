@@ -17,14 +17,23 @@
 component Event {
 
 	variables.canceled = false;
+	variables.aborted = false;
 
-	public void function init(required string target, required string type, required struct properties, required Response response) {
+	public void function init(required string target, required string type, required struct properties, Response response) {
 
 		variables.target = arguments.target;
 		variables.type = arguments.type;
-		variables.response = arguments.response;
 
-		setProperties(arguments.properties);
+		if (IsInstanceOf(arguments.properties, "Event")) {
+			local.properties = arguments.properties.getProperties();
+			variables.parent = arguments.properties;
+			variables.response = arguments.properties.getResponse();
+		} else {
+			local.properties = arguments.properties;
+			variables.response = arguments.response;
+		}
+
+		setProperties(local.properties);
 
 	}
 
@@ -45,14 +54,23 @@ component Event {
 	}
 
 	public void function abort() {
-		abort;
+
+		variables.aborted = true;
+		if (StructKeyExists(variables, "parent")) {
+			variables.parent.abort();
+		}
+
+	}
+
+	public boolean function isAborted() {
+		return variables.aborted;
 	}
 
 	public struct function getProperties() {
 
 		var properties = {};
 		for (var property in this) {
-			if (!IsCustomFunction(this[property])) {
+			if (StructKeyExists(this, property) && !IsCustomFunction(this[property])) {
 				properties[property] = this[property];
 			}
 		}
@@ -75,7 +93,7 @@ component Event {
 	* Returns a copy of the event, with its canceled flag reset.
 	**/
 	public Event function clone() {
-		return new Event(getTarget(), getType(), getProperties(), getResponse());
+		return new Event(getTarget(), getType(), this);
 	}
 
 	package Response function getResponse() {

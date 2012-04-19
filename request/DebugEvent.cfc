@@ -16,10 +16,14 @@
 
 component DebugEvent extends="Event" {
 
-	public void function init(required string target, required string type, required struct properties, required Response response, array messages = []) {
+	public void function init(required string target, required string type, required struct properties, Response response) {
 
-		variables.messages = arguments.messages;
-		super.init(arguments.target, arguments.type, arguments.properties, arguments.response);
+		super.init(argumentCollection = arguments);
+		if (IsInstanceOf(arguments.properties, "Event")) {
+			variables.messages = arguments.properties.getMessages();
+		} else {
+			variables.messages = [];
+		}
 
 	}
 
@@ -32,52 +36,38 @@ component DebugEvent extends="Event" {
 
 	public void function abort() {
 
-		record("cflow.aborted");
-		// aborting means that no more output is written
-		variables.response.clear();
+		var size = ArrayLen(variables.messages);
+		if (size == 0 || variables.messages[size].message != "cflow.aborted") {
+			record("cflow.aborted");
+		}
+		super.abort();
 
 	}
 
-	public boolean function isAborted() {
-
-		// the messages array is shared among all the event objects created during processing
-		// since we need to know if some event aborted, we check that array for its last message
-		var aborted = false;
-		var size = ArrayLen(variables.messages);
-		if (size > 0) {
-			aborted = variables.messages[size].message == "cflow.aborted";
-		}
-
-		return aborted;
+	public DebugEvent function clone() {
+		return new DebugEvent(getTarget(), getType(), this);
 	}
 
 	public void function record(required any metadata, string message = "") {
 
-		// we only accept messages if the event is not aborted, because in effect the whole request cycle should have ended already (we're only mimicking this for debugging)
-		if (!isAborted()) {
-			// if the metadata is a simple value and message is not defined, we interpret metadata as the message
-			local.message = arguments.message;
-			if (IsSimpleValue(arguments.metadata) && Len(arguments.message) == 0) {
-				local.message = arguments.metadata;
-			} else {
-				local.metadata = arguments.metadata;
-			}
-			var transport = {
-				message = Len(local.message) > 0 ? local.message : "Dump",
-				target = getTarget(),
-				event = getType(),
-				tickcount = GetTickCount()
-			};
-			if (StructKeyExists(local, "metadata")) {
-				transport.metadata = local.metadata;
-			}
-			ArrayAppend(variables.messages, transport);
+		// if the metadata is a simple value and message is not defined, we interpret metadata as the message
+		local.message = arguments.message;
+		if (IsSimpleValue(arguments.metadata) && Len(arguments.message) == 0) {
+			local.message = arguments.metadata;
+		} else {
+			local.metadata = arguments.metadata;
 		}
+		var transport = {
+			message = Len(local.message) > 0 ? local.message : "Dump",
+			target = getTarget(),
+			event = getType(),
+			tickcount = GetTickCount()
+		};
+		if (StructKeyExists(local, "metadata")) {
+			transport.metadata = local.metadata;
+		}
+		ArrayAppend(variables.messages, transport);
 
-	}
-
-	public Event function clone() {
-		return new DebugEvent(getTarget(), getType(), getProperties(), getResponse(), getMessages());
 	}
 
 	package array function getMessages() {

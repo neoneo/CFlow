@@ -31,14 +31,14 @@ component InvokeTask extends="ComplexTask" {
 
 		invokeMethod(getController(), getMethod(), arguments);
 
-		var success = !arguments.event.isCanceled();
-		if (!success) {
-			if (hasSubtasks()) {
-				runSubtasks(arguments.event.clone());
-			}
+		var canceled = arguments.event.isCanceled();
+		var aborted = arguments.event.isAborted();
+
+		if (canceled && !aborted) {
+			runSubtasks(arguments.event.clone());
 		}
 
-		return success;
+		return !canceled && !aborted;
 	}
 
 	public string function getType() {

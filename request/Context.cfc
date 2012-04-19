@@ -21,6 +21,10 @@ component Context accessors="true" {
 	property name="viewMapping" type="string" default="";
 	property name="requestStrategy" type="RequestStrategy";
 
+	// target and event to dispatch if an unknown event is handled (only applicable if implicitTasks is false)
+	property name="defaultTarget" type="string" default="";
+	property name="defaultEvent" type="string" default="";
+
 	variables.controllers = {}; // controllers are static, so we need only one instance of each
 	variables.tasks = {
 		event = {},
@@ -37,14 +41,13 @@ component Context accessors="true" {
 
 	public Response function handleRequest() {
 
-		var requestParameters = getRequestStrategy().collectParameters();
-		if (StructKeyExists(requestParameters, "parameters")) {
-			local.response = handleEvent(requestParameters.target, requestParameters.event, requestParameters.parameters);
-		} else {
-			local.response = handleEvent(requestParameters.target, requestParameters.event);
-		}
+		var parameters = getRequestStrategy().collectParameters();
 
-		return local.response;
+		// if no target or event is given, revert to the welcome target and/ or event
+		var target = StructKeyExists(parameters, "target") ? parameters.target : getDefaultTarget();
+		var event = StructKeyExists(parameters, "event") ? parameters.event : getDefaultEvent();
+
+		return handleEvent(target, event, parameters);
 	}
 
 	/**
@@ -53,7 +56,7 @@ component Context accessors="true" {
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
 		var response = createResponse();
-		var event = createEvent(arguments.targetName, arguments.eventType, arguments.parameters, response);
+		var event = createRootEvent(arguments.targetName, arguments.eventType, arguments.parameters, response);
 
 		var success = runStartTasks(event);
 
@@ -62,13 +65,15 @@ component Context accessors="true" {
 			success = dispatchEvent(event);
 		}
 
-		// the end tasks are always run
-		if (!success) {
-			// for the remainder, we need an event object with its canceled flag reset
-			event = event.clone();
-		}
+		// the end tasks are always run, unless the event was aborted
+		if (!event.isAborted()) {
+			if (!success) {
+				// for the remainder, we need an event object with its canceled flag reset
+				event = event.clone();
+			}
 
-		runEndTasks(event);
+			runEndTasks(event);
+		}
 
 		return response;
 	}
@@ -154,12 +159,21 @@ component Context accessors="true" {
 		} else {
 			task = createPhaseTask();
 			if (getImplicitTasks()) {
-				// we now assume there is a controller with the name of the target, that exposes a method with the name of the event type
-				task.addSubtask(createInvokeTask(targetName, eventType));
-				// and that there is a template in a directory with the name of the target, that has the same name as the event type
+				// if there is a controller with the name of the target, create an invoke task that invokes the method by the name of the event type
+				var controllerName = getComponentName(targetName, getControllerMapping());
+				if (componentExists(controllerName)) {
+					task.addSubtask(createInvokeTask(targetName, eventType));
+				}
+				// always create a render task that renders a view in a directory with the name of the target, that has the same name as the event type
 				task.addSubtask(createRenderTask(targetName & "/" & eventType));
 				// add this task to the cache, so that next time we can reuse it
 				variables.tasks.event[targetName][eventType] = task;
+			} else {
+				// dispatch the default event on the default target, if applicable
+				if (Len(variables.defaultTarget) > 0 && Len(variables.defaultEvent) > 0 && targetName != variables.defaultTarget && eventType != variables.defaultEvent) {
+					var event = createEvent(variables.defaultTarget, variables.defaultEvent, arguments.event);
+					dispatchEvent(event);
+				}
 			}
 		}
 
@@ -178,17 +192,46 @@ component Context accessors="true" {
 		return variables.tasks[arguments.phase][arguments.targetName];
 	}
 
+	/**
+	 * Returns the controller with the given name.
+	 **/
 	private Controller function getController(required string name) {
 
 		if (!StructKeyExists(variables.controllers, arguments.name)) {
-			var controllerName = arguments.name;
-			if (Len(getControllerMapping()) > 0) {
-				controllerName = getControllerMapping() & "." & controllerName;
+			var controllerName = getComponentName(arguments.name, getControllerMapping());
+			if (!componentExists(controllerName)) {
+				Throw(type = "cflow.request", "Controller #controllerName# does not exist");
 			}
-			variables.controllers[arguments.name] = new "#controllerName#"(this);
+
+			var controller = new "#controllerName#"(this);
+			if (!IsInstanceOf(controller, "Controller")) {
+				Throw(type = "cflow.request", "Controller #controllerName# does not extend cflow.request.Controller");
+			}
+
+			variables.controllers[arguments.name] = controller;
 		}
 
 		return variables.controllers[arguments.name];
+	}
+
+	/**
+	 * Returns true if the component with the given name can be instantiated.
+	 **/
+	private boolean function componentExists(required string fullName) {
+
+		var componentPath = ExpandPath("/" & Replace(arguments.fullName, ".", "/", "all") & ".cfc");
+
+		return FileExists(componentPath);
+	}
+
+	private string function getComponentName(required string name, string mapping = "") {
+
+		var componentName = arguments.name;
+		if (Len(arguments.mapping) > 0) {
+			componentName = arguments.mapping & "." & componentName;
+		}
+
+		return componentName;
 	}
 
 	// FACTORY METHODS ============================================================================
@@ -214,7 +257,7 @@ component Context accessors="true" {
 	 *
 	 * Redirect types:
 	 * url		The parameters struct should have a url key that contains the explicit url to redirect to
-	 * event	The parameters struct should have target and event keys, and may have additional keys that are included as url parameters
+	 * event	The parameters struct should have target and event keys, and may have additional keys that are used as url parameters
 	 **/
 	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
@@ -228,27 +271,26 @@ component Context accessors="true" {
 		return new ElseTask(arguments.condition);
 	}
 
-	public SetTask function createSetTask(required string name, required string expression) {
-		return new SetTask(arguments.name, arguments.expression);
+	public SetTask function createSetTask(required string name, required string expression, boolean overwrite = true) {
+		return new SetTask(arguments.name, arguments.expression, arguments.overwrite);
 	}
 
 	public PhaseTask function createPhaseTask() {
 		return new PhaseTask();
 	}
 
-	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
+	/**
+	 * Creates a new event object, based on the given event object.
+	 **/
+	package Event function createEvent(required string targetName, required string eventType, required Event event) {
+		return new Event(arguments.targetName, arguments.eventType, arguments.event);
+	}
 
-		// if event is an Event, we take the response from there
-		// if not, we expect a Response object in the arguments
-		if (IsInstanceOf(arguments.event, "Event")) {
-			local.properties = arguments.event.getProperties();
-			local.response = arguments.event.getResponse();
-		} else {
-			local.properties = arguments.event;
-			local.response = arguments.response;
-		}
-
-		return new Event(arguments.targetName, arguments.eventType, local.properties, local.response);
+	/**
+	 * Creates a new event object. This method is only used for creating events that originate directly from a request. Further events are always created using createEvent().
+	 **/
+	private Event function createRootEvent(required string targetName, required string eventType, required struct properties, required Response response) {
+		return new Event(arguments.targetName, arguments.eventType, arguments.properties, arguments.response);
 	}
 
 	private Response function createResponse() {

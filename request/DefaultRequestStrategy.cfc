@@ -16,9 +16,6 @@
 
 component DefaultRequestStrategy implements="RequestStrategy" accessors="true" {
 
-	property name="defaultTarget" type="string" default="";
-	property name="defaultEvent" type="string" default="";
-
 	public string function writeUrl(required string target, required string event, struct parameters) {
 
 		var urlString = "index.cfm?target=#arguments.target#&event=#arguments.event#";
@@ -34,19 +31,13 @@ component DefaultRequestStrategy implements="RequestStrategy" accessors="true" {
 
 	/**
 	 * The parameter values in the url and form scopes are collected as properties for the event.
-	 * The target and event parameters are used to dispatch the corresponding event.
-	 * If no target or event parameters are present, the default values for these parameters are used.
 	 **/
 	public struct function collectParameters() {
 
 		var parameters = StructCopy(url);
 		StructAppend(parameters, form, false);
 
-		return {
-			target = StructKeyExists(parameters, "target") ? parameters.target : getDefaultTarget(),
-			event = StructKeyExists(parameters, "event") ? parameters.event : getDefaultEvent(),
-			parameters = parameters
-		};
+		return parameters;
 	}
 
 }

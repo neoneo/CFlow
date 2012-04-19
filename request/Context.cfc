@@ -150,15 +150,15 @@ component Context accessors="true" {
 
 	private boolean function runEventTasks(required Event event) {
 
-		var task = JavaCast("null", 0);
+		var result = true;
 		// check if there are tasks for this event
 		var targetName = arguments.event.getTarget();
 		var eventType = arguments.event.getType();
 		if (StructKeyExists(variables.tasks.event, targetName) && StructKeyExists(variables.tasks.event[targetName], eventType)) {
-			task = variables.tasks.event[targetName][eventType];
+			result = variables.tasks.event[targetName][eventType].run(arguments.event);
 		} else {
-			task = createPhaseTask();
 			if (getImplicitTasks()) {
+				var task = createPhaseTask();
 				// if there is a controller with the name of the target, create an invoke task that invokes the method by the name of the event type
 				var controllerName = getComponentName(targetName, getControllerMapping());
 				if (componentExists(controllerName)) {
@@ -168,16 +168,18 @@ component Context accessors="true" {
 				task.addSubtask(createRenderTask(targetName & "/" & eventType));
 				// add this task to the cache, so that next time we can reuse it
 				variables.tasks.event[targetName][eventType] = task;
+
+				result = task.run(arguments.event);
 			} else {
 				// dispatch the default event on the default target, if applicable
 				if (Len(variables.defaultTarget) > 0 && Len(variables.defaultEvent) > 0 && targetName != variables.defaultTarget && eventType != variables.defaultEvent) {
 					var event = createEvent(variables.defaultTarget, variables.defaultEvent, arguments.event);
-					dispatchEvent(event);
+					result = dispatchEvent(event);
 				}
 			}
 		}
 
-		return task.run(arguments.event);
+		return result;
 	}
 
 	/**

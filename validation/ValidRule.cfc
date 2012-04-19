@@ -29,12 +29,12 @@ component ValidRule extends="Rule" {
 
 			case "numeric":
 			case "integer":
-				if (IsNumeric(value)) {
-					value = Val(value);
-				} else if (LSIsNumeric(value)) {
+				if (LSIsNumeric(value)) {
 					value = LSParseNumber(value);
+				} else if (IsNumeric(value)) {
+					value = Val(value);
 				}
-				result = IsValid(variables.type, value);
+				result = StructKeyExists(local, "value") && IsValid(variables.type, value);
 				if (result) {
 					arguments.data[variables.fieldName] = value;
 				}

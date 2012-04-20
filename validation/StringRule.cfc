@@ -30,16 +30,7 @@ component StringRule extends="Rule" {
 	}
 
 	private boolean function compareValues(required string value1, required string value2) {
-
-		var result = false;
-
-		if (variables.caseSensitive) {
-			result = Compare(arguments.value1, arguments.value2) == 0;
-		} else {
-			result = CompareNoCase(arguments.value1, arguments.value2) == 0;
-		}
-
-		return result;
+		return variables.caseSensitive ? Compare(arguments.value1, arguments.value2) == 0 : CompareNoCase(arguments.value1, arguments.value2) == 0;
 	}
 
 	private boolean function getCaseSensitive() {

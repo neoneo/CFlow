@@ -18,6 +18,13 @@ component DebugContext extends="Context" {
 
 	variables.debugOutputRenderer = new DebugOutputRenderer();
 
+	public boolean function dispatchEvent(required DebugEvent event) {
+
+		arguments.event.record("Dispatch #arguments.event.getTarget()#.#arguments.event.getType()#");
+
+		return super.dispatchEvent(arguments.event);
+	}
+
 	// FACTORY METHODS ============================================================================
 
 	public DebugTask function createInvokeTask(required string controllerName, required string methodName) {
@@ -73,7 +80,7 @@ component DebugContext extends="Context" {
 
 	// TEMPLATE METHODS ===========================================================================
 
-	private boolean function runStartTasks(required Event event) {
+	private boolean function runStartTasks(required DebugEvent event) {
 
 		arguments.event.record("cflow.starttasks");
 
@@ -85,14 +92,10 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("cflow.starttasks");
 
-		if (arguments.event.isAborted()) {
-			renderDebugOutput(arguments.event);
-		}
-
 		return success;
 	}
 
-	private boolean function runBeforeTasks(required Event event) {
+	private boolean function runBeforeTasks(required DebugEvent event) {
 
 		arguments.event.record("cflow.beforetasks");
 
@@ -104,14 +107,10 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("cflow.beforetasks");
 
-		if (arguments.event.isAborted()) {
-			renderDebugOutput(arguments.event);
-		}
-
 		return success;
 	}
 
-	private boolean function runAfterTasks(required Event event) {
+	private boolean function runAfterTasks(required DebugEvent event) {
 
 		arguments.event.record("cflow.aftertasks");
 
@@ -123,14 +122,10 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("cflow.aftertasks");
 
-		if (arguments.event.isAborted()) {
-			renderDebugOutput(arguments.event);
-		}
-
 		return success;
 	}
 
-	private boolean function runEndTasks(required Event event) {
+	private boolean function runEndTasks(required DebugEvent event) {
 
 		arguments.event.record("cflow.endtasks");
 
@@ -142,13 +137,10 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("cflow.endtasks");
 
-		// render debug output
-		renderDebugOutput(arguments.event);
-
 		return success;
 	}
 
-	private boolean function runEventTasks(required Event event) {
+	private boolean function runEventTasks(required DebugEvent event) {
 
 		arguments.event.record("cflow.eventtasks");
 
@@ -160,14 +152,16 @@ component DebugContext extends="Context" {
 
 		arguments.event.record("cflow.eventtasks");
 
-		if (arguments.event.isAborted()) {
-			renderDebugOutput(arguments.event);
-		}
-
 		return success;
 	}
 
-	private void function renderDebugOutput(required Event event) {
+	private void function finalize(required DebugEvent event) {
+		renderDebugOutput(arguments.event);
+	}
+
+	// DEBUG OUTPUT METHODS =======================================================================
+
+	private void function renderDebugOutput(required DebugEvent event) {
 
 		// we're going to change the viewmapping temporarily
 		// this might lead to race conditions in a production environment so debugging there is dangerous
@@ -181,12 +175,11 @@ component DebugContext extends="Context" {
 		}
 
 		arguments.event._debugoutput = variables.debugOutputRenderer.render(arguments.event.getMessages());
-
 		task.run(arguments.event);
 
 	}
 
-	private void function handleException(required any exception, required Event event) {
+	private void function handleException(required any exception, required DebugEvent event) {
 
 		arguments.event.record({exception: exception}, "cflow.exception");
 		var response = arguments.event.getResponse();

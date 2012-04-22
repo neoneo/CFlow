@@ -100,4 +100,8 @@ component Event {
 		return variables.response;
 	}
 
+	package void function reset() {
+		variables.canceled = false;
+	}
+
 }

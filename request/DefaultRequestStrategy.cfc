@@ -18,15 +18,21 @@ component DefaultRequestStrategy implements="RequestStrategy" accessors="true" {
 
 	public string function writeUrl(required string target, required string event, struct parameters) {
 
-		var urlString = "index.cfm?target=#arguments.target#&event=#arguments.event#";
+		var queryString = "";
+		if (Len(arguments.target) > 0) {
+			queryString = "target=" & UrlEncodedFormat(arguments.target);
+		}
+		if (Len(arguments.event) > 0) {
+			queryString = ListAppend(queryString, "event=" & UrlEncodedFormat(arguments.event), "&");
+		}
 
 		if (StructKeyExists(arguments, "parameters")) {
 			for (var name in arguments.parameters) {
-				urlString = ListAppend(urlString, name & "=" & arguments.parameters[name], "&");
+				queryString = ListAppend(queryString, name & "=" & UrlEncodedFormat(arguments.parameters[name]), "&");
 			}
 		}
 
-		return urlString;
+		return "index.cfm" & (Len(queryString) > 0 ? "?" & queryString : "");
 	}
 
 	/**

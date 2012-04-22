@@ -16,58 +16,63 @@
 
 component RedirectTask implements="Task" {
 
+	/**
+	 * Constructor.
+	 * type				url or event; determines which parameters are expected
+	 * parameters		if the type is url, a url key is required; for event, target and event keys are optional
+	 * 					additionally, for both types a parameters struct is optional, which contains additional querystring parameters
+	 * permanent		whether this is a permanent redirect or not
+	 * requestStrategy	the request strategy, only required when type is event
+	 **/
 	public void function init(required string type, required struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
 
-		switch (arguments.type) {
+		variables.type = arguments.type;
+
+		switch (variables.type) {
 			case "url":
 				// the url key should be present
 				variables.urlString = arguments.parameters.url;
-				variables.generate = false;
 				break;
 
 			case "event":
-
 				variables.urlString = "";
-				variables.generate = true; // do we have to generate the url at runtime?
 
-				// the request manager should be present, as well as some keys in the parameters struct
+				// the request strategy should be present, target and event keys are optional in parameters
 				variables.requestStrategy = arguments.requestStrategy;
-				variables.target = arguments.parameters.target;
-				variables.event = arguments.parameters.event;
-				// any other keys in the parameters struct are (fixed) url parameters
-				variables.parameters = StructCopy(arguments.parameters);
-				// remove the required arguments from the parameters
-				StructDelete(variables.parameters, "target");
-				StructDelete(variables.parameters, "event");
-				StructDelete(variables.parameters, "permanent");
-
-				// handle runtime parameters if present
-				if (StructKeyExists(variables.parameters, "parameters")) {
-					// this should be an array of parameters to be evaluated at runtime
-					// they can have the form '<name1> = <name2>', where name1 gives the name of the parameter and name2 gives the value (if it exists on the event)
-					// so convert them all to the same form
-					var runtimeParameters = [];
-					for (var parameter in variables.parameters.parameters) {
-						var runtimeParameter = {};
-						if (ListLen(parameter, "=") > 1) {
-							runtimeParameter.name = Trim(ListFirst(parameter, "="));
-							runtimeParameter.value = Trim(ListLast(parameter, "="));
-						} else {
-							// name and value are the same
-							runtimeParameter.name = Trim(parameter);
-							runtimeParameter.value = Trim(parameter);
-						}
-						ArrayAppend(runtimeParameters, runtimeParameter);
-					}
-					variables.runtimeParameters = runtimeParameters;
-					StructDelete(variables.parameters, "parameters");
-				} else {
-					// no runtime parameters
-					// the url is always the same, so we can generate it now
-					variables.urlString = arguments.requestStrategy.writeUrl(arguments.parameters.target, arguments.parameters.event, variables.parameters);
-					variables.generate = false;
-				}
+				variables.target = StructKeyExists(arguments.parameters, "target") ? arguments.parameters.target : "";
+				variables.event = StructKeyExists(arguments.parameters, "event") ? arguments.parameters.event : "";
 				break;
+		}
+
+		variables.generate = false; // generate the url at runtime?
+
+		// handle runtime parameters if present
+		if (StructKeyExists(arguments.parameters, "parameters")) {
+			variables.generate = true;
+			// this should be an array of parameters to be evaluated at runtime
+			// a parameter can be a single name, in which case the parameter name and value are taken from the event as is
+			// optionally, they can have the form '<name1>=<name2>', where name1 gives the name of the parameter and name2 gives the value (if it exists on the event)
+			// convert them all to the same form
+			local.parameters = [];
+			for (var parameter in arguments.parameters.parameters) {
+				var transport = {};
+				if (ListLen(parameter, "=") > 1) {
+					transport.name = Trim(ListFirst(parameter, "="));
+					transport.value = Trim(ListLast(parameter, "="));
+				} else {
+					// name and value are the same
+					transport.name = Trim(parameter);
+					transport.value = Trim(parameter);
+				}
+				ArrayAppend(local.parameters, transport);
+			}
+			variables.parameters = local.parameters;
+		} else {
+			// no runtime parameters
+			if (variables.type == "event") {
+				// the url is always the same, so we can generate it now
+				variables.urlString = arguments.requestStrategy.writeUrl(variables.target, variables.event);
+			}
 		}
 
 		if (arguments.permanent) {
@@ -94,14 +99,31 @@ component RedirectTask implements="Task" {
 		var urlString = variables.urlString;
 
 		if (variables.generate) {
-			// this means we have to append runtime parameters onto the url
-			var parameters = StructCopy(variables.parameters);
-			for (var parameter in variables.runtimeParameters) {
+			// we have to append runtime parameters onto the url
+			var parameters = {};
+			for (var parameter in variables.parameters) {
 				if (StructKeyExists(arguments.event, parameter.value)) {
 					parameters[parameter.name] = arguments.event[parameter.value];
 				}
 			}
-			urlString = variables.requestStrategy.writeUrl(variables.target, variables.event, parameters);
+
+			switch (variables.type) {
+				case "url":
+					if (!StructIsEmpty(parameters)) {
+						if (urlString does not contain "?") {
+							urlString &= "?";
+						}
+						for (var parameter in parameters) {
+							urlString = ListAppend(urlString, parameter & "=" & UrlEncodedFormat(parameters[parameter]), "&");
+						}
+					}
+
+					break;
+
+				case "event":
+					urlString = variables.requestStrategy.writeUrl(variables.target, variables.event, parameters);
+					break;
+			}
 		}
 
 		return urlString;

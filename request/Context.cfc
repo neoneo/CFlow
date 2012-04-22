@@ -24,6 +24,8 @@ component Context accessors="true" {
 	// target and event to dispatch if an unknown event is handled (only applicable if implicitTasks is false)
 	property name="defaultTarget" type="string" default="";
 	property name="defaultEvent" type="string" default="";
+	property name="undefinedTarget" type="string" default="";
+	property name="undefinedEvent" type="string" default="";
 
 	variables.controllers = {}; // controllers are static, so we need only one instance of each
 	variables.tasks = {
@@ -43,9 +45,9 @@ component Context accessors="true" {
 
 		var parameters = getRequestStrategy().collectParameters();
 
-		// if no target or event is given, revert to the welcome target and/ or event
-		var target = StructKeyExists(parameters, "target") ? parameters.target : getDefaultTarget();
-		var event = StructKeyExists(parameters, "event") ? parameters.event : getDefaultEvent();
+		// if no target or event is given, revert to the default target and/ or event
+		var target = StructKeyExists(parameters, "target") ? parameters.target : variables.defaultTarget;
+		var event = StructKeyExists(parameters, "event") ? parameters.event : variables.defaultEvent;
 
 		return handleEvent(target, event, parameters);
 	}
@@ -65,15 +67,19 @@ component Context accessors="true" {
 			success = dispatchEvent(event);
 		}
 
-		// the end tasks are always run, unless the event was aborted
+		// the end tasks are always run, unless the event is aborted
 		if (!event.isAborted()) {
 			if (!success) {
 				// for the remainder, we need an event object with its canceled flag reset
-				event = event.clone();
+				event.reset();
 			}
 
 			runEndTasks(event);
 		}
+
+		// basically, finalize() is only provided as a hook for DebugContext
+		// maybe there are other needs for it, but if not, find a way to factor this out
+		finalize(event);
 
 		return response;
 	}
@@ -166,20 +172,31 @@ component Context accessors="true" {
 				}
 				// always create a render task that renders a view in a directory with the name of the target, that has the same name as the event type
 				task.addSubtask(createRenderTask(targetName & "/" & eventType));
-				// add this task to the cache, so that next time we can reuse it
-				variables.tasks.event[targetName][eventType] = task;
+				// register this task, so that next time we can reuse it
+				register(task, "event", targetName, eventType);
 
 				result = task.run(arguments.event);
 			} else {
-				// dispatch the default event on the default target, if applicable
-				if (Len(variables.defaultTarget) > 0 && Len(variables.defaultEvent) > 0 && targetName != variables.defaultTarget && eventType != variables.defaultEvent) {
-					var event = createEvent(variables.defaultTarget, variables.defaultEvent, arguments.event);
+				// dispatch the undefined event, if applicable
+				if (Len(variables.undefinedTarget) > 0 && Len(variables.undefinedEvent) > 0 && (targetName != variables.undefinedTarget || eventType != variables.undefinedEvent)) {
+					// if the current target exists, dispatch the event on that target, otherwise dispatch on the undefined target
+					// also do that if the undefined event was dispatched already
+					if (!StructKeyExists(variables.tasks.event, targetName) || eventType == variables.undefinedEvent) {
+						targetName = variables.undefinedTarget;
+					}
+					eventType = variables.undefinedEvent;
+
+					var event = createEvent(targetName, eventType, arguments.event);
 					result = dispatchEvent(event);
 				}
 			}
 		}
 
 		return result;
+	}
+
+	private void function finalize(required Event event) {
+		// hook
 	}
 
 	/**

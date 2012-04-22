@@ -440,12 +440,10 @@ component XmlReader {
 					if (StructKeyExists(arguments.task, "url")) {
 						// the redirect should be to the url defined here
 						type = "url";
-					} else {
-						// we have a redirect to an event
-						// if there is a parameters attribute present, convert the value to an array
-						if (StructKeyExists(parameters, "parameters")) {
-							parameters.parameters = ListToArray(parameters.parameters);
-						}
+					}
+					// if there is a parameters attribute present, convert the value to an array
+					if (StructKeyExists(parameters, "parameters")) {
+						parameters.parameters = ListToArray(parameters.parameters);
 					}
 
 					instance = variables.context.createRedirectTask(type, parameters, permanent);

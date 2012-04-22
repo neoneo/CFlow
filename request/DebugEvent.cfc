@@ -36,6 +36,7 @@ component DebugEvent extends="Event" {
 
 	public void function abort() {
 
+		// make sure the abort message is logged only once
 		var size = ArrayLen(variables.messages);
 		if (size == 0 || variables.messages[size].message != "cflow.aborted") {
 			record("cflow.aborted");
@@ -50,7 +51,7 @@ component DebugEvent extends="Event" {
 
 	public void function record(required any metadata, string message = "") {
 
-		// if the metadata is a simple value and message is not defined, we interpret metadata as the message
+		// if metadata is a simple value and message is not defined, we interpret metadata as the message
 		local.message = arguments.message;
 		if (IsSimpleValue(arguments.metadata) && Len(arguments.message) == 0) {
 			local.message = arguments.metadata;

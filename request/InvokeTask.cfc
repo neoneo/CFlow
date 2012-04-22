@@ -35,7 +35,8 @@ component InvokeTask extends="ComplexTask" {
 		var aborted = arguments.event.isAborted();
 
 		if (canceled && !aborted) {
-			runSubtasks(arguments.event.clone());
+			arguments.event.reset();
+			runSubtasks(arguments.event);
 		}
 
 		return !canceled && !aborted;

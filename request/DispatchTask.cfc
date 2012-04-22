@@ -43,7 +43,7 @@ component DispatchTask extends="ComplexTask" {
 		var aborted = dispatch.isAborted();
 
 		if (canceled && !aborted) {
-			runSubtasks(arguments.event.clone());
+			runSubtasks(arguments.event);
 			if (variables.cancelFailed) {
 				arguments.event.cancel();
 			}

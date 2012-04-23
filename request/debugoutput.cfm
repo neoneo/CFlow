@@ -167,11 +167,28 @@
 </script>
 </cfsavecontent>
 <cfoutput>
-	<!--- put the debugoutput inside the body if applicable --->
-	<cfif response.getType() eq "HTML" and content contains "</body>">
-		#Replace(content, "</body>", debugoutput & "</body>")#
-	<cfelse>
-		#content#
-		#debugoutput#
-	</cfif>
+	<cfswitch expression="#response.getType()#">
+		<cfcase value="HTML">
+			<!--- put the debugoutput inside the body if applicable --->
+			<cfif content contains "</body>">
+				#Replace(content, "</body>", debugoutput & "</body>")#
+			<cfelse>
+				#content#
+				#debugoutput#
+			</cfif>
+		</cfcase>
+		<cfcase value="JSON">
+			<!--- if the data is a struct, put the debugoutput on it --->
+			<!--- otherwise ignore it --->
+			<cfset data = DeserializeJSON(content)>
+			<cfif IsStruct(data)>
+				<cfset data["_debugoutput"] = ReplaceList(debugoutput, "#Chr(9)#,#Chr(10)#,#Chr(13)#", "")>
+			</cfif>
+			<cfset response.append(data)>
+		</cfcase>
+		<cfdefaultcase>
+			#content#
+			#debugoutput#
+		</cfdefaultcase>
+	</cfswitch>
 </cfoutput>

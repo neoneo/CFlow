@@ -17,16 +17,13 @@
 component Context accessors="true" extends="cflow.req.Context" {
 
 	property name="targetMapping" type="string" default="";
-	property name="factory" type="component";
-
-	variables.factory = new Factory();
 
 	variables.targets = {};
 
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
-		var response = variables.factory.createResponse();
-		var event = variables.factory.createEvent(arguments.parameters);
+		var response = createResponse();
+		var event = createEvent(arguments.parameters);
 
 		getTarget(arguments.targetName).handleEvent(arguments.eventType, event, response);
 
@@ -41,7 +38,7 @@ component Context accessors="true" extends="cflow.req.Context" {
 				variables.targets[arguments.name] = new "#targetName#"();
 			} else {
 				if (arguments.name == getUndefinedTarget()) {
-					Throw(type = "cflow.request.UndefinedTargetDoesNotExist", message = "The undefined target does not exist.");
+					Throw(type = "cflow.request", message = "The undefined target does not exist.");
 				} else {
 					// the target is not defined; try the undefined target
 					variables.targets[arguments.name] = getTarget(getUndefinedTarget());

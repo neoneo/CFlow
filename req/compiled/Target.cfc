@@ -5,6 +5,7 @@
 
 	public void function init(required Context context, required string name) {
 		variables.context = arguments.context;
+		variables.requestStrategy = variables.context.getRequestStrategy();
 		variables.name = arguments.name;
 	}
 
@@ -24,7 +25,7 @@
 			if (canceled) {
 				arguments.event.reset();
 			}
-			end (arguments.event, arguments.response);
+			end(arguments.event, arguments.response);
 		}
 
 	}

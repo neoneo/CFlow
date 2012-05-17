@@ -440,9 +440,6 @@ component XmlReader {
 					var parameters = StructCopy(arguments.task);
 					StructDelete(parameters, "$type");
 					StructDelete(parameters, "permanent");
-					StructDelete(parameters, "url");
-					StructDelete(parameters, "target");
-					StructDelete(parameters, "event");
 
 					// there are two types of redirects: to an event and to a url
 					// depending on the type, the constructor expects different parameters

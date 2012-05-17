@@ -39,26 +39,20 @@ component RedirectTask implements="Task" {
 
 				// the request strategy should be present, target and event keys are optional in parameters
 				variables.requestStrategy = arguments.requestStrategy;
-				variables.target = StructKeyExists(arguments.parameters, "target") ? arguments.parameters.target : "";
-				variables.event = StructKeyExists(arguments.parameters, "event") ? arguments.parameters.event : "";
+				variables.target = new cflow.util.Parameter(StructKeyExists(arguments.parameters, "target") ? arguments.parameters.target : "");
+				variables.event = new cflow.util.Parameter(StructKeyExists(arguments.parameters, "event") ? arguments.parameters.event : "");
 				break;
 		}
 
 		// handle runtime parameters if present
 		local.parameters = {};
 		for (var name in arguments.parameters) {
-			// store the parameter in a Parameter instance; that instance will determine whether the value should be taken literally or be evaluated
-			local.parameters[name] = new cflow.util.Parameter(arguments.parameters[name]);
-		}
-		variables.parameters = local.parameters;
-
-		if (StructIsEmpty(variables.parameters)) {
-			// no runtime parameters
-			if (variables.type == "event") {
-				// the url is always the same, so we can generate it now
-				variables.urlString = arguments.requestStrategy.writeUrl(variables.target, variables.event);
+			if (!ArrayContains(["url", "target", "event"], name)) {
+				// store the parameter in a Parameter instance; that instance will determine whether the value should be taken literally or be evaluated
+				local.parameters[name] = new cflow.util.Parameter(arguments.parameters[name]);
 			}
 		}
+		variables.parameters = local.parameters;
 
 		if (arguments.permanent) {
 			variables.statusCode = 301;
@@ -105,7 +99,7 @@ component RedirectTask implements="Task" {
 					break;
 
 				case "event":
-					urlString = variables.requestStrategy.writeUrl(variables.target, variables.event, parameters);
+					urlString = variables.requestStrategy.writeUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
 					break;
 			}
 		}

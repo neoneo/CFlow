@@ -34,11 +34,15 @@ component EachRuleSet extends="RuleSet" {
 
 		// create a copy of the data that we can modify
 		var transport = StructCopy(arguments.data);
+		var i = 1;
 		for (var element in set) {
 			// replace the field with the element
 			transport[variables.fieldName] = element;
 			// call the super method, so the element is tested against the rules
 			var result = super.validate(transport);
+			// if a ValidRule is tested, and passed, the value may have been converted
+			// write the value back to the set; if the set was already an array before it was passed in here, the converted value goes back to the caller
+			set[i] = transport[variables.fieldName];
 			if (variables.aggregate) {
 				// only include distinct messages
 				for (var message in result) {
@@ -51,6 +55,7 @@ component EachRuleSet extends="RuleSet" {
 				// so the result is an array within an array
 				ArrayAppend(messages, result);
 			}
+			i++;
 		}
 
 		return messages;

@@ -14,20 +14,13 @@
    limitations under the License.
 */
 
-component Context accessors="true" {
+component Context accessors="true" extends="cflow.req.Context" {
 
 	property name="implicitTasks" type="boolean" default="false";
-	property name="controllerMapping" type="string" default="";
-	property name="viewMapping" type="string" default="";
-	property name="requestStrategy" type="RequestStrategy";
+	property name="factory" type="component";
 
-	// target and event to dispatch if an unknown event is handled (only applicable if implicitTasks is false)
-	property name="defaultTarget" type="string" default="";
-	property name="defaultEvent" type="string" default="";
-	property name="undefinedTarget" type="string" default="";
-	property name="undefinedEvent" type="string" default="";
+	variables.factory = new Factory(this);
 
-	variables.controllers = {}; // controllers are static, so we need only one instance of each
 	variables.tasks = {
 		event = {},
 		start = {},
@@ -36,29 +29,10 @@ component Context accessors="true" {
 		after = {}
 	};
 
-	// just create an instance of the default request strategy
-	// if it is not needed, it will be garbage collected
-	// assuming this will only occur once in the life of the application, it's not a big cost
-	variables.requestStrategy = new DefaultRequestStrategy(this);
-
-	public Response function handleRequest() {
-
-		var parameters = getRequestStrategy().collectParameters();
-
-		// if no target or event is given, revert to the default target and/ or event
-		var target = StructKeyExists(parameters, "target") ? parameters.target : variables.defaultTarget;
-		var event = StructKeyExists(parameters, "event") ? parameters.event : variables.defaultEvent;
-
-		return handleEvent(target, event, parameters);
-	}
-
-	/**
-	 * Fires an event on the given target.
-	 **/
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
-		var response = createResponse();
-		var event = createEvent(arguments.parameters, response);
+		var response = variables.factory.createResponse();
+		var event = variables.factory.createEvent(arguments.parameters, response);
 		event.setTarget(targetName);
 		event.setType(eventType);
 
@@ -219,96 +193,6 @@ component Context accessors="true" {
 		}
 
 		return variables.tasks[arguments.phase][arguments.targetName];
-	}
-
-	/**
-	 * Returns the controller with the given name.
-	 **/
-	private component function getController(required string name) {
-
-		if (!StructKeyExists(variables.controllers, arguments.name)) {
-			var controllerName = getComponentName(arguments.name, getControllerMapping());
-			if (!componentExists(controllerName)) {
-				Throw(type = "cflow.request", message = "Controller #controllerName# does not exist");
-			}
-
-			variables.controllers[arguments.name] = new "#controllerName#"();
-		}
-
-		return variables.controllers[arguments.name];
-	}
-
-	/**
-	 * Returns true if the component with the given name can be instantiated.
-	 **/
-	private boolean function componentExists(required string fullName) {
-
-		var componentPath = ExpandPath("/" & Replace(arguments.fullName, ".", "/", "all") & ".cfc");
-
-		return FileExists(componentPath);
-	}
-
-	private string function getComponentName(required string name, string mapping = "") {
-
-		var componentName = arguments.name;
-		if (Len(arguments.mapping) > 0) {
-			componentName = arguments.mapping & "." & componentName;
-		}
-
-		return componentName;
-	}
-
-	// FACTORY METHODS ============================================================================
-
-	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {
-		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
-	}
-
-	public DispatchTask function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
-		return new DispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
-	}
-
-	public RenderTask function createRenderTask(required string view) {
-		return new RenderTask(arguments.view, getViewMapping(), getRequestStrategy());
-	}
-
-	/**
-	 * Creates a RedirectTask.
-	 *
-	 * @param	{String}	type		the redirect type: url or event
-	 * @param	{Struct}	parameters	the parameters specific to the type of redirect (see below)
-	 * @param	{Boolean}	permanent	whether the redirect is permanent or not [false]
-	 *
-	 * Redirect types:
-	 * url		The parameters struct should have a url key that contains the explicit url to redirect to
-	 * event	The parameters struct should have target and event keys, and may have additional keys that are used as url parameters
-	 **/
-	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
-		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
-	}
-
-	public IfTask function createIfTask(required string condition) {
-		return new IfTask(arguments.condition);
-	}
-
-	public ElseTask function createElseTask(string condition = "") {
-		return new ElseTask(arguments.condition);
-	}
-
-	public SetTask function createSetTask(required string name, required string expression, boolean overwrite = true) {
-		return new SetTask(arguments.name, arguments.expression, arguments.overwrite);
-	}
-
-	public PhaseTask function createPhaseTask() {
-		return new PhaseTask();
-	}
-
-	private Event function createEvent(required struct parameters, required Response response) {
-		return new Event(arguments.parameters, arguments.response);
-	}
-
-	private Response function createResponse() {
-		return new Response();
 	}
 
 }

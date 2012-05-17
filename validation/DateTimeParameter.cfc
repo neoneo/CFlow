@@ -38,7 +38,7 @@ component DateTimeParameter {
 		// a percentage sign is not needed for this parameter, but to be consequent its use is allowed
 		// just remove it
 		local.expression = arguments.expression;
-		if (Left(local.expression) == "%") {
+		if (Left(local.expression, 1) == "%") {
 			RemoveChars(local.expression, 1, 1);
 		}
 

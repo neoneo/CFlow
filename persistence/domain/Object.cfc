@@ -3,14 +3,11 @@
  **/
 component Object {
 
-	include "../static/invoke.cfm";
-
 	variables._ = {
 		persisted = false,
 		modified = false,
 		loaded = false,
-		populated = false,
-		identifier = CreateUniqueId() // Railo specific function
+		populated = false
 	};
 
 	public boolean function isPersisted() {
@@ -21,7 +18,7 @@ component Object {
 		return variables._.modified;
 	}
 
-	public void function configure(required struct descriptor, required Context context) {
+	public void function init(required struct descriptor, required Context context) {
 		variables._.descriptor = arguments.descriptor;
 		variables._.context = arguments.context;
 		variables._.entity = variables._.context.getEntity(variables._.descriptor.entity);
@@ -67,6 +64,7 @@ component Object {
 		var descriptor = variables._.descriptor.methods[arguments.missingMethodName];
 		var instance = this;
 		var methodName = descriptor.name;
+		var propertyName = descriptor.property;
 
 		// check if the call must be directed to a decorated object
 		if (StructKeyExists(descriptor, "decorates")) {
@@ -75,16 +73,11 @@ component Object {
 		}
 
 		// all accessor methods require a property name; the setters additionally require a value (1 argument) (which can be null however)
-		return ArrayIsDefined(arguments.missingMethodArguments, 1) ? invokeMethod(instance, methodName, arguments.missingMethodArguments[1]) : invokeMethod(instance, methodName);
-	}
-
-	public boolean function equals(required any instance) {
-		// we assume that there is ever only one instance for a given record in the current session
-		return arguments.instance.identifierEquals(variables._.identifier);
-	}
-
-	public boolean function identifierEquals(required string identifier) {
-		return variables._.identifier == arguments.identifier;
+		var parameters = {name = propertyName};
+		if (ArrayIsDefined(arguments.missingMethodArguments, 1)) {
+			parameters.value = arguments.missingMethodArguments[1];
+		}
+		return invokeMethod(instance, methodName, parameters);
 	}
 
 	private any function getProperty(required string name) {
@@ -113,7 +106,7 @@ component Object {
 					variables._.modified = variables[arguments.name] != arguments.value;
 				} else {
 					// check for object equality
-					variables._.modified = !variables[arguments.name].equals(arguments.value);
+					variables._.modified = !ObjectEquals(variables[arguments.name], arguments.value);
 				}
 			} else {
 				// the object is modified if one is null and the other is not
@@ -136,38 +129,42 @@ component Object {
 		return variables[arguments.name];
 	}
 
-	private void function setCollection(required string name, required any collection) {
+	private void function setCollection(required string name, required any value) {
 
 	}
 
-	private void function addToCollection(required string name, required any member) {
+	private void function addToCollection(required string name, required any value) {
 
 		var collection = getCollection(arguments.name);
-		if (!collection.hasMember(arguments.member)) {
-			collection.add(arguments.member);
+		if (!collection.hasMember(arguments.value)) {
+			collection.add(arguments.value);
 			// also set the relation on the other side
 			var property = variables._.descriptor.properties[arguments.name];
-			invokeMethod(arguments.member, "set#property.relation#", {value = this});
+			invokeMethod(arguments.value, "set#property.relation#", {value = this});
 		}
 
 	}
 
-	private void function removeFromCollection(required string name, required any member) {
+	private void function removeFromCollection(required string name, required any value) {
 
 		var collection = getCollection(arguments.name);
-		if (collection.hasMember(arguments.member)) {
-			collection.remove(arguments.member);
+		if (collection.hasMember(arguments.value)) {
+			collection.remove(arguments.value);
 			var property = variables._.descriptor.properties[arguments.name];
-			invokeMethod(arguments.member, "set#property.relation#", {value = JavaCast("null", 0)});
+			invokeMethod(arguments.value, "set#property.relation#", {value = JavaCast("null", 0)});
 		}
 
 	}
 
-	private boolean function hasCollectionMember(required string name, any member) {
+	private Object function createCollectionMember(required string name) {
+
+	}
+
+	private boolean function hasCollectionMember(required string name, any value) {
 
 		var collection = getCollection(arguments.name);
-		if (StructKeyExists(arguments, "member")) {
-			return collection.hasMember(arguments.member);
+		if (StructKeyExists(arguments, "value")) {
+			return collection.hasMember(arguments.value);
 		} else {
 			return !collection.isEmpty();
 		}

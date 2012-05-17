@@ -14,36 +14,27 @@
    limitations under the License.
 */
 
-component InvokeTask extends="ComplexTask" {
+component SetTask implements="Task" {
 
-	//if (!StructKeyExists(GetFunctionList(), "invoke")) {
-		include "../static/invoke.cfm";
-	//}
+	public void function init(required string name, required string expression, boolean overwrite = true) {
 
-	public void function init(required component controller, required string method) {
-
-		variables.controller = arguments.controller;
-		variables.method = arguments.method;
+		variables.name = arguments.name;
+		variables.parameter = new cflow.util.Parameter(arguments.expression);
+		variables.overwrite = arguments.overwrite;
 
 	}
 
 	public boolean function run(required Event event) {
 
-		invokeMethod(variables.controller, variables.method, arguments);
-
-		var canceled = arguments.event.isCanceled();
-		var aborted = arguments.event.isAborted();
-
-		if (canceled && !aborted) {
-			arguments.event.reset();
-			runSubtasks(arguments.event);
+		if (variables.overwrite || !StructKeyExists(arguments.event, variables.name)) {
+			arguments.event[variables.name] = variables.parameter.getValue(arguments.event);
 		}
 
-		return !canceled && !aborted;
+		return true;
 	}
 
 	public string function getType() {
-		return "invoke";
+		return "set";
 	}
 
 }

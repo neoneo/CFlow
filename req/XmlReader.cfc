@@ -438,8 +438,11 @@ component XmlReader {
 					}
 
 					var parameters = StructCopy(arguments.task);
-					StructDelete(parameters, "permanent");
 					StructDelete(parameters, "$type");
+					StructDelete(parameters, "permanent");
+					StructDelete(parameters, "url");
+					StructDelete(parameters, "target");
+					StructDelete(parameters, "event");
 
 					// there are two types of redirects: to an event and to a url
 					// depending on the type, the constructor expects different parameters
@@ -449,9 +452,9 @@ component XmlReader {
 						type = "url";
 					}
 					// if there is a parameters attribute present, convert the value to an array
-					if (StructKeyExists(parameters, "parameters")) {
-						parameters.parameters = ListToArray(parameters.parameters);
-					}
+					//if (StructKeyExists(parameters, "parameters")) {
+					//	parameters.parameters = ListToArray(parameters.parameters);
+					//}
 
 					instance = variables.context.createRedirectTask(type, parameters, permanent);
 					break;

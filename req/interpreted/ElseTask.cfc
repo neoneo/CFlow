@@ -14,36 +14,34 @@
    limitations under the License.
 */
 
-component InvokeTask extends="ComplexTask" {
+component ElseTask extends="IfTask" {
 
-	//if (!StructKeyExists(GetFunctionList(), "invoke")) {
-		include "../static/invoke.cfm";
-	//}
+	public void function init(string condition = "") {
 
-	public void function init(required component controller, required string method) {
-
-		variables.controller = arguments.controller;
-		variables.method = arguments.method;
+		if (Len(arguments.condition) > 0) {
+			super.init(arguments.condition);
+			variables.hasCondition = true;
+		} else {
+			variables.hasCondition = false;
+		}
 
 	}
 
 	public boolean function run(required Event event) {
 
-		invokeMethod(variables.controller, variables.method, arguments);
-
-		var canceled = arguments.event.isCanceled();
-		var aborted = arguments.event.isAborted();
-
-		if (canceled && !aborted) {
-			arguments.event.reset();
+		if (!variables.hasCondition) {
+			// the subtasks have to run unconditionally
 			runSubtasks(arguments.event);
+		} else {
+			// conditional running of subtasks, which is implemented in the superclass
+			super.run(arguments.event);
 		}
 
-		return !canceled && !aborted;
+		return true;
 	}
 
 	public string function getType() {
-		return "invoke";
+		return "else";
 	}
 
 }

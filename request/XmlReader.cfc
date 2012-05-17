@@ -197,6 +197,7 @@ component XmlReader {
 
 	private void function compileIncludes() {
 
+		// first get all the top level includes and process them
 		var targets = StructFindKey(variables.tasks, "includes", "all");
 
 		// there can be includes that include other includes
@@ -282,6 +283,72 @@ component XmlReader {
 			targets = StructFindKey(variables.tasks, "includes", "all");
 		}
 
+		// now process any includes that are defined in an event
+		// those includes must specify an event
+		// it is still true that there can be recursion
+		var includes = StructFindValue(variables.tasks, "include", "all");
+		// remove items that use the value 'include' but are not includes
+		for (var i = ArrayLen(includes); i >= 1; i--) {
+			if (includes[i].key != "$type") {
+				ArrayDeleteAt(includes, i);
+			}
+		}
+
+		var count = ArrayLen(includes);
+		while (!ArrayIsEmpty(includes)) {
+			// loop backwards over the includes, because one include is generally going to be replaced by more than one task
+			// in the case of multiple includes in one event, looping forward would invalidate the path to the include entry
+			for (var i = ArrayLen(includes); i >= 1; i--) {
+				var include = includes[i];
+				// target and event are mandatory attributes
+				if (!StructKeyExists(variables.tasks, include.owner.target)) {
+					Throw(type = "cflow.request", message = "Included target '#include.owner.target#' not found");
+				}
+				var target = variables.tasks[include.owner.target];
+
+				// the event must be defined in this target
+				if (!StructKeyExists(target.events, include.owner.event)) {
+					Throw(type = "cflow.request", message = "Included target '#include.owner.target#' does not define event '#include.owner.event#'");
+				}
+				// get the tasks that have to be inserted instead of the include
+				var eventTasks = target.events[include.owner.event];
+				// if these tasks contain an include, do not proceed
+				var eventIncludes = StructFindValue({t = eventTasks}, "include", "all");
+				var proceed = true;
+				for (var eventInclude in eventIncludes) {
+					if (eventInclude.key == "$type") {
+						proceed = false;
+						break;
+					}
+				}
+
+				if (proceed) {
+					// get a reference to the parent array of the include from the path
+					// the path is of the form ".target.events.eventType[taskIndex].$type", but there can be deeper nesting
+					// first pick up the array index
+					var indices = REMatch("[0-9]+(?=])", include.path); // there can be more than one, but we want only the last one
+					var index = Val(indices[ArrayLen(indices)]);
+					// cut off the index and .$type from the path
+					var path = Left(include.path, Len(include.path) - Len("[#index#].$type"));
+					// get the reference
+					var parent = Evaluate("variables.tasks#path#");
+					// remove the include entry
+					ArrayDeleteAt(parent, index);
+					// insert the include's tasks at that position
+					for (var j = ArrayLen(eventTasks); j >= 1; j--) {
+						ArrayInsertAt(parent, index, eventTasks[j]);
+					}
+					// remove the include struct
+					ArrayDeleteAt(includes, i);
+				}
+			}
+
+			count--;
+			if (count < 0) {
+				Throw(type = "cflow.request", message = "Circular reference detected in includes");
+			}
+		}
+
 	}
 
 	/**
@@ -297,7 +364,7 @@ component XmlReader {
 				// find all tasks that have no controller specified
 				var tasks = StructFindValue(target, "invoke", "all");
 				for (var task in tasks) {
-					if (task.owner.$type == "invoke") {
+					if (task.key == "$type") {
 						if (!StructKeyExists(task.owner, "controller")) {
 							// explicitly set the controller
 							task.owner.controller = variables.defaultControllers[name];
@@ -320,7 +387,7 @@ component XmlReader {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "dispatch", "all");
 			for (var task in tasks) {
-				if (task.owner.$type == "dispatch") {
+				if (task.key == "$type") {
 					if (!StructKeyExists(task.owner, "target")) {
 						task.owner.target = name;
 					}
@@ -354,9 +421,9 @@ component XmlReader {
 
 			var tasks = StructFindValue(target, "render", "all");
 			for (task in tasks) {
-				if (task.owner.$type == "render") {
+				if (task.key == "$type") {
 					if (arguments.eventPhase && task.path contains ".events." || !arguments.eventPhase && task.path does not contain ".events.") {
-					// check for the existence of a view attribute, as some other task could have an attribute with the value 'render'
+						// check for the existence of a view attribute, as some other task could have an attribute with the value 'render'
 						// prepend the target name as the directory name
 						task.owner.view = name & "/" & task.owner.view;
 					}
@@ -377,7 +444,7 @@ component XmlReader {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "redirect", "all");
 			for (var task in tasks) {
-				if (task.owner.$type == "redirect") {
+				if (task.key == "$type") {
 					// do nothing if the redirect is to a fixed url, or if it has a target already
 					if (!StructKeyExists(task.owner, "url")) {
 						if (!StructKeyExists(task.owner, "target")) {

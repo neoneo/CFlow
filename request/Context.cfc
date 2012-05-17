@@ -280,8 +280,8 @@ component Context accessors="true" {
 	 * @param	{Boolean}	permanent	whether the redirect is permanent or not [false]
 	 *
 	 * Redirect types:
-	 * url		The parameters struct should have a url key that contains the explicit url to redirect to
-	 * event	The parameters struct should have target and event keys, and may have additional keys that are used as url parameters
+	 * url		The parameters struct should have a url key that contains the url to redirect to
+	 * event	The parameters struct should have target and event keys
 	 **/
 	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());

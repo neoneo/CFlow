@@ -21,7 +21,7 @@ component ComplexTask implements="Task" {
 
 	variables.subtasks = [];
 
-	public boolean function run(required Event event) {
+	public boolean function run(required Event event, required Response response) {
 		Throw(type = "cflow.notimplemented", message = "Not implemented");
 	}
 
@@ -33,11 +33,11 @@ component ComplexTask implements="Task" {
 		ArrayAppend(variables.subtasks, arguments.task);
 	}
 
-	private boolean function runSubtasks(required Event event) {
+	private boolean function runSubtasks(required Event event, required Response response) {
 
 		var success = true;
 		for (var task in variables.subtasks) {
-			success = task.run(arguments.event);
+			success = task.run(arguments.event, arguments.response);
 			if (!success) {
 				break;
 			}

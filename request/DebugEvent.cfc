@@ -16,7 +16,7 @@
 
 component DebugEvent extends="Event" {
 
-	public void function init(required struct properties, required Response response) {
+	public void function init(required struct properties) {
 		super.init(argumentCollection = arguments);
 		variables.messages = [];
 	}
@@ -27,17 +27,6 @@ component DebugEvent extends="Event" {
 		super.cancel();
 
 	}
-
-	/*public void function abort() {
-
-		// make sure the abort message is logged only once
-		var size = ArrayLen(variables.messages);
-		if (size == 0 || variables.messages[size].message != "cflow.aborted") {
-			record("cflow.aborted");
-		}
-		super.abort();
-
-	}*/
 
 	public void function record(required any metadata, string message = "") {
 

@@ -19,8 +19,8 @@
  **/
 component PhaseTask extends="ComplexTask" {
 
-	public boolean function run(required Event event) {
-		return runSubtasks(arguments.event);
+	public boolean function run(required Event event, required Response response) {
+		return runSubtasks(arguments.event, arguments.response);
 	}
 
 	public string function getType() {

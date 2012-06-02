@@ -21,9 +21,10 @@ component Context accessors="true" {
 	property name="viewMapping" type="string" default="";
 	property name="requestStrategy" type="RequestStrategy";
 
-	// target and event to dispatch if an unknown event is handled (only applicable if implicitTasks is false)
+	// target and event to dispatch if no target or event is specified
 	property name="defaultTarget" type="string" default="";
 	property name="defaultEvent" type="string" default="";
+	// target and event to dispatch if an unknown event is handled (only applicable if implicitTasks is false)
 	property name="undefinedTarget" type="string" default="";
 	property name="undefinedEvent" type="string" default="";
 
@@ -39,7 +40,7 @@ component Context accessors="true" {
 	// just create an instance of the default request strategy
 	// if it is not needed, it will be garbage collected
 	// assuming this will only occur once in the life of the application, it's not a big cost
-	variables.requestStrategy = new DefaultRequestStrategy(this);
+	variables.requestStrategy = new DefaultRequestStrategy();
 
 	public Response function handleRequest() {
 
@@ -58,15 +59,15 @@ component Context accessors="true" {
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
 		var response = createResponse();
-		var event = createEvent(arguments.parameters, response);
+		var event = createEvent(arguments.parameters);
 		event.setTarget(targetName);
 		event.setType(eventType);
 
-		var success = runStartTasks(event, arguments.targetName);
+		var success = runStartTasks(event, response, arguments.targetName);
 
 		// only run the event task if we have success
 		if (success) {
-			success = dispatchEvent(event, arguments.targetName, arguments.eventType);
+			success = dispatchEvent(event, response, arguments.targetName, arguments.eventType);
 		}
 
 		// the end tasks are always run, unless the event is aborted
@@ -76,31 +77,31 @@ component Context accessors="true" {
 				event.reset();
 			}
 
-			runEndTasks(event, arguments.targetName);
+			runEndTasks(event, response, arguments.targetName);
 		}
 
 		// basically, finalize() is only provided as a hook for DebugContext
 		// maybe there are other needs for it, but if not, find a way to factor this out
-		finalize(event);
+		finalize(event, response);
 
 		return response;
 	}
 
-	public boolean function dispatchEvent(required Event event, required string targetName, required string eventType) {
+	public boolean function dispatchEvent(required Event event, required Response response, required string targetName, required string eventType) {
 
 		local.targetName = arguments.event.getTarget();
 		local.eventType = arguments.event.getType();
 		arguments.event.setTarget(arguments.targetName);
 		arguments.event.setType(arguments.eventType);
 
-		var success = runBeforeTasks(arguments.event, arguments.targetName);
+		var success = runBeforeTasks(arguments.event, arguments.response, arguments.targetName);
 
 		if (success) {
-			success = runEventTasks(arguments.event, arguments.targetName, arguments.eventType);
+			success = runEventTasks(arguments.event, arguments.response, arguments.targetName, arguments.eventType);
 		}
 
 		if (success) {
-			success = runAfterTasks(arguments.event, arguments.targetName);
+			success = runAfterTasks(arguments.event, arguments.response, arguments.targetName);
 		}
 
 		arguments.event.setTarget(local.targetName);
@@ -148,28 +149,28 @@ component Context accessors="true" {
 
 	// TEMPLATE METHODS ===========================================================================
 
-	private boolean function runStartTasks(required Event event, required string targetName) {
-		return getPhaseTask("start", arguments.targetName).run(arguments.event);
+	private boolean function runStartTasks(required Event event, required Response response, required string targetName) {
+		return getPhaseTask("start", arguments.targetName).run(arguments.event, arguments.response);
 	}
 
-	private boolean function runBeforeTasks(required Event event, required string targetName) {
-		return getPhaseTask("before", arguments.targetName).run(arguments.event);
+	private boolean function runBeforeTasks(required Event event, required Response response, required string targetName) {
+		return getPhaseTask("before", arguments.targetName).run(arguments.event, arguments.response);
 	}
 
-	private boolean function runAfterTasks(required Event event, required string targetName) {
-		return getPhaseTask("after", arguments.targetName).run(arguments.event);
+	private boolean function runAfterTasks(required Event event, required Response response, required string targetName) {
+		return getPhaseTask("after", arguments.targetName).run(arguments.event, arguments.response);
 	}
 
-	private boolean function runEndTasks(required Event event, required string targetName) {
-		return getPhaseTask("end", arguments.targetName).run(arguments.event);
+	private boolean function runEndTasks(required Event event, required Response response, required string targetName) {
+		return getPhaseTask("end", arguments.targetName).run(arguments.event, arguments.response);
 	}
 
-	private boolean function runEventTasks(required Event event, required string targetName, required string eventType) {
+	private boolean function runEventTasks(required Event event, required Response response, required string targetName, required string eventType) {
 
 		var result = true;
 		// check if there are tasks for this event
 		if (StructKeyExists(variables.tasks.event, arguments.targetName) && StructKeyExists(variables.tasks.event[arguments.targetName], arguments.eventType)) {
-			result = variables.tasks.event[arguments.targetName][arguments.eventType].run(arguments.event);
+			result = variables.tasks.event[arguments.targetName][arguments.eventType].run(arguments.event, arguments.response);
 		} else {
 			if (getImplicitTasks()) {
 				var task = createPhaseTask();
@@ -183,7 +184,7 @@ component Context accessors="true" {
 				// register this task, so that next time we can reuse it
 				register(task, "event", arguments.targetName, arguments.eventType);
 
-				result = task.run(arguments.event);
+				result = task.run(arguments.event, arguments.response);
 			} else {
 				// dispatch the undefined event, if applicable
 				if (Len(variables.undefinedTarget) > 0 && Len(variables.undefinedEvent) > 0 && (arguments.targetName != variables.undefinedTarget || arguments.eventType != variables.undefinedEvent)) {
@@ -196,8 +197,7 @@ component Context accessors="true" {
 					}
 					local.eventType = variables.undefinedEvent;
 
-					//var event = createEvent(arguments.targetName, arguments.eventType, arguments.event);
-					result = dispatchEvent(arguments.event, local.targetName, local.eventType);
+					result = dispatchEvent(arguments.event, arguments.response, local.targetName, local.eventType);
 				}
 			}
 		}
@@ -205,7 +205,7 @@ component Context accessors="true" {
 		return result;
 	}
 
-	private void function finalize(required Event event) {
+	private void function finalize(required Event event, required Response response) {
 		// hook
 	}
 
@@ -299,12 +299,16 @@ component Context accessors="true" {
 		return new SetTask(arguments.name, arguments.expression, arguments.overwrite);
 	}
 
+	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
+		return new ThreadTask(arguments.action, arguments.name, arguments.priority, arguments.timeout);
+	}
+
 	public PhaseTask function createPhaseTask() {
 		return new PhaseTask();
 	}
 
-	private Event function createEvent(required struct parameters, required Response response) {
-		return new Event(arguments.parameters, arguments.response);
+	private Event function createEvent(required struct parameters) {
+		return new Event(arguments.parameters);
 	}
 
 	private Response function createResponse() {

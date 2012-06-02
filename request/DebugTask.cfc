@@ -27,14 +27,14 @@ component DebugTask implements="Task" {
 
 	}
 
-	public boolean function run(required Event event) {
+	public boolean function run(required Event event, required Response response) {
 
 		success = true;
 
 		if (!arguments.event.isAborted()) {
 			arguments.event.record(variables.metadata, "cflow.task");
 
-			success = variables.task.run(arguments.event);
+			success = variables.task.run(arguments.event, arguments.response);
 
 			arguments.event.record(variables.metadata, "cflow.task");
 		}

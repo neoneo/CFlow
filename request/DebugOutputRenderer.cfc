@@ -68,30 +68,33 @@
 		return data;
 	}
 
+	/**
+	 * Returns true if the two structs contain the same keys with the same values.
+	 **/
 	private boolean function structEquals(required struct struct1, required struct struct2) {
 
-		var isEqual = true;
+		var result = true;
 		for (var key in arguments.struct1) {
 			// ignore tickcount
 			if (key != "tickcount") {
 				if (StructKeyExists(arguments.struct2, key)) {
 					if (IsSimpleValue(arguments.struct1[key])) {
-						isEqual = arguments.struct1[key] == arguments.struct2[key];
+						result = arguments.struct1[key] == arguments.struct2[key];
 					} else {
 						// we expect this to be a struct
-						isEqual = structEquals(arguments.struct1[key], arguments.struct2[key]);
+						result = structEquals(arguments.struct1[key], arguments.struct2[key]);
 					}
 				} else {
-					isEqual = false;
+					result = false;
 				}
 
-				if (!isEqual) {
+				if (!result) {
 					break;
 				}
 			}
 		}
 
-		return isEqual;
+		return result;
 	}
 	</cfscript>
 
@@ -160,6 +163,15 @@
 									<cfelse>
 										(Set #metadata.name# = #metadata.expression#)
 									</cfif>
+								</cfcase>
+								<cfcase value="thread">
+									<cfswitch expression="#metadata.action#">
+										<cfcase value="run">Run thread</cfcase>
+										<cfcase value="terminate">Terminate thread</cfcase>
+										<cfcase value="join">Join thread<cfif ListLen(metadata.name) gt 1>s</cfif></cfcase>
+									</cfswitch>
+									<!--- for layout, insert a space after each comma --->
+									#Replace(metadata.name, ",", ", ", "all")#
 								</cfcase>
 							</cfswitch>
 						</cfcase>

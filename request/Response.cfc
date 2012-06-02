@@ -1,4 +1,4 @@
-/*
+<!---
    Copyright 2012 Neo Neo
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,14 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
+--->
 
-component Response accessors="true" {
+<cfcomponent displayname="Response" accessors="true" output="false">
 
-	property name="type" type="string" default="HTML";
-	property name="contentKey" type="string" default="";
+	<cfproperty name="type" type="string" default="HTML">
+	<cfproperty name="contentKey" type="string" default="">
 
-	include "../static/content.cfm"; // include the content() function, that calls cfcontent to set the content type
-	include "../static/header.cfm"; // the same for cfheader
+	<cfscript>
 
 	public void function init() {
 
@@ -101,15 +100,6 @@ component Response accessors="true" {
 
 	}
 
-	public void function writeHeaders() {
-
-		content(variables.contentTypes[getType()]);
-		for (var header in variables.headers) {
-			header(header.name, header.value);
-		}
-
-	}
-
 	public void function clear(string key = "") {
 
 		if (Len(arguments.key) == 0) {
@@ -126,5 +116,15 @@ component Response accessors="true" {
 		}
 
 	}
+	</cfscript>
 
-}
+	<cffunction name="writeHeaders" access="public" output="false" returntype="void">
+
+		<cfcontent type="#variables.contentTypes[getType()]#">
+		<cfloop array="#variables.headers#" index="header">
+			<cfheader name="#header.name#" value="#header.value#">
+		</cfloop>
+
+	</cffunction>
+
+</cfcomponent>

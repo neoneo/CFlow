@@ -36,12 +36,12 @@ component IfTask extends="ComplexTask" {
 
 	}
 
-	public boolean function run(required Event event) {
+	public boolean function run(required Event event, required Response response) {
 
 		if (variables.evaluator.execute(arguments.event)) {
-			runSubtasks(arguments.event);
+			runSubtasks(arguments.event, arguments.response);
 		} else if (StructKeyExists(variables, "elseTask")) {
-			variables.elseTask.run(arguments.event);
+			variables.elseTask.run(arguments.event, arguments.response);
 		}
 
 		return true;

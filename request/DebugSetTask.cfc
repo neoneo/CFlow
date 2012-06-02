@@ -24,7 +24,7 @@ component DebugSetTask extends="SetTask" {
 
 	}
 
-	public boolean function run(required Event event) {
+	public boolean function run(required Event event, required Response response) {
 
 		success = true;
 
@@ -34,7 +34,7 @@ component DebugSetTask extends="SetTask" {
 
 			arguments.event.record(metadata, "cflow.task");
 
-			success = super.run(arguments.event);
+			success = super.run(arguments.event, arguments.response);
 			// get the result
 			metadata.value = arguments.event[variables.name];
 

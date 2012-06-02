@@ -22,9 +22,8 @@ component Event accessors="true" {
 	variables.canceled = false;
 	variables.aborted = false;
 
-	public void function init(required struct properties, required Response response) {
+	public void function init(required struct properties) {
 		setProperties(arguments.properties);
-		variables.response = arguments.response;
 	}
 
 	public void function cancel() {
@@ -36,12 +35,7 @@ component Event accessors="true" {
 	}
 
 	public void function abort() {
-
 		variables.aborted = true;
-		/*if (StructKeyExists(variables, "parent")) {
-			variables.parent.abort();
-		}*/
-
 	}
 
 	public boolean function isAborted() {
@@ -69,10 +63,6 @@ component Event accessors="true" {
 			}
 		}
 
-	}
-
-	package Response function getResponse() {
-		return variables.response;
 	}
 
 	package void function reset() {

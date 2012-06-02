@@ -31,9 +31,9 @@
 
 	}
 
-	public boolean function run(required Event event) {
+	public boolean function run(required Event event, required Response response) {
 
-		render(arguments.event.getProperties(), arguments.event.getResponse());
+		render(arguments.event.getProperties(), arguments.response);
 
 		return true;
 	}

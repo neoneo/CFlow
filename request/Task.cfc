@@ -16,7 +16,7 @@
 
 interface {
 
-	public boolean function run(required Event event);
+	public boolean function run(required Event event, required Response response);
 
 	public string function getType();
 

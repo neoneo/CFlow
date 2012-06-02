@@ -14,34 +14,18 @@
    limitations under the License.
 */
 
-component ElseTask extends="IfTask" {
-
-	public void function init(string condition = "") {
-
-		if (Len(arguments.condition) > 0) {
-			super.init(arguments.condition);
-			variables.hasCondition = true;
-		} else {
-			variables.hasCondition = false;
-		}
-
-	}
+component DebugRedirectTask extends="RedirectTask" {
 
 	public boolean function run(required Event event, required Response response) {
 
-		if (!variables.hasCondition) {
-			// the subtasks have to run unconditionally
-			runSubtasks(arguments.event, arguments.response);
-		} else {
-			// conditional running of subtasks, which is implemented in the superclass
-			super.run(arguments.event, arguments.response);
-		}
+		// we just record the fact that normally a redirect should occur right now
+		arguments.event.record({
+			url = obtainUrl(arguments.event)
+		}, "cflow.redirect");
+		// abort the rest of the flow
+		arguments.event.abort();
 
-		return true;
-	}
-
-	public string function getType() {
-		return "else";
+		return false;
 	}
 
 }

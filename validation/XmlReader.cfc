@@ -271,7 +271,7 @@ component XmlReader {
 				var argumentCollection = {};
 				// workaround for Railo bug 1798, can't use StructCopy to copy xml structs
 				for (var attribute in xmlAttributes) {
-					if (!ArrayContains(["message", "component", "field", "mask"], attribute)) {
+					if (ArrayFind(["message", "component", "field", "mask"], attribute) == 0) {
 						argumentCollection[attribute] = xmlAttributes[attribute];
 					}
 				}

@@ -20,7 +20,7 @@ component XmlReader {
 	variables.abstractTargetNames = []; // list of targets that are abstract
 	variables.defaultControllers = {}; // default controllers per target
 
-	variables.complexTaskTypes = ["invoke", "dispatch", "if", "else"]; // complex tasks are tasks that can contain other tasks
+	variables.complexTaskTypes = ["invoke", "dispatch", "if", "else", "thread"]; // complex tasks are tasks that can contain other tasks
 
 	public void function init(required Context context) {
 		variables.context = arguments.context;
@@ -176,7 +176,7 @@ component XmlReader {
 		StructAppend(task, arguments.node.xmlAttributes);
 
 		// for complex tasks, there can be child tasks that are to be executed if an event is canceled
-		if (ArrayContains(variables.complexTaskTypes, task.$type)) {
+		if (ArrayFind(variables.complexTaskTypes, task.$type) > 0) {
 			task.sub = getTasksFromChildNodes(arguments.node);
 		}
 
@@ -538,10 +538,18 @@ component XmlReader {
 					var overwrite = !StructKeyExists(arguments.task, "overwrite") || arguments.task.overwrite;
 					StructDelete(attributes, "$type");
 					StructDelete(attributes, "overwrite");
-					var name = ListFirst(StructKeyList(attributes));
-					var expression = arguments.task[name];
+					var name = ListFirst(StructKeyList(attributes)); // pick up the attribute (=variable) name
+					var expression = arguments.task[name]; // pick up the attribute value (the expression)
 					instance = variables.context.createSetTask(name, expression, overwrite);
 					break;
+
+				case "thread":
+					// all attributes are optional
+					var action = StructKeyExists(arguments.task, "action") ? arguments.task.action : "run";
+					var name = StructKeyExists(arguments.task, "name") ? arguments.task.name : "";
+					var priority = StructKeyExists(arguments.task, "priority") ? arguments.task.priority : "run";
+					var timeout = StructKeyExists(arguments.task, "timeout") ? arguments.task.timeout : 0;
+					instance = variables.context.createThreadTask(action, name, priority, timeout);
 			}
 
 			// check for subtasks

@@ -46,7 +46,7 @@ component EachRuleSet extends="RuleSet" {
 			if (variables.aggregate) {
 				// only include distinct messages
 				for (var message in result) {
-					if (!ArrayContains(messages, message)) {
+					if (ArrayFind(messages, message) == 0) {
 						ArrayAppend(messages, message);
 					}
 				}

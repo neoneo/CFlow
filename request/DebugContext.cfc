@@ -49,6 +49,10 @@ component DebugContext extends="Context" {
 		return new DebugRedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
+	public DebugThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
+		return new DebugThreadTask(this, arguments.action, arguments.name, arguments.priority, arguments.timeout);
+	}
+
 	public DebugTask function createIfTask(required string condition) {
 
 		var task = super.createIfTask(argumentCollection = arguments);
@@ -67,15 +71,8 @@ component DebugContext extends="Context" {
 		return new DebugSetTask(arguments.name, arguments.expression, arguments.overwrite);
 	}
 
-	public DebugTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
-
-		var task = super.createThreadTask(argumentCollection = arguments);
-
-		return new DebugTask(task, arguments);
-	}
-
-	package DebugEvent function createEvent(required struct properties) {
-		return new DebugEvent(arguments.properties);
+	public DebugEvent function createEvent(required string target, required string type, struct properties = {}) {
+		return new DebugEvent(arguments.target, arguments.type, arguments.properties);
 	}
 
 	// TEMPLATE METHODS ===========================================================================
@@ -181,7 +178,7 @@ component DebugContext extends="Context" {
 
 	private void function handleException(required any exception, required DebugEvent event, required Response response) {
 
-		arguments.event.record({exception: exception}, "cflow.exception");
+		arguments.event.record({exception: arguments.exception}, "cflow.exception");
 		arguments.response.clear();
 		renderDebugOutput(arguments.event, arguments.response);
 		response.write();

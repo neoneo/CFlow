@@ -14,9 +14,9 @@
    limitations under the License.
 --->
 
-component DebugDispatchTask extends="DispatchTask" {
+component DebugThreadTask extends="ThreadTask" {
 
-	public void function init(required Context context, required string targetName, required string eventType, boolean cancelFailed = true) {
+	public void function init(required Context context, string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
 
 		variables.metadata = StructCopy(arguments);
 		StructDelete(variables.metadata, "context");
@@ -31,18 +31,42 @@ component DebugDispatchTask extends="DispatchTask" {
 
 		if (!arguments.event.isAborted()) {
 			var metadata = StructCopy(variables.metadata);
-			// get the target and event that are actually going to be dispatched
-			metadata.dispatchTargetName = variables.targetParameter.getValue(arguments.event);
-			metadata.dispatchEventType = variables.eventType.getValue(arguments.event);
 
 			arguments.event.record(metadata, "cflow.task");
 
 			success = super.run(arguments.event, arguments.response);
+
+			// if this is a join action, merge the event messages on the current event object
+			if (variables.metadata.action == "join") {
+				// loop over the joined threads
+				var names = ListToArray(variables.metadata.name);
+				for (var name in names) {
+					// pick up the messages from the thread event object
+					arguments.event.record({
+						name = name,
+						messages = cfthread[name].event.getMessages()
+					}, "cflow.thread");
+				}
+			}
 
 			arguments.event.record(metadata, "cflow.task");
 		}
 
 		return success;
 	}
+
+	/*private boolean function runSubtasks(required Event event, required Response response) {
+
+		// this method is invoked from within the thread
+		try {
+			super.runSubtasks(arguments.event, arguments.response);
+		} catch (any e) {
+			// record the exception, in case the thread is joined by the page thread later
+			arguments.event.record({exception: e}, "cflow.exception");
+			// rethrow, so the thread exits with the same status code
+			rethrow;
+		}
+
+	}*/
 
 }

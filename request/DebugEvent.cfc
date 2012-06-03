@@ -16,8 +16,9 @@
 
 component DebugEvent extends="Event" {
 
-	public void function init(required struct properties) {
+	public void function init(required string target, required string type, struct properties = {}) {
 		super.init(argumentCollection = arguments);
+		// create an array for recording debugging messages
 		variables.messages = [];
 	}
 
@@ -28,6 +29,9 @@ component DebugEvent extends="Event" {
 
 	}
 
+	/**
+	 * Records a debugging message. This message will be displayed in debug output.
+	 **/
 	public void function record(required any metadata, string message = "") {
 
 		// if metadata is a simple value and message is not defined, we interpret metadata as the message

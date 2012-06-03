@@ -116,6 +116,31 @@
 		}
 
 	}
+
+	/**
+	 * Merges content and headers from the given Response instance onto the current instance.
+	 **/
+	public void function merge(required Response response) {
+
+		var data = arguments.response.getData();
+		// append generated content
+		for (var i = 1; i <= ArrayLen(data.keys); i++) {
+			append(data.contents[i], data.keys[i]);
+		}
+		// append headers
+		for (var header in data.headers) {
+			appendHeader(header.name, header.value);
+		}
+
+	}
+
+	package struct function getData() {
+		return {
+			keys = variables.keys,
+			contents = variables.contents,
+			headers = variables.headers
+		};
+	}
 	</cfscript>
 
 	<cffunction name="writeHeaders" access="public" output="false" returntype="void">

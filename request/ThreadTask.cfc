@@ -16,8 +16,9 @@
 
 component ThreadTask extends="ComplexTask" {
 
-	public void function init(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
+	public void function init(required Context context, string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
 
+		variables.context = arguments.context;
 		variables.action = arguments.action;
 		variables.name = arguments.name;
 		variables.priority = arguments.priority;
@@ -35,20 +36,26 @@ component ThreadTask extends="ComplexTask" {
 		switch (variables.action) {
 			case "run":
 				// run the subtasks within the thread
-				thread action="run" name="#variables.name#" priority="#variables.priority#" event="#arguments.event#" response="#arguments.response#" {
-					// for thread safety, the thread gets its own event and response objects
-					runSubtasks(attributes.event, attributes.response);
+				// for thread safety, the thread gets its own event and response objects
+				thread action="run" name="#variables.name#" priority="#variables.priority#" properties="#arguments.event.getProperties()#" target="#arguments.event.getTarget()#" event="#arguments.event.getType()#" {
+					// create new event and response objects based on the attributes
+					// these objects are not passed in as attributes, because we need clean objects (in the case of the event object, mainly for debug mode)
+					// there is also a railo bug: https://issues.jboss.org/browse/RAILO-1926
+					thread.event = variables.context.createEvent(attributes.target, attributes.event, attributes.properties);
+					thread.response = variables.context.createResponse();
+					runSubtasks(thread.event, thread.response);
 				};
 				break;
 
 			case "join":
 				thread action="join" name="#variables.name#" timeout="#variables.timeout#";
 				for (var name in variables.names) {
+					event.record(cfthread[name].status, name);
 					if (cfthread[name].status == "completed") {
-						// merge the event objects of the threads on the current event object (without overwriting)
-						arguments.event.setProperties(cfthread[name].event.getProperties());
-						// merging the response objects is more difficult: setType(), write() and clear() all interfere
-						// for now ignore the thread's response object
+						// merge the event objects of the threads on the current event object
+						arguments.event.setProperties(cfthread[name].event); // this will append the properties of the thread event without overwriting
+						// the same for the response objects
+						arguments.response.merge(cfthread[name].response);
 					}
 				}
 				break;
@@ -73,6 +80,20 @@ component ThreadTask extends="ComplexTask" {
 		}
 
 		super.addSubtask(arguments.task);
+
+	}
+
+	private boolean function runSubtasks(required Event event, required Response response) {
+
+		// this method is invoked from within the thread
+		try {
+			super.runSubtasks(arguments.event, arguments.response);
+		} catch (any e) {
+			// record the exception, in case the thread is joined by the page thread later
+			arguments.event.record({exception: e}, "cflow.exception");
+			// rethrow, so the thread exits with the same status code
+			rethrow;
+		}
 
 	}
 

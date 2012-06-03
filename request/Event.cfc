@@ -22,7 +22,9 @@ component Event accessors="true" {
 	variables.canceled = false;
 	variables.aborted = false;
 
-	public void function init(required struct properties) {
+	public void function init(required string target, required string type, struct properties = {}) {
+		setTarget(arguments.target);
+		setType(arguments.type)
 		setProperties(arguments.properties);
 	}
 
@@ -54,16 +56,14 @@ component Event accessors="true" {
 		return properties;
 	}
 
+	/**
+	 * Puts properties on the object. Existing properties are kept (no overwrites).
+	 **/
 	public void function setProperties(required struct properties) {
-
-		for (var property in arguments.properties) {
-			// the property could be null, so check for that too
-			if (StructKeyExists(arguments.properties, property) && (!StructKeyExists(this, property) || !IsCustomFunction(this[property]))) {
-				this[property] = arguments.properties[property];
-			}
-		}
-
+		StructAppend(this, arguments.properties, false);
 	}
+
+	// PACKAGE METHODS ============================================================================
 
 	package void function reset() {
 		variables.canceled = false;

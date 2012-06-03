@@ -32,7 +32,7 @@
 		// total duration of execution
 		var duration = variables.messages[ArrayLen(variables.messages)].tickcount - variables.messages[1].tickcount;
 
-		var content = "<h1>CFlow debugging information</h1><ul>";
+		var content = "<ul>";
 		for (var child in result) {
 			content &= renderMessage(child);
 		}
@@ -110,6 +110,7 @@
 
 		<cfset var renderChildren = false>
 		<cfset var renderException = false>
+		<cfset var renderThreadTasks = false>
 		<cfset var dumpMetadata = false>
 		<cfset var dispatchTask = false>
 
@@ -175,6 +176,11 @@
 								</cfcase>
 							</cfswitch>
 						</cfcase>
+						<cfcase value="cflow.thread">
+							<!--- task information regarding a joined thread --->
+							Thread #metadata.name#
+							<cfset renderThreadTasks = true>
+						</cfcase>
 						<cfcase value="cflow.exception">
 							Exception
 							<cfset renderException = true>
@@ -191,10 +197,10 @@
 				</div>
 				<cfset dumpMetadata = dumpMetadata and StructKeyExists(local, "metadata")>
 				<cfset renderChildren = StructKeyExists(data, "children") and not ArrayIsEmpty(data.children)>
-				<cfif dumpMetadata or renderChildren or renderException>
-					<cfset grandchildren = 0><!--- count children of children, so that we can report back if a dispatch task didn't have any tasks (children are phase, so we need the grandchildren) --->
+				<cfif dumpMetadata or renderChildren or renderException or renderThreadTasks>
 					<div class="data">
 						<cfif renderChildren>
+							<cfset grandchildren = 0><!--- count children of children, so that we can report back if a dispatch task didn't have any tasks (children are phase, so we need the grandchildren) --->
 							<ul>
 							<cfloop array="#data.children#" index="child">
 								#renderMessage(child)#
@@ -226,6 +232,10 @@
 						</cfif>
 						<cfif dumpMetadata>
 							<cfdump var="#metadata#">
+						</cfif>
+						<cfif renderThreadTasks>
+							<!--- create a new renderer and let it render the messages from the thread --->
+							#new DebugOutputRenderer().render(metadata.messages)#
 						</cfif>
 					</div>
 				</cfif>

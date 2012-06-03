@@ -59,9 +59,7 @@ component Context accessors="true" {
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
 		var response = createResponse();
-		var event = createEvent(arguments.parameters);
-		event.setTarget(targetName);
-		event.setType(eventType);
+		var event = createEvent(targetName, eventType, arguments.parameters);
 
 		var success = runStartTasks(event, response, arguments.targetName);
 
@@ -287,6 +285,10 @@ component Context accessors="true" {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
+	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
+		return new ThreadTask(this, arguments.action, arguments.name, arguments.priority, arguments.timeout);
+	}
+
 	public IfTask function createIfTask(required string condition) {
 		return new IfTask(arguments.condition);
 	}
@@ -299,19 +301,15 @@ component Context accessors="true" {
 		return new SetTask(arguments.name, arguments.expression, arguments.overwrite);
 	}
 
-	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
-		return new ThreadTask(arguments.action, arguments.name, arguments.priority, arguments.timeout);
-	}
-
 	public PhaseTask function createPhaseTask() {
 		return new PhaseTask();
 	}
 
-	private Event function createEvent(required struct parameters) {
-		return new Event(arguments.parameters);
+	public Event function createEvent(required string target, required string type, struct parameters = {}) {
+		return new Event(arguments.target, arguments.type, arguments.parameters);
 	}
 
-	private Response function createResponse() {
+	public Response function createResponse() {
 		return new Response();
 	}
 

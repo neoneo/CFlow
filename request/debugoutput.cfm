@@ -54,6 +54,7 @@
 	#cflow .message, #cflow .data {
 		border: 1px solid #000;
 		padding: 2px;
+		overflow: hidden;
 	}
 
 	#cflow .message {
@@ -76,6 +77,10 @@
 
 	#cflow .task > .message {
 		background-color: #99f;
+	}
+
+	#cflow .task.thread .thread > .message {
+		background-color: #66c;
 	}
 
 	#cflow .redirect a {
@@ -115,6 +120,7 @@
 
 <cfoutput>
 <div id="cflow">
+	<h1>CFlow debugging information</h1>
 	#_debugoutput#
 </div>
 </cfoutput>

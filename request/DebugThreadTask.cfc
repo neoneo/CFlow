@@ -16,7 +16,7 @@
 
 component DebugThreadTask extends="ThreadTask" {
 
-	public void function init(required Context context, string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
+	public void function init(required Context context, string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
 
 		variables.metadata = StructCopy(arguments);
 		StructDelete(variables.metadata, "context");
@@ -42,10 +42,12 @@ component DebugThreadTask extends="ThreadTask" {
 				var names = ListToArray(variables.metadata.name);
 				for (var name in names) {
 					// pick up the messages from the thread event object
+					// it is possible that the thread is terminated before the event object is created, so check for that
 					arguments.event.record({
 						name = name,
-						messages = cfthread[name].event.getMessages()
-					}, "cflow.thread");
+						status = cfthread[name].status,
+						messages = StructKeyExists(cfthread[name], "event") ? cfthread[name].event.getMessages() : []
+					}, "cflow.joinedthread");
 				}
 			}
 
@@ -55,11 +57,11 @@ component DebugThreadTask extends="ThreadTask" {
 		return success;
 	}
 
-	/*private boolean function runSubtasks(required Event event, required Response response) {
+	private boolean function runSubtasks(required Event event, required Response response) {
 
 		// this method is invoked from within the thread
 		try {
-			super.runSubtasks(arguments.event, arguments.response);
+			var success = super.runSubtasks(arguments.event, arguments.response);
 		} catch (any e) {
 			// record the exception, in case the thread is joined by the page thread later
 			arguments.event.record({exception: e}, "cflow.exception");
@@ -67,6 +69,7 @@ component DebugThreadTask extends="ThreadTask" {
 			rethrow;
 		}
 
-	}*/
+		return success;
+	}
 
 }

@@ -16,13 +16,14 @@
 
 component ThreadTask extends="ComplexTask" {
 
-	public void function init(required Context context, string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
+	public void function init(required Context context, string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
 
 		variables.context = arguments.context;
 		variables.action = arguments.action;
 		variables.name = arguments.name;
 		variables.priority = arguments.priority;
 		variables.timeout = arguments.timeout;
+		variables.duration = arguments.duration;
 
 		if (arguments.action == "join") {
 			// convert the names list into an array for easy looping later
@@ -50,7 +51,6 @@ component ThreadTask extends="ComplexTask" {
 			case "join":
 				thread action="join" name="#variables.name#" timeout="#variables.timeout#";
 				for (var name in variables.names) {
-					event.record(cfthread[name].status, name);
 					if (cfthread[name].status == "completed") {
 						// merge the event objects of the threads on the current event object
 						arguments.event.setProperties(cfthread[name].event); // this will append the properties of the thread event without overwriting
@@ -64,6 +64,9 @@ component ThreadTask extends="ComplexTask" {
 				thread action="terminate" name="#variables.name#";
 				break;
 
+			case "sleep":
+				thread action="sleep" duration="#variables.duration#";
+				break;
 		}
 
 		return true; // no canceling or aborting the current event is possible within a thread
@@ -80,20 +83,6 @@ component ThreadTask extends="ComplexTask" {
 		}
 
 		super.addSubtask(arguments.task);
-
-	}
-
-	private boolean function runSubtasks(required Event event, required Response response) {
-
-		// this method is invoked from within the thread
-		try {
-			super.runSubtasks(arguments.event, arguments.response);
-		} catch (any e) {
-			// record the exception, in case the thread is joined by the page thread later
-			arguments.event.record({exception: e}, "cflow.exception");
-			// rethrow, so the thread exits with the same status code
-			rethrow;
-		}
 
 	}
 

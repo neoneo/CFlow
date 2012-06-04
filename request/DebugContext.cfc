@@ -49,8 +49,8 @@ component DebugContext extends="Context" {
 		return new DebugRedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
-	public DebugThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
-		return new DebugThreadTask(this, arguments.action, arguments.name, arguments.priority, arguments.timeout);
+	public DebugThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
+		return new DebugThreadTask(this, arguments.action, arguments.name, arguments.priority, arguments.timeout, arguments.duration);
 	}
 
 	public DebugTask function createIfTask(required string condition) {

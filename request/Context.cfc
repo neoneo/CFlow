@@ -285,7 +285,7 @@ component Context accessors="true" {
 		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
-	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0) {
+	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
 		return new ThreadTask(this, arguments.action, arguments.name, arguments.priority, arguments.timeout);
 	}
 

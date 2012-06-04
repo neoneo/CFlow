@@ -79,7 +79,7 @@
 		background-color: #99f;
 	}
 
-	#cflow .task.thread .thread > .message {
+	#cflow .joinedthread > .message {
 		background-color: #66c;
 	}
 

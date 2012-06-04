@@ -30,7 +30,8 @@
 			variables.index++;
 		}
 		// total duration of execution
-		var duration = variables.messages[ArrayLen(variables.messages)].tickcount - variables.messages[1].tickcount;
+		// the messages array can be empty if output is rendered for a terminated thread
+		var duration = ArrayIsEmpty(variables.messages) ? 0 : variables.messages[ArrayLen(variables.messages)].tickcount - variables.messages[1].tickcount;
 
 		var content = "<ul>";
 		for (var child in result) {
@@ -167,18 +168,28 @@
 								</cfcase>
 								<cfcase value="thread">
 									<cfswitch expression="#metadata.action#">
-										<cfcase value="run">Run thread</cfcase>
-										<cfcase value="terminate">Terminate thread</cfcase>
-										<cfcase value="join">Join thread<cfif ListLen(metadata.name) gt 1>s</cfif></cfcase>
+										<cfcase value="run">
+											Run thread #metadata.name#
+											<cfif metadata.priority neq "normal">with #LCase(metadata.priority)# priority</cfif>
+										</cfcase>
+										<cfcase value="terminate">
+											Terminate thread #metadata.name#
+										</cfcase>
+										<cfcase value="join">
+											Join thread<cfif ListLen(metadata.name) gt 1>s</cfif> #Replace(metadata.name, ",", ", ", "all")#
+											<cfif metadata.timeout gt 0>within #metadata.timeout# ms</cfif>
+										</cfcase>
+										<cfcase value="sleep">
+											Sleep #metadata.duration# ms
+										</cfcase>
 									</cfswitch>
-									<!--- for layout, insert a space after each comma --->
-									#Replace(metadata.name, ",", ", ", "all")#
 								</cfcase>
 							</cfswitch>
 						</cfcase>
-						<cfcase value="cflow.thread">
+						<cfcase value="cflow.joinedthread">
 							<!--- task information regarding a joined thread --->
 							Thread #metadata.name#
+							<cfif metadata.status neq "completed">(#LCase(metadata.status)#)</cfif>
 							<cfset renderThreadTasks = true>
 						</cfcase>
 						<cfcase value="cflow.exception">

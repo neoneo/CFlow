@@ -549,7 +549,8 @@ component XmlReader {
 					var name = StructKeyExists(arguments.task, "name") ? arguments.task.name : "";
 					var priority = StructKeyExists(arguments.task, "priority") ? arguments.task.priority : "normal";
 					var timeout = StructKeyExists(arguments.task, "timeout") ? arguments.task.timeout : 0;
-					instance = variables.context.createThreadTask(action, name, priority, timeout);
+					var duration = StructKeyExists(arguments.task, "duration") ? arguments.task.duration : 0;
+					instance = variables.context.createThreadTask(action, name, priority, timeout, duration);
 			}
 
 			// check for subtasks

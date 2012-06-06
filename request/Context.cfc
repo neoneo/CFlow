@@ -78,7 +78,7 @@ component Context accessors="true" {
 			runEndTasks(event, response, arguments.targetName);
 		}
 
-		// basically, finalize() is only provided as a hook for DebugContext
+		// basically, finalize() is only provided as a hook for debug.Context
 		// maybe there are other needs for it, but if not, find a way to factor this out
 		finalize(event, response);
 

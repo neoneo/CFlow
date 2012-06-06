@@ -176,7 +176,7 @@ component XmlReader {
 		StructAppend(task, arguments.node.xmlAttributes);
 
 		// for complex tasks, there can be child tasks that are to be executed if an event is canceled
-		if (ArrayContains(variables.complexTaskTypes, task.$type)) {
+		if (ArrayFind(variables.complexTaskTypes, task.$type) > 0) {
 			task.sub = getTasksFromChildNodes(arguments.node);
 		}
 

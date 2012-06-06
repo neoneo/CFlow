@@ -55,7 +55,7 @@ component Compiler {
 	}
 
 	private void function compileTask(required struct task, required file file) {
-		invokeMethod(this, "compile" & arguments.task.$type & "Task", arguments);
+		variables["compile" & arguments.task.$type & "Task"](argumentCollection = arguments);
 	}
 
 	private void function compileInvokeTask(required struct task, required file file) {
@@ -69,7 +69,7 @@ component Compiler {
 			controller = "getContext().getController(""#arguments.task.controller#"")";
 		}
 		FileWriteLine(arguments.file, "#controller#.#arguments.task.method#(arguments.event));");
-		FileWriteLine(file, "if (arguments.event.isAborted()) return;");
+		FileWriteLine(arguments.file, "if (arguments.event.isAborted()) return;");
 		compileSubtasks(arguments.task, required file file);
 
 	}
@@ -169,8 +169,9 @@ component Compiler {
 		if (StructKeyExists(arguments.task, "condition")) {
 			command &= " if (#compileExpression(arguments.task.condition)#)";
 		}
-		FileWriteLine(file, "} " & command & " {");
+		FileWriteLine(file, command & " {");
 		compileSubtasks(arguments.task, arguments.file);
+		FileWriteLine(file, "}");
 
 	}
 

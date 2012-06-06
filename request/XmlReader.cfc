@@ -389,7 +389,7 @@ component XmlReader {
 			for (var task in tasks) {
 				if (task.key == "$type") {
 					if (!StructKeyExists(task.owner, "target")) {
-						task.owner.target = name;
+						task.owner["target"] = name;
 					}
 					// if the event goes to the same target, and is defined immediately in the before or after phase, this would cause an infinite loop
 					if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
@@ -448,7 +448,7 @@ component XmlReader {
 					// do nothing if the redirect is to a fixed url, or if it has a target already
 					if (!StructKeyExists(task.owner, "url")) {
 						if (!StructKeyExists(task.owner, "target")) {
-							task.owner.target = name;
+							task.owner["target"] = name;
 						}
 
 						// if the redirect goes to the same target and is defined outside the event phase, this would cause an infinite loop

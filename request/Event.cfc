@@ -63,11 +63,11 @@ component Event accessors="true" {
 		StructAppend(this, arguments.properties, false);
 	}
 
-	// PACKAGE METHODS ============================================================================
-
-	package void function reset() {
+	public void function reset() {
 		variables.canceled = false;
 	}
+
+	// PACKAGE METHODS ============================================================================
 
 	package void function setTarget(required string value) {
 		variables.target = arguments.value;

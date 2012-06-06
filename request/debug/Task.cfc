@@ -15,9 +15,9 @@
 */
 
 /**
- * The DebugTask is a decorator that is used when in debug mode.
+ * Task is a decorator that is used when in debug mode.
  **/
-component DebugTask implements="Task" {
+component Task implements="cflow.request.Task" {
 
 	public void function init(required Task task, required struct metadata) {
 
@@ -27,16 +27,19 @@ component DebugTask implements="Task" {
 
 	}
 
-	public boolean function run(required Event event) {
+	public boolean function run(required Event event, required Response response) {
 
 		success = true;
 
 		if (!arguments.event.isAborted()) {
-			arguments.event.record(variables.metadata, "cflow.task");
+			// create a copy of the metadata struct
+			// subclasses must be allowed to modify it before or after the task runs
+			var metadata = StructCopy(variables.metadata);
+			recordStart(arguments.event, metadata);
 
-			success = variables.task.run(arguments.event);
+			success = variables.task.run(arguments.event, arguments.response);
 
-			arguments.event.record(variables.metadata, "cflow.task");
+			recordEnd(arguments.event, metadata);
 		}
 
 		return success;
@@ -48,6 +51,14 @@ component DebugTask implements="Task" {
 
 	public void function addSubtask(required Task task) {
 		variables.task.addSubtask(arguments.task);
+	}
+
+	private void function recordStart(required Event event, required struct metadata) {
+		arguments.event.record(arguments.metadata, "cflow.task");
+	}
+
+	private void function recordEnd(required Event event, required struct metadata) {
+		arguments.event.record(arguments.metadata, "cflow.task");
 	}
 
 }

@@ -29,7 +29,6 @@ component InvokeTask extends="ComplexTask" {
 
 	public boolean function run(required Event event, required Response response) {
 
-		//invokeMethod(variables.controller, variables.method, arguments);
 		variables.controller[variables.method](arguments.event);
 
 		var canceled = arguments.event.isCanceled();

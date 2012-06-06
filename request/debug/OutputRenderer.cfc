@@ -14,7 +14,7 @@
    limitations under the License.
 --->
 
-<cfcomponent displayname="DebugOutputRenderer" output="false">
+<cfcomponent displayname="OutputRenderer" output="false">
 
 	<cfscript>
 	public string function render(required array messages) {
@@ -246,7 +246,7 @@
 						</cfif>
 						<cfif renderThreadTasks>
 							<!--- create a new renderer and let it render the messages from the thread --->
-							#new DebugOutputRenderer().render(metadata.messages)#
+							#new OutputRenderer().render(metadata.messages)#
 						</cfif>
 					</div>
 				</cfif>

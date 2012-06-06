@@ -34,8 +34,8 @@ component DispatchTask extends="ComplexTask" {
 	public boolean function run(required Event event, required Response response) {
 
 		// get the target and event from the respective parameters
-		var targetName = variables.targetParameter.getValue(arguments.event);
-		var eventType = variables.eventType.getValue(arguments.event);
+		var targetName = getTarget(arguments.event);
+		var eventType = getEvent(arguments.event);
 
 		variables.context.dispatchEvent(arguments.event, arguments.response, targetName, eventType);
 		var canceled = arguments.event.isCanceled();
@@ -52,6 +52,14 @@ component DispatchTask extends="ComplexTask" {
 
 	public string function getType() {
 		return "dispatch";
+	}
+
+	public string function getTarget(required Event event) {
+		return variables.targetParameter.getValue(arguments.event);
+	}
+
+	public string function getEvent(required Event event) {
+		return variables.eventType.getValue(arguments.event);
 	}
 
 }

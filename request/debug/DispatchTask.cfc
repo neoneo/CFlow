@@ -14,18 +14,15 @@
    limitations under the License.
 */
 
-component DebugRedirectTask extends="RedirectTask" {
+component DispatchTask extends="Task" {
 
-	public boolean function run(required Event event, required Response response) {
+	private void function recordStart(required Event event, required struct metadata) {
+		// get the target and event that are actually going to be dispatched
+		arguments.metadata.dispatchTargetName = variables.task.getTarget(arguments.event);
+		arguments.metadata.dispatchEventType = variables.task.getEvent(arguments.event);
 
-		// we just record the fact that normally a redirect should occur right now
-		arguments.event.record({
-			url = obtainUrl(arguments.event)
-		}, "cflow.redirect");
-		// abort the rest of the flow
-		arguments.event.abort();
+		super.recordStart(arguments.event, arguments.metadata);
 
-		return false;
 	}
 
 }

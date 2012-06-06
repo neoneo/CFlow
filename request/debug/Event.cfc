@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component DebugEvent extends="Event" {
+component Event extends="cflow.request.Event" {
 
 	public void function init(required string target, required string type, struct properties = {}) {
 		super.init(argumentCollection = arguments);

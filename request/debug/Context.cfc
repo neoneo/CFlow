@@ -14,11 +14,11 @@
    limitations under the License.
 */
 
-component DebugContext extends="Context" {
+component Context extends="cflow.request.Context" {
 
-	variables.debugOutputRenderer = new DebugOutputRenderer();
+	variables.outputRenderer = new OutputRenderer();
 
-	public boolean function dispatchEvent(required DebugEvent event, required Response response, required string targetName, required string eventType) {
+	public boolean function dispatchEvent(required Event event, required Response response, required string targetName, required string eventType) {
 
 		arguments.event.record("Dispatch #arguments.targetName#.#arguments.eventType#");
 
@@ -27,57 +27,69 @@ component DebugContext extends="Context" {
 
 	// FACTORY METHODS ============================================================================
 
-	public DebugTask function createInvokeTask(required string controllerName, required string methodName) {
+	public Task function createInvokeTask(required string controllerName, required string methodName) {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);
 
-		return new DebugTask(task, arguments);
+		return new Task(task, arguments);
 	}
 
-	public DebugDispatchTask function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
-		return new DebugDispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
+	public Task function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
+
+		var task = super.createDispatchTask(argumentCollection = arguments);
+
+		return new DispatchTask(task, arguments);
 	}
 
-	public DebugTask function createRenderTask(required string view) {
+	public Task function createRenderTask(required string view) {
 
 		var task = super.createRenderTask(argumentCollection = arguments);
 
-		return new DebugTask(task, arguments);
+		return new Task(task, arguments);
 	}
 
-	public DebugRedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
-		return new DebugRedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
+	public Task function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
+
+		var task = super.createRedirectTask(argumentCollection = arguments);
+
+		return new RedirectTask(task, arguments);
 	}
 
-	public DebugThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
-		return new DebugThreadTask(this, arguments.action, arguments.name, arguments.priority, arguments.timeout, arguments.duration);
+	public Task function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
+
+		var task = super.createThreadTask(argumentCollection = arguments);
+
+		return new ThreadTask(task, arguments);
 	}
 
-	public DebugTask function createIfTask(required string condition) {
+	public Task function createIfTask(required string condition) {
 
 		var task = super.createIfTask(argumentCollection = arguments);
 
-		return new DebugTask(task, arguments);
+		return new Task(task, arguments);
 	}
 
-	public DebugTask function createElseTask(string condition = "") {
+	public Task function createElseTask(string condition = "") {
 
 		var task = super.createElseTask(argumentCollection = arguments);
 
-		return new DebugTask(task, arguments);
+		return new Task(task, arguments);
 	}
 
-	public DebugSetTask function createSetTask(required string name, required string expression, boolean overwrite = true) {
-		return new DebugSetTask(arguments.name, arguments.expression, arguments.overwrite);
+	public Task function createSetTask(required string name, required string expression, boolean overwrite = true) {
+
+		var task = super.createSetTask(argumentCollection = arguments);
+
+		return new SetTask(task, arguments);
 	}
 
-	public DebugEvent function createEvent(required string target, required string type, struct properties = {}) {
-		return new DebugEvent(arguments.target, arguments.type, arguments.properties);
+	public Event function createEvent(required string target, required string type, struct properties = {}) {
+		return new Event(arguments.target, arguments.type, arguments.properties);
 	}
 
 	// TEMPLATE METHODS ===========================================================================
 
-	private boolean function runStartTasks(required DebugEvent event, required Response response, required string targetName) {
+	private boolean function runStartTasks(required Event event, required Response response, required string targetName) {
 
 		arguments.event.record("cflow.starttasks");
 
@@ -92,7 +104,7 @@ component DebugContext extends="Context" {
 		return success;
 	}
 
-	private boolean function runBeforeTasks(required DebugEvent event, required Response response, required string targetName) {
+	private boolean function runBeforeTasks(required Event event, required Response response, required string targetName) {
 
 		arguments.event.record("cflow.beforetasks");
 
@@ -107,7 +119,7 @@ component DebugContext extends="Context" {
 		return success;
 	}
 
-	private boolean function runAfterTasks(required DebugEvent event, required Response response, required string targetName) {
+	private boolean function runAfterTasks(required Event event, required Response response, required string targetName) {
 
 		arguments.event.record("cflow.aftertasks");
 
@@ -122,7 +134,7 @@ component DebugContext extends="Context" {
 		return success;
 	}
 
-	private boolean function runEndTasks(required DebugEvent event, required Response response, required string targetName) {
+	private boolean function runEndTasks(required Event event, required Response response, required string targetName) {
 
 		arguments.event.record("cflow.endtasks");
 
@@ -137,7 +149,7 @@ component DebugContext extends="Context" {
 		return success;
 	}
 
-	private boolean function runEventTasks(required DebugEvent event, required Response response, required string targetName, required string eventType) {
+	private boolean function runEventTasks(required Event event, required Response response, required string targetName, required string eventType) {
 
 		arguments.event.record("cflow.eventtasks");
 
@@ -152,35 +164,35 @@ component DebugContext extends="Context" {
 		return success;
 	}
 
-	private void function finalize(required DebugEvent event, required Response response) {
-		renderDebugOutput(arguments.event, arguments.response);
+	private void function finalize(required Event event, required Response response) {
+		renderOutput(arguments.event, arguments.response);
 	}
 
-	// DEBUG OUTPUT METHODS =======================================================================
+	// OUTPUT METHODS =============================================================================
 
-	private void function renderDebugOutput(required DebugEvent event, required Response response) {
+	private void function renderOutput(required Event event, required Response response) {
 
 		// we're going to change the viewmapping temporarily
 		// this might lead to race conditions in a production environment so debugging there is dangerous
 		// to make sure the context remains consistent, we put this code inside a lock
 		lock name="cflow.context" type="exclusive" timeout="1" {
 			var viewMapping = getViewMapping();
-			setViewMapping("/cflow/request");
+			setViewMapping("/cflow/request/debug");
 			// create a (non-debug) render task
-			var task = super.createRenderTask("debugoutput");
+			var task = super.createRenderTask("output");
 			setViewMapping(viewMapping);
 		}
 
-		arguments.event._debugoutput = variables.debugOutputRenderer.render(arguments.event.getMessages());
+		arguments.event._debugoutput = variables.outputRenderer.render(arguments.event.getMessages());
 		task.run(arguments.event, arguments.response);
 
 	}
 
-	private void function handleException(required any exception, required DebugEvent event, required Response response) {
+	private void function handleException(required any exception, required Event event, required Response response) {
 
 		arguments.event.record({exception: arguments.exception}, "cflow.exception");
 		arguments.response.clear();
-		renderDebugOutput(arguments.event, arguments.response);
+		renderOutput(arguments.event, arguments.response);
 		response.write();
 		abort;
 

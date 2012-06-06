@@ -1,8 +1,6 @@
 <cfcomponent displayname="Target" output="false">
 
 	<cfscript>
-	include "/cflow/static/invoke.cfm";
-
 	public void function init(required Context context, required string name) {
 		variables.context = arguments.context;
 		variables.requestStrategy = variables.context.getRequestStrategy();
@@ -16,7 +14,7 @@
 		var canceled = arguments.event.isCanceled();
 		var aborted = arguments.event.isAborted();
 		if (!canceled && !aborted) {
-			invokeMethod(this, arguments.eventType, {event = arguments.event, response = arguments.response});
+			this[arguments.eventType](arguments.event, arguments.response);
 		}
 
 		canceled = arguments.event.isCanceled();

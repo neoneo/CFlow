@@ -14,23 +14,20 @@
    limitations under the License.
 */
 
-component Event extends="cflow.req.Event" {
+component RedirectTask extends="Task" {
 
-	public void function init(required struct properties, required Response response) {
-		variables.response = arguments.response;
-		super.init(arguments.properties);
-	}
+	public boolean function run(required Event event, required Response response) {
 
-	package Response function getResponse() {
-		return variables.response;
-	}
+		if (!arguments.event.isAborted()) {
+			// we just record the fact that normally a redirect should occur right now
+			arguments.event.record({
+				url = variables.task.obtainUrl(arguments.event)
+			}, "cflow.redirect");
+			// abort the rest of the flow
+			arguments.event.abort();
+		}
 
-	package void function setTarget(required string value) {
-		variables.target = arguments.value;
-	}
-
-	package void function setType(required string value) {
-		variables.type = arguments.value;
+		return false;
 	}
 
 }

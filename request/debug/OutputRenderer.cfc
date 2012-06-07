@@ -33,11 +33,11 @@
 		// the messages array can be empty if output is rendered for a terminated thread
 		var duration = ArrayIsEmpty(variables.messages) ? 0 : variables.messages[ArrayLen(variables.messages)].tickcount - variables.messages[1].tickcount;
 
-		var content = "<ul>";
+		var content = "<ol>";
 		for (var child in result) {
 			content &= renderMessage(child);
 		}
-		content &= "</ul><span class=""total duration"">#duration#</span>";
+		content &= "</ol><span class=""total duration"">#duration#</span>";
 
 		return content;
 	}
@@ -212,7 +212,7 @@
 					<div class="data">
 						<cfif renderChildren>
 							<cfset grandchildren = 0><!--- count children of children, so that we can report back if a dispatch task didn't have any tasks (children are phase, so we need the grandchildren) --->
-							<ul>
+							<ol>
 							<cfloop array="#data.children#" index="child">
 								#renderMessage(child)#
 								<cfif dispatchTask && StructKeyExists(child, "children")>
@@ -223,11 +223,11 @@
 							<cfif dispatchTask and grandchildren eq 0>
 								<li class="eventwithouttasks"><div class="message">Event without tasks</div></li>
 							</cfif>
-							</ul>
+							</ol>
 						</cfif>
 						<cfif renderException>
 							<cfset var exception = metadata.exception>
-							<h2>#exception.type#: #exception.message#</h2>
+							<h2>#exception.type#: #HTMLEditFormat(exception.message)#</h2>
 							<p><strong>#exception.detail#</strong></p>
 
 							<!--- stack trace --->
@@ -235,11 +235,14 @@
 							<cfset var i = 0>
 							<p><strong>#tagContext[1].template#: line #tagContext[1].line#</strong></p>
 							<code>#tagContext[1].codePrintHTML#</code>
-							<p>
+							<ol>
 								<cfloop from="2" to="#ArrayLen(tagContext)#" index="i">
-								<div>#tagContext[i].template#: line #tagContext[i].line#</div>
+								<li>
+									<p>#tagContext[i].template#: line #tagContext[i].line#</p>
+									<code class="hidden">#tagContext[i].codePrintHTML#</code>
+								</li>
 								</cfloop>
-							</p>
+							</ol>
 						</cfif>
 						<cfif dumpMetadata>
 							<cfdump var="#metadata#">

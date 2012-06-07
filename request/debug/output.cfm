@@ -31,15 +31,19 @@
 		padding: 2px 16px;
 	}
 
-	#cflow ul {
+	#cflow ol {
 		list-style-type: none;
 		margin: 0;
 		padding: 0 12px;
 	}
 
-	#cflow li {
+	#cflow ol > li {
 		padding: 0px;
 		border: 2px dashed transparent;
+	}
+
+	#cflow ol > li.hover {
+		border-color: #f00;
 	}
 
 	#cflow .duration {
@@ -116,6 +120,29 @@
 	#cflow .exception h2 {
 		font-size: 11pt;
 	}
+
+	#cflow .exception ol {
+		padding: 0px;
+		margin-top: 12px;
+	}
+
+	#cflow .exception li {
+		border-width: 0;
+	}
+
+	#cflow .exception li > p {
+		margin: 0;
+		cursor: pointer;
+	}
+
+	#cflow .exception li code {
+		margin: 12px 0 12px 12px;
+		display: block;
+	}
+
+	#cflow .hidden {
+		display: none !important;
+	}
 </style>
 
 <cfoutput>
@@ -124,52 +151,34 @@
 	#_debugoutput#
 </div>
 </cfoutput>
-
 <script>
-	var cflow = {
+	(function () {
+		function mouseover(e) {
+			e.currentTarget.classList.add("hover");
+			e.stopPropagation();
+		};
 
-		node: document.getElementById("cflow"),
+		function mouseout(e) {
+			e.currentTarget.classList.remove("hover");
+		};
 
-		getActiveListItem: function (node) {
-			var listItem = node;
-
-			while (listItem.tagName.toLowerCase() !== "li" && listItem !== this.node) {
-				listItem = listItem.parentNode;
+		function click(e) {
+			var toggleNode = e.currentTarget.children[1];
+			if (toggleNode) {
+				toggleNode.classList.toggle("hidden");
 			}
-
-			if (listItem === this.node) {
-				listItem = null;
-			}
-
-			return listItem;
+			e.stopPropagation();
 		}
 
-	};
+		Array.prototype.forEach.call(document.querySelectorAll("#cflow > ol > li, #cflow li:not(.exception) > .data > ol > li"), function (node) {
+			node.addEventListener("mouseover", mouseover);
+			node.addEventListener("mouseout", mouseout);
+		});
 
-	cflow.node.addEventListener("mouseover", function (e) {
-		var listItem = cflow.getActiveListItem(e.target);
-		if (listItem) {
-			listItem.style.borderColor = "#f00";
-		}
-	}, false);
-
-	cflow.node.addEventListener("mouseout", function (e) {
-		var listItem = cflow.getActiveListItem(e.target);
-		if (listItem) {
-			listItem.style.borderColor = "";
-		}
-	}, false);
-
-	cflow.node.addEventListener("click", function (e) {
-		var listItem = cflow.getActiveListItem(e.target);
-		if (listItem) {
-			var dataDiv = listItem.children[1];
-			if (dataDiv) {
-				dataDiv.style.display = dataDiv.style.display === "none" ? "" : "none";
-			}
-		}
-	}, false);
-
+		Array.prototype.forEach.call(document.querySelectorAll("#cflow li"), function (node) {
+			node.addEventListener("click", click);
+		});
+	})();
 </script>
 </cfsavecontent>
 <cfoutput>

@@ -16,41 +16,25 @@
 
 component RedirectTask implements="Task" {
 
-	/**
-	 * Constructor.
-	 * type				url or event; determines which parameters are expected
-	 * parameters		if the type is url, a url key is required; for event, target and event keys are optional
-	 * 					additionally, for both types a parameters struct is optional, which contains additional querystring parameters
-	 * permanent		whether this is a permanent redirect or not
-	 * requestStrategy	the request strategy, only required when type is event
-	 **/
-	public void function init(required string type, required struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
+	public void function init(string url = "", string target = "", required string event = "", struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
 
-		variables.type = arguments.type;
-
-		switch (variables.type) {
-			case "url":
-				// the url key should be present
-				variables.urlString = new cflow.util.Parameter(arguments.parameters.url);
-				break;
-
-			case "event":
-				// the request strategy should be present, target and event keys are optional in parameters
-				variables.requestStrategy = arguments.requestStrategy;
-				variables.target = new cflow.util.Parameter(StructKeyExists(arguments.parameters, "target") ? arguments.parameters.target : "");
-				variables.event = new cflow.util.Parameter(StructKeyExists(arguments.parameters, "event") ? arguments.parameters.event : "");
-				break;
+		if (Len(arguments.url) > 0) {
+			variables.isEventRedirect = false;
+			variables.url =  new cflow.util.Parameter(arguments.url);
+		} else {
+			variables.isEventRedirect = true;
+			// the request strategy should be present, target and event keys are optional in parameters
+			variables.requestStrategy = arguments.requestStrategy;
+			variables.target = new cflow.util.Parameter(arguments.target);
+			variables.event = new cflow.util.Parameter(arguments.event);
 		}
 
 		// handle runtime parameters if present
-		local.parameters = {};
+		variables.parameters = {};
 		for (var name in arguments.parameters) {
-			if (ArrayFind(["url", "target", "event"], name) == 0) {
-				// store the parameter in a Parameter instance; that instance will determine whether the value should be taken literally or be evaluated
-				local.parameters[name] = new cflow.util.Parameter(arguments.parameters[name]);
-			}
+			// store the parameter in a Parameter instance; that instance will determine whether the value should be taken literally or be evaluated
+			variables.parameters[name] = new cflow.util.Parameter(arguments.parameters[name]);
 		}
-		variables.parameters = local.parameters;
 
 		if (arguments.permanent) {
 			variables.statusCode = 301;
@@ -73,7 +57,7 @@ component RedirectTask implements="Task" {
 
 	public string function obtainUrl(required Event event) {
 
-		var urlString = "";
+		local.url = "";
 		var parameters = {};
 		// get the values for the parameters to append on the url
 		for (var name in variables.parameters) {
@@ -81,29 +65,24 @@ component RedirectTask implements="Task" {
 			parameters[name] = variables.parameters[name].getValue(arguments.event);
 		}
 
-		switch (variables.type) {
-			case "url":
-				urlString = variables.urlString.getValue(arguments.event);
-				// only append if there are parameters
-				if (!StructIsEmpty(parameters)) {
-					if (urlString does not contain "?") {
-						urlString &= "?";
-					}
-					var queryString = "";
-					for (var name in parameters) {
-						queryString = ListAppend(queryString, name & "=" & UrlEncodedFormat(parameters[name]), "&");
-					}
-					urlString &= queryString;
+		if (variables.isEventRedirect) {
+			local.url = variables.requestStrategy.writeUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
+		} else {
+			local.url = variables.url.getValue(arguments.event);
+			// only append if there are parameters
+			if (!StructIsEmpty(parameters)) {
+				if (local.url does not contain "?") {
+					local.url &= "?";
 				}
-
-				break;
-
-			case "event":
-				urlString = variables.requestStrategy.writeUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
-				break;
+				var queryString = "";
+				for (var name in parameters) {
+					queryString = ListAppend(queryString, name & "=" & UrlEncodedFormat(parameters[name]), "&");
+				}
+				local.url &= queryString;
+			}
 		}
 
-		return urlString;
+		return local.url;
 	}
 
 }

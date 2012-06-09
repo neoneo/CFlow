@@ -142,7 +142,7 @@
 						<cfcase value="cflow.aborted">Request aborted</cfcase>
 						<cfcase value="cflow.task">
 							<cfswitch expression="#metadata.type#">
-								<cfcase value="invoke">Invoke #metadata.controllerName#.#metadata.methodName#</cfcase>
+								<cfcase value="invoke">Invoke #metadata.controllerName#.#metadata.handlerName#</cfcase>
 								<cfcase value="dispatch">
 									Dispatch #metadata.targetName#.#metadata.eventType#
 									<!--- get the event that was actually dispatched --->

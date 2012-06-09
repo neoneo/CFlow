@@ -136,73 +136,73 @@ component XmlReader {
 
 	private Rule function createRuleFromNode(required xml node, required string fieldName, datatype = "string") {
 
-		var ruleType = arguments.node.xmlName;
+		var type = arguments.node.xmlName;
 		// check if it is a negation; in this case the node name starts with "not-"
 		var negation = false;
-		if (ListFirst(ruleType, "-") == "not") {
+		if (ListFirst(type, "-") == "not") {
 			negation = true;
-			ruleType = ListRest(ruleType, "-");
+			type = ListRest(type, "-");
 		}
 
 		var xmlAttributes = arguments.node.xmlAttributes;
 		var caseSensitive = StructKeyExists(xmlAttributes, "caseSensitive") && xmlAttributes.caseSensitive;
 
-		var rule = JavaCast("null", 0);
+		var instance = JavaCast("null", 0);
 
-		switch (ruleType) {
+		switch (type) {
 			case "exist":
 			case "each":
 				// EachRuleSet is a RuleSet
 				// we return a simple rule after which we can add the EachRuleSet, to prevent an error if the each node is the first node (rule sets can only be added after a rule)
-				rule = variables.context.createExistRule();
+				instance = variables.context.createExistRule();
 				break;
 
 			case "nonempty":
-				rule = variables.context.createNonEmptyRule();
+				instance = variables.context.createNonEmptyRule();
 				break;
 
 			case "valid":
-				rule = variables.context.createValidRule(xmlAttributes.type);
+				instance = variables.context.createValidRule(xmlAttributes.type);
 				break;
 
 			case "satisfy":
-				rule = variables.context.createSatisfyRule(xmlAttributes.condition);
+				instance = variables.context.createSatisfyRule(xmlAttributes.condition);
 				break;
 
 			case "contain":
-				rule = variables.context.createContainRule(xmlAttributes.value, caseSensitive);
+				instance = variables.context.createContainRule(xmlAttributes.value, caseSensitive);
 				break;
 
 			case "endwidth":
-				rule = variables.context.createEndWithRule(xmlAttributes.value, caseSensitive);
+				instance = variables.context.createEndWithRule(xmlAttributes.value, caseSensitive);
 				break;
 
 			case "startwith":
-				rule = variables.context.createStartWithRule(xmlAttributes.value, caseSensitive);
+				instance = variables.context.createStartWithRule(xmlAttributes.value, caseSensitive);
 				break;
 
 			case "match":
-				rule = variables.context.createMatchRule(xmlAttributes.pattern);
+				instance = variables.context.createMatchRule(xmlAttributes.pattern);
 				break;
 
 			case "element":
-				rule = variables.context.createElementRule(xmlAttributes.set, caseSensitive);
+				instance = variables.context.createElementRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "intersection":
-				rule = variables.context.createIntersectionRule(xmlAttributes.set, caseSensitive);
+				instance = variables.context.createIntersectionRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "subset":
-				rule = variables.context.createSubsetRule(xmlAttributes.set, caseSensitive);
+				instance = variables.context.createSubsetRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "superset":
-				rule = variables.context.createSupersetRule(xmlAttributes.set, caseSensitive);
+				instance = variables.context.createSupersetRule(xmlAttributes.set, caseSensitive);
 				break;
 
 			case "distinct":
-				rule = variables.context.createDistinctRule(caseSensitive);
+				instance = variables.context.createDistinctRule(caseSensitive);
 				break;
 
 			case "equal":
@@ -210,19 +210,19 @@ component XmlReader {
 					// create a rule depending on the datatype
 					switch (arguments.datatype) {
 						case "string":
-							rule = variables.context.createEqualStringRule(xmlAttributes.value, caseSensitive);
+							instance = variables.context.createEqualStringRule(xmlAttributes.value, caseSensitive);
 							break;
 
 						case "numeric":
-							rule = variables.context.createEqualNumericRule(xmlAttributes.value);
+							instance = variables.context.createEqualNumericRule(xmlAttributes.value);
 							break;
 
 						case "datetime":
-							rule = variables.context.createEqualDateTimeRule(xmlAttributes.value);
+							instance = variables.context.createEqualDateTimeRule(xmlAttributes.value);
 							break;
 					}
 				} else if (StructKeyExists(xmlAttributes, "set")) {
-					rule = variables.context.createEqualSetRule(xmlAttributes.set, caseSensitive);
+					instance = variables.context.createEqualSetRule(xmlAttributes.set, caseSensitive);
 				}
 				break;
 
@@ -232,17 +232,17 @@ component XmlReader {
 					switch (arguments.datatype) {
 						case "numeric":
 						case "string":
-							rule = variables.context.createMinimumNumericRule(xmlAttributes.value);
+							instance = variables.context.createMinimumNumericRule(xmlAttributes.value);
 							break;
 
 						case "datetime":
-							rule = variables.context.createMinimumDateTimeRule(xmlAttributes.value);
+							instance = variables.context.createMinimumDateTimeRule(xmlAttributes.value);
 							break;
 					}
 				} else if (StructKeyExists(xmlAttributes, "length")) {
-					rule = variables.context.createMinimumLengthRule(xmlAttributes.length);
+					instance = variables.context.createMinimumLengthRule(xmlAttributes.length);
 				} else if (StructKeyExists(xmlAttributes, "count")) {
-					rule = variables.context.createMinimumCountRule(xmlAttributes.count);
+					instance = variables.context.createMinimumCountRule(xmlAttributes.count);
 				}
 				break;
 
@@ -252,17 +252,17 @@ component XmlReader {
 					switch (arguments.datatype) {
 						case "numeric":
 						case "string":
-							rule = variables.context.createMaximumNumericRule(xmlAttributes.value);
+							instance = variables.context.createMaximumNumericRule(xmlAttributes.value);
 							break;
 
 						case "datetime":
-							rule = variables.context.createMaximumDateTimeRule(xmlAttributes.value);
+							instance = variables.context.createMaximumDateTimeRule(xmlAttributes.value);
 							break;
 					}
 				} else if (StructKeyExists(xmlAttributes, "length")) {
-					rule = variables.context.createMaximumLengthRule(xmlAttributes.length);
+					instance = variables.context.createMaximumLengthRule(xmlAttributes.length);
 				} else if (StructKeyExists(xmlAttributes, "count")) {
-					rule = variables.context.createMaximumCountRule(xmlAttributes.count);
+					instance = variables.context.createMaximumCountRule(xmlAttributes.count);
 				}
 				break;
 
@@ -270,12 +270,13 @@ component XmlReader {
 				// create an instance of the component, and pass all attributes as arguments except the default attributes
 				var argumentCollection = {};
 				// workaround for Railo bug 1798, can't use StructCopy to copy xml structs
+				var fixedAttributes = ["message", "component", "field", "mask"];
 				for (var attribute in xmlAttributes) {
-					if (ArrayFind(["message", "component", "field", "mask"], attribute) == 0) {
+					if (ArrayFind(fixedAttributes, attribute) == 0) {
 						argumentCollection[attribute] = xmlAttributes[attribute];
 					}
 				}
-				rule = new "#xmlAttributes.component#"(argumentCollection = argumentCollection);
+				instance = new "#xmlAttributes.component#"(argumentCollection = argumentCollection);
 				break;
 
 		}
@@ -289,19 +290,19 @@ component XmlReader {
 		// a field attribute on the rule node overrides this
 		if (StructKeyExists(xmlAttributes, "field")) {
 			// field contains the field name to get the value from
-			rule.setField(xmlAttributes.field);
+			instance.setField(xmlAttributes.field);
 		} else {
 			// default: use the fieldName passed in
-			rule.setField(arguments.fieldName);
+			instance.setField(arguments.fieldName);
 		}
 
-		if (ruleType != "each") {
+		if (type != "each") {
 			if (negation) {
-				rule = variables.context.createNegateRule(rule);
+				instance = variables.context.createNegateRule(rule);
 			}
 		}
 
-		return rule;
+		return instance;
 	}
 
 }

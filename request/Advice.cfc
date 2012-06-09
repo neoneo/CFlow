@@ -14,30 +14,18 @@
    limitations under the License.
 */
 
-component InvokeTask extends="ComplexTask" {
+component Advice implements="Task" {
 
-	public void function init(required component controller, required string handlerName) {
-		variables.controller = arguments.controller;
-		variables.handlerName = arguments.handlerName;
+	public void function init(required Task task) {
+		variables.task = arguments.task;
 	}
 
 	public boolean function run(required Event event, required Response response) {
-
-		variables.controller[variables.handlerName](arguments.event);
-
-		var canceled = arguments.event.isCanceled();
-		var aborted = arguments.event.isAborted();
-
-		if (canceled && !aborted) {
-			arguments.event.reset();
-			runSubtasks(arguments.event, arguments.response);
-		}
-
-		return !canceled && !aborted;
+		return variables.task.run(arguments.event, arguments.response);
 	}
 
 	public string function getType() {
-		return "invoke";
+		return variables.task.getType();
 	}
 
 }

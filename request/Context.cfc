@@ -258,8 +258,8 @@ component Context accessors="true" {
 
 	// FACTORY METHODS ============================================================================
 
-	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {
-		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
+	public InvokeTask function createInvokeTask(required string controllerName, required string handlerName) {
+		return new InvokeTask(getController(arguments.controllerName), arguments.handlerName);
 	}
 
 	public DispatchTask function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
@@ -281,8 +281,8 @@ component Context accessors="true" {
 	 * url		The parameters struct should have a url key that contains the url to redirect to
 	 * event	The parameters struct should have target and event keys
 	 **/
-	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
-		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
+	public RedirectTask function createRedirectTask(string url = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
+		return new RedirectTask(arguments.url, arguments.target, arguments.event, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
 	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {

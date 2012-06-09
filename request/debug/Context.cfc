@@ -48,7 +48,7 @@ component Context extends="cflow.request.Context" {
 		return new Task(task, arguments);
 	}
 
-	public Task function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
+	public Task function createRedirectTask(string url = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
 
 		var task = super.createRedirectTask(argumentCollection = arguments);
 

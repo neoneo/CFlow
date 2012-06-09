@@ -313,7 +313,7 @@ component XmlReader {
 				// get the tasks that have to be inserted instead of the include
 				var eventTasks = target.events[include.owner.event];
 				// if these tasks contain an include, do not proceed
-				var eventIncludes = StructFindValue({t = eventTasks}, "include", "all");
+				var eventIncludes = StructFindValue({t = eventTasks}, "include", "all"); // put the event tasks in a struct to be able to call StructFindValue()
 				var proceed = true;
 				for (var eventInclude in eventIncludes) {
 					if (eventInclude.key == "$type") {
@@ -485,9 +485,9 @@ component XmlReader {
 			switch (arguments.task.$type) {
 				case "invoke":
 					if (!StructKeyExists(arguments.task, "controller")) {
-						Throw(type = "cflow.request", message = "No controller associated with invoke task for method '#arguments.task.method#'");
+						Throw(type = "cflow.request", message = "No controller associated with invoke task for handler '#arguments.task.handler#'");
 					}
-					instance = variables.context.createInvokeTask(arguments.task.controller, arguments.task.method);
+					instance = variables.context.createInvokeTask(arguments.task.controller, arguments.task.handler);
 					break;
 
 				case "dispatch":
@@ -499,28 +499,20 @@ component XmlReader {
 					break;
 
 				case "redirect":
-					var permanent = false;
-					if (StructKeyExists(arguments.task, "permanent")) {
-						permanent = arguments.task.permanent;
-					}
-
+					local.url = StructKeyExists(arguments.task, "url") ? arguments.task.url : "";
+					var target = StructKeyExists(arguments.task, "target") ? arguments.task.target : ""
+					var event = StructKeyExists(arguments.task, "event") ? arguments.task.event : ""
 					var parameters = StructCopy(arguments.task);
-					StructDelete(parameters, "permanent");
+					var permanent = StructKeyExists(arguments.task, "permanent") && arguments.task.permanent;
+					// delete the formal attributes so the additional attributes are left
 					StructDelete(parameters, "$type");
+					StructDelete(parameters, "permanent");
+					StructDelete(parameters, "url");
+					StructDelete(parameters, "target");
+					StructDelete(parameters, "event");
+					StructDelete(parameters, "advice");
 
-					// there are two types of redirects: to an event and to a url
-					// depending on the type, the constructor expects different parameters
-					var type = "event";
-					if (StructKeyExists(arguments.task, "url")) {
-						// the redirect should be to the url defined here
-						type = "url";
-					}
-					// if there is a parameters attribute present, convert the value to an array
-					if (StructKeyExists(parameters, "parameters")) {
-						parameters.parameters = ListToArray(parameters.parameters);
-					}
-
-					instance = variables.context.createRedirectTask(type, parameters, permanent);
+					instance = variables.context.createRedirectTask(local.url, target, event, parameters, permanent);
 					break;
 
 				case "if":
@@ -538,6 +530,8 @@ component XmlReader {
 					var overwrite = !StructKeyExists(arguments.task, "overwrite") || arguments.task.overwrite;
 					StructDelete(attributes, "$type");
 					StructDelete(attributes, "overwrite");
+					StructDelete(attributes, "advice");
+
 					var name = ListFirst(StructKeyList(attributes)); // pick up the attribute (=variable) name
 					var expression = arguments.task[name]; // pick up the attribute value (the expression)
 					instance = variables.context.createSetTask(name, expression, overwrite);
@@ -550,13 +544,38 @@ component XmlReader {
 					var priority = StructKeyExists(arguments.task, "priority") ? arguments.task.priority : "normal";
 					var timeout = StructKeyExists(arguments.task, "timeout") ? arguments.task.timeout : 0;
 					var duration = StructKeyExists(arguments.task, "duration") ? arguments.task.duration : 0;
+
 					instance = variables.context.createThreadTask(action, name, priority, timeout, duration);
+					break;
+
+				case "task":
+					// create an instance of the component, and pass all attributes as arguments except the default attributes
+					var argumentCollection = {};
+					// workaround for Railo bug 1798, can't use StructCopy to copy xml structs
+					var fixedAttributes = ["component", "advice"];
+					for (var attribute in xmlAttributes) {
+						if (ArrayFind(fixedAttributes, attribute) == 0) {
+							argumentCollection[attribute] = xmlAttributes[attribute];
+						}
+					}
+					instance = new "#xmlAttributes.component#"(argumentCollection = argumentCollection);
+					break;
+
 			}
 
 			// check for subtasks
 			if (StructKeyExists(arguments.task, "sub")) {
 				for (var subtask in arguments.task.sub) {
 					instance.addSubtask(createTask(subtask));
+				}
+			}
+
+			// check if the task should be decorated by an advice
+			if (StructKeyExists(arguments.task, "advice")) {
+				var advices = ListToArray(arguments.task.advice);
+				// the first advice should be invoked first, so it is the last one to decorate the task
+				for (var i = ArrayLen(advices); i >= 1; i--) {
+					instance = new "#advices[i]#"(instance);
 				}
 			}
 		}

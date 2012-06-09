@@ -26,7 +26,7 @@ component DispatchTask extends="ComplexTask" {
 	public void function init(required Context context, required string targetName, required string eventType) {
 
 		variables.context = arguments.context;
-		variables.targetParameter = new cflow.util.Parameter(arguments.targetName);
+		variables.targetName = new cflow.util.Parameter(arguments.targetName);
 		variables.eventType = new cflow.util.Parameter(arguments.eventType);
 
 	}
@@ -34,8 +34,8 @@ component DispatchTask extends="ComplexTask" {
 	public boolean function run(required Event event, required Response response) {
 
 		// get the target and event from the respective parameters
-		var targetName = getTarget(arguments.event);
-		var eventType = getEvent(arguments.event);
+		var targetName = getTargetName(arguments.event);
+		var eventType = getEventType(arguments.event);
 
 		variables.context.dispatchEvent(arguments.event, arguments.response, targetName, eventType);
 		var canceled = arguments.event.isCanceled();
@@ -54,11 +54,11 @@ component DispatchTask extends="ComplexTask" {
 		return "dispatch";
 	}
 
-	public string function getTarget(required Event event) {
-		return variables.targetParameter.getValue(arguments.event);
+	public string function getTargetName(required Event event) {
+		return variables.targetName.getValue(arguments.event);
 	}
 
-	public string function getEvent(required Event event) {
+	public string function getEventType(required Event event) {
 		return variables.eventType.getValue(arguments.event);
 	}
 

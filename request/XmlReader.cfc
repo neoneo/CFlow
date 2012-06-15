@@ -285,7 +285,7 @@ component XmlReader {
 
 		// now process any includes that are defined in an event
 		// those includes must specify an event
-		// it is still true that there can be recursion
+		// in this case there can be recursion too
 		var includes = StructFindValue(variables.tasks, "include", "all");
 		// remove items that use the value 'include' but are not includes
 		for (var i = ArrayLen(includes); i >= 1; i--) {
@@ -336,7 +336,8 @@ component XmlReader {
 					ArrayDeleteAt(parent, index);
 					// insert the include's tasks at that position
 					for (var j = ArrayLen(eventTasks); j >= 1; j--) {
-						ArrayInsertAt(parent, index, eventTasks[j]);
+						// insert a duplicate, since changes such as the default controller will be applied to the tasks later
+						ArrayInsertAt(parent, index, Duplicate(eventTasks[j]));
 					}
 					// remove the include struct
 					ArrayDeleteAt(includes, i);

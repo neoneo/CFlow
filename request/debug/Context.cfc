@@ -16,8 +16,6 @@
 
 component Context extends="cflow.request.Context" {
 
-	variables.outputRenderer = new OutputRenderer();
-
 	public boolean function dispatchEvent(required Event event, required Response response, required string targetName, required string eventType) {
 
 		arguments.event.record("Dispatch #arguments.targetName#.#arguments.eventType#");
@@ -27,7 +25,7 @@ component Context extends="cflow.request.Context" {
 
 	// FACTORY METHODS ============================================================================
 
-	public Task function createInvokeTask(required string controllerName, required string methodName) {
+	public Task function createInvokeTask(required string controllerName, required string handlerName) {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);
 
@@ -183,7 +181,8 @@ component Context extends="cflow.request.Context" {
 			setViewMapping(viewMapping);
 		}
 
-		arguments.event._debugoutput = variables.outputRenderer.render(arguments.event.getMessages());
+		// the output renderer is not thread safe, so create a new one for every request
+		arguments.event._debugoutput = new OutputRenderer(arguments.event.getMessages()).render();
 		task.run(arguments.event, arguments.response);
 
 	}

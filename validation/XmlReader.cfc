@@ -281,7 +281,7 @@ component XmlReader {
 
 		}
 
-		if (!StructKeyExists(local, "rule")) {
+		if (!StructKeyExists(local, "instance")) {
 			Throw(type = "cflow.validation", message = "Invalid rule '#arguments.node.xmlName#'");
 		}
 
@@ -298,7 +298,7 @@ component XmlReader {
 
 		if (type != "each") {
 			if (negation) {
-				instance = variables.context.createNegateRule(rule);
+				instance = variables.context.createNegateRule(instance);
 			}
 		}
 

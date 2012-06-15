@@ -17,16 +17,18 @@
 <cfcomponent displayname="OutputRenderer" output="false">
 
 	<cfscript>
-	public string function render(required array messages) {
-
+	public void function init(required array messages) {
 		variables.index = 1;
 		variables.messages = arguments.messages;
+	}
+
+	public string function render() {
 
 		// loop through the messages and reconstruct the task hierarchy
 		// some tasks can contain children, but the messages array doesn't have this hierarchy
 		var result = []; // resulting messages array with hierarchy
 		while (variables.index <= ArrayLen(variables.messages)) {
-			construct(result);
+			ArrayAppend(result, construct());
 			variables.index++;
 		}
 		// total duration of execution
@@ -37,26 +39,32 @@
 		for (var child in result) {
 			content &= renderMessage(child);
 		}
-		content &= "</ol><span class=""total duration"">#duration#</span>";
+		content &= "</ol><span class=""total duration"">#duration#</span>"; /* */
 
 		return content;
 	}
 
-	private struct function construct(required array children) {
+	private struct function construct() {
 
 		var data = {};
-		ArrayAppend(arguments.children, data);
 
-		data.element = variables.messages[variables.index]; // loop until we find the corresponding item
+		data.element = variables.messages[variables.index];
 		// only certain messages can contain children
 		if (REFind("cflow\.(task|(start|before|after|end|event)tasks)", data.element.message) == 1) {
 			variables.index++;
 			data.children = [];
+
+			// a task log starts and ends with the same message, except for the tickcount
+			// loop until the same struct is found, ignoring the tickcount
+			var message1 = StructCopy(data.element);
+			StructDelete(message1, "tickcount");
 			while (variables.index <= ArrayLen(variables.messages)) {
-				if (structEquals(variables.messages[variables.index], data.element)) {
+				var message2 = StructCopy(variables.messages[variables.index]);
+				StructDelete(message2, "tickcount");
+				if (message1.equals(message2)) {
 					break;
 				}
-				construct(data.children);
+				ArrayAppend(data.children, construct());
 				variables.index++;
 			}
 			// task duration
@@ -64,38 +72,12 @@
 			if (ArrayLen(variables.messages) >= variables.index) {
 				data.duration = variables.messages[variables.index].tickcount - data.element.tickcount;
 			}
+		} else {
+			// for single messages report the duration since the previous message
+			data.duration = variables.messages[variables.index].tickcount - variables.messages[variables.index - 1].tickcount;
 		}
 
 		return data;
-	}
-
-	/**
-	 * Returns true if the two structs contain the same keys with the same values.
-	 **/
-	private boolean function structEquals(required struct struct1, required struct struct2) {
-
-		var result = true;
-		for (var key in arguments.struct1) {
-			// ignore tickcount
-			if (key != "tickcount") {
-				if (StructKeyExists(arguments.struct2, key)) {
-					if (IsSimpleValue(arguments.struct1[key])) {
-						result = arguments.struct1[key] == arguments.struct2[key];
-					} else {
-						// we expect this to be a struct
-						result = structEquals(arguments.struct1[key], arguments.struct2[key]);
-					}
-				} else {
-					result = false;
-				}
-
-				if (!result) {
-					break;
-				}
-			}
-		}
-
-		return result;
 	}
 	</cfscript>
 
@@ -249,7 +231,7 @@
 						</cfif>
 						<cfif renderThreadTasks>
 							<!--- create a new renderer and let it render the messages from the thread --->
-							#new OutputRenderer().render(metadata.messages)#
+							#new OutputRenderer(metadata.messages).render()#
 						</cfif>
 					</div>
 				</cfif>

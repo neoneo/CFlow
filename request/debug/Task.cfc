@@ -29,7 +29,7 @@ component Task implements="cflow.request.Task" {
 
 	public boolean function run(required Event event, required Response response) {
 
-		success = true;
+		var success = true;
 
 		if (!arguments.event.isAborted()) {
 			// create a copy of the metadata struct
@@ -37,7 +37,13 @@ component Task implements="cflow.request.Task" {
 			var metadata = StructCopy(variables.metadata);
 			recordStart(arguments.event, metadata);
 
-			success = variables.task.run(arguments.event, arguments.response);
+			try {
+				success = variables.task.run(arguments.event, arguments.response);
+			} catch (any exception) {
+				arguments.event.record({exception: exception}, "cflow.exception");
+				arguments.response.clear();
+				arguments.event.abort();
+			}
 
 			recordEnd(arguments.event, metadata);
 		}
@@ -54,11 +60,12 @@ component Task implements="cflow.request.Task" {
 	}
 
 	private void function recordStart(required Event event, required struct metadata) {
-		arguments.event.record(arguments.metadata, "cflow.task");
+		arguments.event.recordStart(arguments.metadata, "cflow.task");
 	}
 
 	private void function recordEnd(required Event event, required struct metadata) {
-		arguments.event.record(arguments.metadata, "cflow.task");
+		// metadata is not used, but can be used by subclasses
+		arguments.event.recordEnd();
 	}
 
 }

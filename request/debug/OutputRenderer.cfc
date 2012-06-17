@@ -16,79 +16,37 @@
 
 <cfcomponent displayname="OutputRenderer" output="false">
 
-	<cfscript>
-	public void function init(required array messages) {
-		variables.index = 1;
-		variables.messages = arguments.messages;
-	}
+	<cffunction name="render" access="public" output="false" returntype="string">
+		<cfargument name="messages" type="array" required="true">
 
-	public string function render() {
+		<cfsavecontent variable="local.content">
+			<cfoutput>
+			<ol>
+				<li class="initiation">
+					<div class="message">
+						Initiation
+						<span class="time">#arguments.messages[1].elapsed#</span>
+					</div>
+				</li>
+				<cfloop array="#arguments.messages#" index="local.child">
+					#renderMessage(local.child)#
+				</cfloop>
+			</ol>
+			<span class="total time">#arguments.messages[ArrayLen(arguments.messages)].time#</span>
+			</cfoutput>
+		</cfsavecontent>
 
-		// loop through the messages and reconstruct the task hierarchy
-		// some tasks can contain children, but the messages array doesn't have this hierarchy
-		var result = []; // resulting messages array with hierarchy
-		while (variables.index <= ArrayLen(variables.messages)) {
-			ArrayAppend(result, construct());
-			variables.index++;
-		}
-		// total duration of execution
-		// the messages array can be empty if output is rendered for a terminated thread
-		var duration = ArrayIsEmpty(variables.messages) ? 0 : variables.messages[ArrayLen(variables.messages)].tickcount - variables.messages[1].tickcount;
-
-		var content = "<ol>";
-		for (var child in result) {
-			content &= renderMessage(child);
-		}
-		content &= "</ol><span class=""total duration"">#duration#</span>"; /* */
-
-		return content;
-	}
-
-	private struct function construct() {
-
-		var data = {};
-
-		data.element = variables.messages[variables.index];
-		// only certain messages can contain children
-		if (REFind("cflow\.(task|(start|before|after|end|event)tasks)", data.element.message) == 1) {
-			variables.index++;
-			data.children = [];
-
-			// a task log starts and ends with the same message, except for the tickcount
-			// loop until the same struct is found, ignoring the tickcount
-			var message1 = StructCopy(data.element);
-			StructDelete(message1, "tickcount");
-			while (variables.index <= ArrayLen(variables.messages)) {
-				var message2 = StructCopy(variables.messages[variables.index]);
-				StructDelete(message2, "tickcount");
-				if (message1.equals(message2)) {
-					break;
-				}
-				ArrayAppend(data.children, construct());
-				variables.index++;
-			}
-			// task duration
-			// when debug is rendered when an exception is thrown, the array is not complete so we cannot assume that the element exists
-			if (ArrayLen(variables.messages) >= variables.index) {
-				data.duration = variables.messages[variables.index].tickcount - data.element.tickcount;
-			}
-		} else {
-			// for single messages report the duration since the previous message
-			data.duration = variables.messages[variables.index].tickcount - variables.messages[variables.index - 1].tickcount;
-		}
-
-		return data;
-	}
-	</cfscript>
+		<cfreturn local.content>
+	</cffunction>
 
 	<cffunction name="renderMessage" access="private" output="false" returntype="string">
 		<cfargument name="data" type="struct" required="true">
 
 		<cfset var child = "">
 		<cfset var content = "">
-		<cfset var message = data.element.message>
-		<cfif StructKeyExists(data.element, "metadata")>
-			<cfset var metadata = data.element.metadata>
+		<cfset var message = arguments.data.message>
+		<cfif StructKeyExists(arguments.data, "metadata")>
+			<cfset var metadata = arguments.data.metadata>
 		</cfif>
 
 		<cfset var renderChildren = false>
@@ -119,7 +77,7 @@
 						<cfcase value="cflow.aftertasks">After</cfcase>
 						<cfcase value="cflow.endtasks">End</cfcase>
 						<cfcase value="cflow.eventtasks">Event</cfcase>
-						<cfcase value="cflow.eventcanceled">Event #data.element.target#.#data.element.event# canceled</cfcase>
+						<cfcase value="cflow.eventcanceled">Event #arguments.data.target#.#arguments.data.event# canceled</cfcase>
 						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.url#">#metadata.url#</a></cfcase>
 						<cfcase value="cflow.aborted">Request aborted</cfcase>
 						<cfcase value="cflow.task">
@@ -185,7 +143,9 @@
 						</cfdefaultcase>
 					</cfswitch>
 					<cfif StructKeyExists(data, "duration")>
-						<span class="duration">#data.duration#</span>
+						<span class="time">#data.duration#</span>
+					<cfelse>
+						<span class="time">#data.elapsed#</span>
 					</cfif>
 				</div>
 				<cfset dumpMetadata = dumpMetadata and StructKeyExists(local, "metadata")>
@@ -230,8 +190,8 @@
 							<cfdump var="#metadata#">
 						</cfif>
 						<cfif renderThreadTasks>
-							<!--- create a new renderer and let it render the messages from the thread --->
-							#new OutputRenderer(metadata.messages).render()#
+							<!--- render the messages from the thread --->
+							#render(metadata.messages)#
 						</cfif>
 					</div>
 				</cfif>

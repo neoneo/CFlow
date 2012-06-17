@@ -41,7 +41,7 @@ component ThreadTask extends="ComplexTask" {
 				thread action="run" name="#variables.name#" priority="#variables.priority#" properties="#arguments.event.getProperties()#" target="#arguments.event.getTarget()#" event="#arguments.event.getType()#" {
 					// create new event and response objects based on the attributes
 					// these objects are not passed in as attributes, because we need clean objects (in the case of the event object, mainly for debug mode)
-					// there is also a railo bug: https://issues.jboss.org/browse/RAILO-1926
+					// there is also a railo bug: https://issues.jboss.org/browse/RAILO-1926 (which is not going to be solved)
 					thread.event = variables.context.createEvent(attributes.target, attributes.event, attributes.properties);
 					thread.response = variables.context.createResponse();
 					runSubtasks(thread.event, thread.response);

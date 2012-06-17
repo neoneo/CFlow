@@ -23,6 +23,7 @@
 		font-family: Verdana, sans-serif;
 		font-size: 9pt;
 		color: #000;
+		background-color: white;
 	}
 
 	#cflow > h1 {
@@ -46,7 +47,7 @@
 		border-color: #f00;
 	}
 
-	#cflow .duration {
+	#cflow .time {
 		font-weight: bold;
 		float: right;
 	}
@@ -64,6 +65,13 @@
 	#cflow .message {
 		overflow: hidden;
 		background-color: #ffb200;
+	}
+
+	#cflow .initiation > .message {
+		background-color: transparent;
+		font-weight: bold;
+		color: #999;
+		border-color: #999;
 	}
 
 	#cflow .data {

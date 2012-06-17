@@ -16,11 +16,107 @@
 
 component Context extends="cflow.request.Context" {
 
+	variables.outputStrategies = [];
+
+	public void function init() {
+
+		variables.outputRenderer = new OutputRenderer();
+		setViewMapping("/cflow/request/debug");
+		// create a (non-debug) render task
+		variables.debugRenderTask = super.createRenderTask("output");
+
+	}
+
+	public void function addOutputStrategy(required output.Strategy strategy) {
+		ArrayAppend(variables.outputStrategies, arguments.strategy);
+	}
+
 	public boolean function dispatchEvent(required Event event, required Response response, required string targetName, required string eventType) {
-
-		arguments.event.record("Dispatch #arguments.targetName#.#arguments.eventType#");
-
 		return super.dispatchEvent(arguments.event, arguments.response, arguments.targetName, arguments.eventType);
+	}
+
+	// TEMPLATE METHODS ===========================================================================
+
+	private void function runTasks(required Event event, required Response response) {
+
+		super.runTasks(arguments.event, arguments.response);
+
+		renderOutput(arguments.event, arguments.response);
+
+	}
+
+	private boolean function runStartTasks(required Event event, required Response response, required string targetName) {
+
+		arguments.event.recordStart("cflow.starttasks");
+
+		var success = super.runStartTasks(arguments.event, arguments.response, arguments.targetName);
+
+		arguments.event.recordEnd();
+
+		// the event can be aborted if an exception occurs, in which case we have to force return false because there are tasks that always return true
+		return success && !arguments.event.isAborted();
+	}
+
+	private boolean function runBeforeTasks(required Event event, required Response response, required string targetName) {
+
+		arguments.event.recordStart("cflow.beforetasks");
+
+		var success = super.runBeforeTasks(arguments.event, arguments.response, arguments.targetName);
+
+		arguments.event.recordEnd();
+
+		return success && !arguments.event.isAborted();
+	}
+
+	private boolean function runAfterTasks(required Event event, required Response response, required string targetName) {
+
+		arguments.event.recordStart("cflow.aftertasks");
+
+		var success = super.runAfterTasks(arguments.event, arguments.response, arguments.targetName);
+
+		arguments.event.recordEnd();
+
+		return success && !arguments.event.isAborted();
+	}
+
+	private boolean function runEndTasks(required Event event, required Response response, required string targetName) {
+
+		arguments.event.recordStart("cflow.endtasks");
+
+		var success = super.runEndTasks(arguments.event, arguments.response, arguments.targetName);
+
+		arguments.event.recordEnd();
+
+		return success && !arguments.event.isAborted();
+	}
+
+	private boolean function runEventTasks(required Event event, required Response response, required string targetName, required string eventType) {
+
+		arguments.event.recordStart("cflow.eventtasks");
+
+		var success = super.runEventTasks(arguments.event, arguments.response, arguments.targetName, arguments.eventType);
+
+		arguments.event.recordEnd();
+
+		return success && !arguments.event.isAborted();
+	}
+
+	// OUTPUT METHODS =============================================================================
+
+	private void function renderOutput(required Event event, required Response response) {
+
+		// the output renderer is not thread safe, so create a new one for every request
+		arguments.event._debugoutput = variables.outputRenderer.render(arguments.event.getMessages());
+		variables.debugRenderTask.run(arguments.event, arguments.response);
+
+	}
+
+	private void function handleException(required any exception, required Event event, required Response response) {
+
+		arguments.event.record({exception: arguments.exception}, "cflow.exception");
+		arguments.response.clear();
+		arguments.event.abort();
+
 	}
 
 	// FACTORY METHODS ============================================================================
@@ -32,7 +128,7 @@ component Context extends="cflow.request.Context" {
 		return new Task(task, arguments);
 	}
 
-	public Task function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
+	public Task function createDispatchTask(required string targetName, required string eventType) {
 
 		var task = super.createDispatchTask(argumentCollection = arguments);
 
@@ -83,118 +179,6 @@ component Context extends="cflow.request.Context" {
 
 	public Event function createEvent(required string target, required string type, struct properties = {}) {
 		return new Event(arguments.target, arguments.type, arguments.properties);
-	}
-
-	// TEMPLATE METHODS ===========================================================================
-
-	private boolean function runStartTasks(required Event event, required Response response, required string targetName) {
-
-		arguments.event.record("cflow.starttasks");
-
-		try {
-			var success = super.runStartTasks(arguments.event, arguments.response, arguments.targetName);
-		} catch (any exception) {
-			handleException(exception, arguments.event, arguments.response);
-		}
-
-		arguments.event.record("cflow.starttasks");
-
-		return success;
-	}
-
-	private boolean function runBeforeTasks(required Event event, required Response response, required string targetName) {
-
-		arguments.event.record("cflow.beforetasks");
-
-		try {
-			var success = super.runBeforeTasks(arguments.event, arguments.response, arguments.targetName);
-		} catch (any exception) {
-			handleException(exception, arguments.event, arguments.response);
-		}
-
-		arguments.event.record("cflow.beforetasks");
-
-		return success;
-	}
-
-	private boolean function runAfterTasks(required Event event, required Response response, required string targetName) {
-
-		arguments.event.record("cflow.aftertasks");
-
-		try {
-			var success = super.runAfterTasks(arguments.event, arguments.response, arguments.targetName);
-		} catch (any exception) {
-			handleException(exception, arguments.event, arguments.response);
-		}
-
-		arguments.event.record("cflow.aftertasks");
-
-		return success;
-	}
-
-	private boolean function runEndTasks(required Event event, required Response response, required string targetName) {
-
-		arguments.event.record("cflow.endtasks");
-
-		try {
-			var success = super.runEndTasks(arguments.event, arguments.response, arguments.targetName);
-		} catch (any exception) {
-			handleException(exception, arguments.event, arguments.response);
-		}
-
-		arguments.event.record("cflow.endtasks");
-
-		return success;
-	}
-
-	private boolean function runEventTasks(required Event event, required Response response, required string targetName, required string eventType) {
-
-		arguments.event.record("cflow.eventtasks");
-
-		try {
-			var success = super.runEventTasks(arguments.event, arguments.response, arguments.targetName, arguments.eventType);
-		} catch (any exception) {
-			handleException(exception, arguments.event, arguments.response);
-		}
-
-		arguments.event.record("cflow.eventtasks");
-
-		return success;
-	}
-
-	private void function finalize(required Event event, required Response response) {
-		renderOutput(arguments.event, arguments.response);
-	}
-
-	// OUTPUT METHODS =============================================================================
-
-	private void function renderOutput(required Event event, required Response response) {
-
-		// we're going to change the viewmapping temporarily
-		// this might lead to race conditions in a production environment so debugging there is dangerous
-		// to make sure the context remains consistent, we put this code inside a lock
-		lock name="cflow.context" type="exclusive" timeout="1" {
-			var viewMapping = getViewMapping();
-			setViewMapping("/cflow/request/debug");
-			// create a (non-debug) render task
-			var task = super.createRenderTask("output");
-			setViewMapping(viewMapping);
-		}
-
-		// the output renderer is not thread safe, so create a new one for every request
-		arguments.event._debugoutput = new OutputRenderer(arguments.event.getMessages()).render();
-		task.run(arguments.event, arguments.response);
-
-	}
-
-	private void function handleException(required any exception, required Event event, required Response response) {
-
-		arguments.event.record({exception: arguments.exception}, "cflow.exception");
-		arguments.response.clear();
-		renderOutput(arguments.event, arguments.response);
-		response.write();
-		abort;
-
 	}
 
 }

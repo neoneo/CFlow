@@ -61,26 +61,7 @@ component Context accessors="true" {
 		var response = createResponse();
 		var event = createEvent(targetName, eventType, arguments.parameters);
 
-		var success = runStartTasks(event, response, arguments.targetName);
-
-		// only run the event task if we have success
-		if (success) {
-			success = dispatchEvent(event, response, arguments.targetName, arguments.eventType);
-		}
-
-		// the end tasks are always run, unless the event is aborted
-		if (!event.isAborted()) {
-			if (!success) {
-				// for the remainder, we need an event object with its canceled flag reset
-				event.reset();
-			}
-
-			runEndTasks(event, response, arguments.targetName);
-		}
-
-		// basically, finalize() is only provided as a hook for debug.Context
-		// maybe there are other needs for it, but if not, find a way to factor this out
-		finalize(event, response);
+		runTasks(event, response);
 
 		return response;
 	}
@@ -147,6 +128,33 @@ component Context accessors="true" {
 
 	// TEMPLATE METHODS ===========================================================================
 
+	/**
+	 * Calls the template methods in order.
+	 **/
+	private void function runTasks(required Event event, required Response response) {
+
+		var targetName = arguments.event.getTarget();
+		var eventType = arguments.event.getType();
+
+		var success = runStartTasks(event, response, targetName);
+
+		// only run the event task if we have success
+		if (success) {
+			success = dispatchEvent(event, response, targetName, eventType);
+		}
+
+		// the end tasks are always run, unless the event is aborted
+		if (!event.isAborted()) {
+			if (!success) {
+				// for the remainder, we need an event object with its canceled flag reset
+				event.reset();
+			}
+
+			runEndTasks(event, response, targetName);
+		}
+
+	}
+
 	private boolean function runStartTasks(required Event event, required Response response, required string targetName) {
 		return getPhaseTask("start", arguments.targetName).run(arguments.event, arguments.response);
 	}
@@ -201,10 +209,6 @@ component Context accessors="true" {
 		}
 
 		return result;
-	}
-
-	private void function finalize(required Event event, required Response response) {
-		// hook
 	}
 
 	/**
@@ -262,25 +266,14 @@ component Context accessors="true" {
 		return new InvokeTask(getController(arguments.controllerName), arguments.handlerName);
 	}
 
-	public DispatchTask function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
-		return new DispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
+	public DispatchTask function createDispatchTask(required string targetName, required string eventType) {
+		return new DispatchTask(this, arguments.targetName, arguments.eventType);
 	}
 
 	public RenderTask function createRenderTask(required string view) {
 		return new RenderTask(arguments.view, getViewMapping(), getRequestStrategy());
 	}
 
-	/**
-	 * Creates a RedirectTask.
-	 *
-	 * @param	{String}	type		the redirect type: url or event
-	 * @param	{Struct}	parameters	the parameters specific to the type of redirect (see below)
-	 * @param	{Boolean}	permanent	whether the redirect is permanent or not [false]
-	 *
-	 * Redirect types:
-	 * url		The parameters struct should have a url key that contains the url to redirect to
-	 * event	The parameters struct should have target and event keys
-	 **/
 	public RedirectTask function createRedirectTask(string url = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
 		return new RedirectTask(arguments.url, arguments.target, arguments.event, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}

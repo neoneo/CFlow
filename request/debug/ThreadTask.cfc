@@ -21,9 +21,9 @@ component ThreadTask extends="Task" {
 		// this method is invoked from within the thread
 		try {
 			var success = super.runSubtasks(arguments.event, arguments.response);
-		} catch (any e) {
+		} catch (any exception) {
 			// record the exception, in case the thread is joined by the page thread later
-			arguments.event.record({exception: e}, "cflow.exception");
+			arguments.event.record({exception: exception}, "cflow.exception");
 			// rethrow, so the thread exits with the same status code
 			rethrow;
 		}
@@ -31,7 +31,7 @@ component ThreadTask extends="Task" {
 		return success;
 	}
 
-	private struct function recordAfter(required Event event, required struct metadata) {
+	private struct function recordEnd(required Event event, required struct metadata) {
 
 		// if this is a join action, merge the event messages on the current event object
 		if (arguments.metadata.action == "join") {
@@ -48,7 +48,7 @@ component ThreadTask extends="Task" {
 			}
 		}
 
-		super.recordAfter(arguments.event, arguments.metadata);
+		super.recordEnd(arguments.event, arguments.metadata);
 
 	}
 

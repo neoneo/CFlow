@@ -67,6 +67,10 @@ component Event accessors="true" {
 		variables.canceled = false;
 	}
 
+	public void function set(required string name, required any value) {
+		this[arguments.name] = arguments.value;
+	}
+
 	// PACKAGE METHODS ============================================================================
 
 	package void function setTarget(required string value) {

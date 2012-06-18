@@ -39,7 +39,11 @@ component Context extends="cflow.request.Context" {
 
 	private void function runTasks(required Event event, required Response response) {
 
-		super.runTasks(arguments.event, arguments.response);
+		try {
+			super.runTasks(arguments.event, arguments.response);
+		} catch (any exception) {
+			arguments.event.recordEndAll();
+		}
 
 		renderOutput(arguments.event, arguments.response);
 
@@ -53,8 +57,7 @@ component Context extends="cflow.request.Context" {
 
 		arguments.event.recordEnd();
 
-		// the event can be aborted if an exception occurs, in which case we have to force return false because there are tasks that always return true
-		return success && !arguments.event.isAborted();
+		return success;
 	}
 
 	private boolean function runBeforeTasks(required Event event, required Response response, required string targetName) {
@@ -65,7 +68,7 @@ component Context extends="cflow.request.Context" {
 
 		arguments.event.recordEnd();
 
-		return success && !arguments.event.isAborted();
+		return success;
 	}
 
 	private boolean function runAfterTasks(required Event event, required Response response, required string targetName) {
@@ -76,7 +79,7 @@ component Context extends="cflow.request.Context" {
 
 		arguments.event.recordEnd();
 
-		return success && !arguments.event.isAborted();
+		return success;
 	}
 
 	private boolean function runEndTasks(required Event event, required Response response, required string targetName) {
@@ -87,7 +90,7 @@ component Context extends="cflow.request.Context" {
 
 		arguments.event.recordEnd();
 
-		return success && !arguments.event.isAborted();
+		return success;
 	}
 
 	private boolean function runEventTasks(required Event event, required Response response, required string targetName, required string eventType) {
@@ -98,7 +101,7 @@ component Context extends="cflow.request.Context" {
 
 		arguments.event.recordEnd();
 
-		return success && !arguments.event.isAborted();
+		return success;
 	}
 
 	// OUTPUT METHODS =============================================================================

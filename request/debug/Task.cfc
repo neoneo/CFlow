@@ -29,22 +29,25 @@ component Task implements="cflow.request.Task" {
 
 	public boolean function run(required Event event, required Response response) {
 
-		var success = true;
+		var success = false;
 
-		if (!arguments.event.isAborted()) {
-			// create a copy of the metadata struct
-			// subclasses must be allowed to modify it before or after the task runs
-			var metadata = StructCopy(variables.metadata);
-			recordStart(arguments.event, metadata);
+		// create a copy of the metadata struct
+		// subclasses must be allowed to modify it before or after the task runs
+		var metadata = StructCopy(variables.metadata);
+		recordStart(arguments.event, metadata);
 
-			try {
-				success = variables.task.run(arguments.event, arguments.response);
-			} catch (any exception) {
+		try {
+			success = variables.task.run(arguments.event, arguments.response);
+		} catch (any exception) {
+			// the exception may have been rethrown by a subtask, in which case the event is aborted already
+			if (!arguments.event.isAborted()) {
 				arguments.event.record({exception: exception}, "cflow.exception");
 				arguments.response.clear();
 				arguments.event.abort();
 			}
-
+			// rethrow the exception in order to exit the flow
+			rethrow;
+		} finally {
 			recordEnd(arguments.event, metadata);
 		}
 

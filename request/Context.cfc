@@ -173,24 +173,24 @@ component Context accessors="true" {
 
 	private boolean function runEventTasks(required Event event, required Response response, required string targetName, required string eventType) {
 
-		var result = true;
+		var success = true; // if nothing happens in this event, we still want to return true (an event does not have to be defined or have tasks)
 		// check if there are tasks for this event
 		if (StructKeyExists(variables.tasks.event, arguments.targetName) && StructKeyExists(variables.tasks.event[arguments.targetName], arguments.eventType)) {
-			result = variables.tasks.event[arguments.targetName][arguments.eventType].run(arguments.event, arguments.response);
+			success = variables.tasks.event[arguments.targetName][arguments.eventType].run(arguments.event, arguments.response);
 		} else {
 			if (getImplicitTasks()) {
 				var task = createPhaseTask();
-				// if there is a controller with the name of the target, create an invoke task that invokes the method by the name of the event type
+				// if there is a controller with the name of the target, create an invoke task that invokes the handler by the name of the event type
 				var controllerName = getComponentName(arguments.targetName, getControllerMapping());
 				if (componentExists(controllerName)) {
 					task.addSubtask(createInvokeTask(arguments.targetName, arguments.eventType));
 				}
 				// always create a render task that renders a view in a directory with the name of the target, that has the same name as the event type
 				task.addSubtask(createRenderTask(arguments.targetName & "/" & arguments.eventType));
-				// register this task, so that next time we can reuse it
+				// register this task, so that next time it is picked up immediately
 				register(task, "event", arguments.targetName, arguments.eventType);
 
-				result = task.run(arguments.event, arguments.response);
+				success = task.run(arguments.event, arguments.response);
 			} else {
 				// dispatch the undefined event, if applicable
 				if (Len(variables.undefinedTarget) > 0 && Len(variables.undefinedEvent) > 0 && (arguments.targetName != variables.undefinedTarget || arguments.eventType != variables.undefinedEvent)) {
@@ -203,12 +203,12 @@ component Context accessors="true" {
 					}
 					local.eventType = variables.undefinedEvent;
 
-					result = dispatchEvent(arguments.event, arguments.response, local.targetName, local.eventType);
+					success = dispatchEvent(arguments.event, arguments.response, local.targetName, local.eventType);
 				}
 			}
 		}
 
-		return result;
+		return success;
 	}
 
 	/**

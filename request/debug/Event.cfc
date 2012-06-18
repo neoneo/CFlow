@@ -105,6 +105,18 @@ component Event extends="cflow.request.Event" {
 
 	}
 
+	/**
+	 * Calls recordEnd() for all open recordStart() calls. This method is used as a shortcut when an exception needs to be handled.
+	 **/
+	package void function recordEndAll() {
+
+		// call recordEnd() n - 1 times (note the strictly smaller comparison operator)
+		for (var i = 1; i < ArrayLen(variables.children); i++) {
+			recordEnd();
+		}
+
+	}
+
 	package array function getMessages() {
 		return variables.messages;
 	}
@@ -123,7 +135,7 @@ component Event extends="cflow.request.Event" {
 
 		var children = getChildren();
 
-		return children[ArrayLen(children)];
+		return !ArrayIsEmpty(children) ? children[ArrayLen(children)] : {message = ""};
 	}
 
 }

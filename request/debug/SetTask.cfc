@@ -27,8 +27,11 @@ component SetTask extends="Task" {
 	private void function recordEnd(required Event event, required struct metadata) {
 
 		// now we can get the value from the event
-		// both calls use the same struct, so the struct in the recordStart() call is 'updated' with the value too
-		arguments.metadata.value = arguments.event[arguments.metadata.name];
+		// if the task has caused an exception, the value will not have been set
+		// in that case the event is aborted (if the event was aborted before the task was run, we wouldn't arrive here)
+		if (!arguments.event.isAborted()) {
+			arguments.metadata.value = arguments.event[arguments.metadata.name];
+		}
 		super.recordEnd(arguments.event, arguments.metadata);
 
 	}

@@ -38,13 +38,14 @@ component IfTask extends="ComplexTask" {
 
 	public boolean function run(required Event event, required Response response) {
 
+		var success = true; // if the condition does not apply, return true
 		if (variables.evaluator.execute(arguments.event)) {
-			runSubtasks(arguments.event, arguments.response);
+			success = runSubtasks(arguments.event, arguments.response);
 		} else if (StructKeyExists(variables, "elseTask")) {
-			variables.elseTask.run(arguments.event, arguments.response);
+			success = variables.elseTask.run(arguments.event, arguments.response);
 		}
 
-		return true;
+		return success;
 	}
 
 	public string function getType() {

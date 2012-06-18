@@ -32,7 +32,10 @@
 					#renderMessage(local.child)#
 				</cfloop>
 			</ol>
-			<span class="total time">#arguments.messages[ArrayLen(arguments.messages)].time#</span>
+			<cfif StructKeyExists(arguments.messages[ArrayLen(arguments.messages)], "time")>
+				<!--- for still running threads, the time attribute may not exist --->
+				<span class="total time">#arguments.messages[ArrayLen(arguments.messages)].time#</span>
+			</cfif>
 			</cfoutput>
 		</cfsavecontent>
 

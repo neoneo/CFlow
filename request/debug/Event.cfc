@@ -126,6 +126,11 @@ component Event extends="cflow.request.Event" {
 		return variables.messages;
 	}
 
+	public void function setRejoin(required boolean value) {
+		// this method is defined with package access in the superclass
+		super.setRejoin(arguments.value);
+	}
+
 	/**
 	 * Returns the array in which to record messages.
 	 **/

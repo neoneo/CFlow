@@ -36,6 +36,7 @@ component ComplexTask implements="Task" {
 	private boolean function runSubtasks(required Event event, required Response response) {
 
 		var success = true; // if a task has no subtasks, we want the flow to proceed
+
 		for (var task in variables.subtasks) {
 			success = task.run(arguments.event, arguments.response);
 			if (!success) {

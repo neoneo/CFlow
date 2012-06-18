@@ -21,6 +21,7 @@ component Event accessors="true" {
 
 	variables.canceled = false;
 	variables.aborted = false;
+	variables.rejoin = true;
 
 	public void function init(required string target, required string type, struct properties = {}) {
 		setTarget(arguments.target);
@@ -67,8 +68,8 @@ component Event accessors="true" {
 		variables.canceled = false;
 	}
 
-	public void function set(required string name, required any value) {
-		this[arguments.name] = arguments.value;
+	public boolean function willRejoin() {
+		return variables.rejoin;
 	}
 
 	// PACKAGE METHODS ============================================================================
@@ -79,6 +80,10 @@ component Event accessors="true" {
 
 	package void function setType(required string value) {
 		variables.type = arguments.value;
+	}
+
+	package void function setRejoin(required boolean value) {
+		variables.rejoin = arguments.value;
 	}
 
 }

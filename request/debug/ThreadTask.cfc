@@ -16,22 +16,7 @@
 
 component ThreadTask extends="Task" {
 
-	private boolean function runSubtasks(required Event event, required Response response) {
-
-		// this method is invoked from within the thread
-		try {
-			var success = super.runSubtasks(arguments.event, arguments.response);
-		} catch (any exception) {
-			// record the exception, in case the thread is joined by the page thread later
-			arguments.event.record({exception: exception}, "cflow.exception");
-			// rethrow, so the thread exits with the same status code
-			rethrow;
-		}
-
-		return success;
-	}
-
-	private struct function recordEnd(required Event event, required struct metadata) {
+	private void function recordEnd(required Event event, required struct metadata) {
 
 		// if this is a join action, merge the event messages on the current event object
 		if (arguments.metadata.action == "join") {

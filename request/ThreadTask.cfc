@@ -43,19 +43,43 @@ component ThreadTask extends="ComplexTask" {
 					// these objects are not passed in as attributes, because we need clean objects (in the case of the event object, mainly for debug mode)
 					// there is also a railo bug: https://issues.jboss.org/browse/RAILO-1926 (which is not going to be solved)
 					thread.event = variables.context.createEvent(attributes.target, attributes.event, attributes.properties);
+					thread.event.setRejoin(false);
 					thread.response = variables.context.createResponse();
 					runSubtasks(thread.event, thread.response);
 				};
 				break;
 
 			case "join":
-				thread action="join" name="#variables.name#" timeout="#variables.timeout#";
+				// tell the threads that they will be joined
+				// structs in the thread scope of other threads become writable after the first join action expires
+				// TODO: find out if this is correct behavior
+				// http://groups.google.com/group/railo/browse_thread/thread/3618c8f24da6eed0
+				thread action="join" name="#variables.name#" timeout="1";
 				for (var name in variables.names) {
-					if (cfthread[name].status == "completed") {
-						// merge the event objects of the threads on the current event object
-						arguments.event.setProperties(cfthread[name].event); // this will append the properties of the thread event without overwriting
-						// the same for the response objects
-						arguments.response.merge(cfthread[name].response);
+					switch (cfthread[name].status) {
+						case "running":
+						case "not_started":
+							cfthread[name].event.setRejoin(true);
+							break;
+					}
+				}
+
+				thread action="join" name="#variables.name#" timeout="#variables.timeout#";
+
+				for (var name in variables.names) {
+					switch (cfthread[name].status) {
+						case "completed":
+						case "running":
+							// merge the event objects of the threads on the current event object
+							arguments.event.setProperties(cfthread[name].event); // this will append the properties of the thread event without overwriting
+							// the same for the response objects
+							arguments.response.merge(cfthread[name].response);
+
+						// no break statement
+						case "not_started":
+							// tell the thread that the join action has timed out
+							cfthread[name].event.setRejoin(false);
+							break;
 					}
 				}
 				break;

@@ -14,9 +14,12 @@
    limitations under the License.
 */
 
-component Context extends="cflow.request.Context" {
+component Context extends="cflow.request.Context" accessors="true" {
 
-	variables.outputStrategies = [];
+	// displayOutput property: always | exception | noredirect | never | <time in milliseconds>
+	// the getter is overridden below
+	property name="displayOutput" type="string" default="always" getter="false";
+	property name="remoteAddresses" type="array";
 
 	public void function init() {
 
@@ -27,10 +30,6 @@ component Context extends="cflow.request.Context" {
 
 	}
 
-	public void function addOutputStrategy(required output.Strategy strategy) {
-		ArrayAppend(variables.outputStrategies, arguments.strategy);
-	}
-
 	public boolean function dispatchEvent(required Event event, required Response response, required string targetName, required string eventType) {
 		return super.dispatchEvent(arguments.event, arguments.response, arguments.targetName, arguments.eventType);
 	}
@@ -39,13 +38,30 @@ component Context extends="cflow.request.Context" {
 
 	private void function runTasks(required Event event, required Response response) {
 
+		var exceptionThrown = false;
 		try {
 			super.runTasks(arguments.event, arguments.response);
 		} catch (any exception) {
+			// end all open recordStart() calls, so that the hierarchy is closed
 			arguments.event.recordEndAll();
+			exceptionThrown = true;
 		}
 
-		renderOutput(arguments.event, arguments.response);
+		var display = false;
+		switch (getDisplayOutput()) {
+			case "exception":
+				display = exceptionThrown;
+				break;
+
+			case "always":
+			case "noredirect":
+				display = true;
+				break;
+
+		}
+		if (display) {
+			renderOutput(arguments.event, arguments.response);
+		}
 
 	}
 
@@ -108,18 +124,34 @@ component Context extends="cflow.request.Context" {
 
 	private void function renderOutput(required Event event, required Response response) {
 
-		// the output renderer is not thread safe, so create a new one for every request
 		arguments.event._debugoutput = variables.outputRenderer.render(arguments.event.getMessages());
 		variables.debugRenderTask.run(arguments.event, arguments.response);
 
 	}
 
-	private void function handleException(required any exception, required Event event, required Response response) {
+	/**
+	 * Returns whether to display debug output, as if the output would be rendered right now.
+	 * This method takes into account the time that the event already has taken, if applicable.
+	 **/
+	public string function getDisplayOutput() {
 
-		arguments.event.record({exception: arguments.exception}, "cflow.exception");
-		arguments.response.clear();
-		arguments.event.abort();
+		var displayOutput = variables.displayOutput;
+		if (!StructKeyExists(variables, "remoteAddresses") || ArrayFind(variables.remoteAddresses, cgi.remote_addr) > 0) {
+			if (IsNumeric(displayOutput)) {
+				// the time allowed for the event to complete has been set
+				if (arguments.event.getTime() >= Val(displayOutput)) {
+					// time has elapsed, always display
+					displayOutput = "always";
+				} else {
+					// time has not yet elapsed, only display if an exception occurs
+					displayOutput = "exception";
+				}
+			}
+		} else {
+			displayOutput = "never";
+		}
 
+		return displayOutput;
 	}
 
 	// FACTORY METHODS ============================================================================
@@ -128,56 +160,56 @@ component Context extends="cflow.request.Context" {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);
 
-		return new Task(task, arguments);
+		return new Task(task, arguments, this);
 	}
 
 	public Task function createDispatchTask(required string targetName, required string eventType) {
 
 		var task = super.createDispatchTask(argumentCollection = arguments);
 
-		return new DispatchTask(task, arguments);
+		return new DispatchTask(task, arguments, this);
 	}
 
 	public Task function createRenderTask(required string view) {
 
 		var task = super.createRenderTask(argumentCollection = arguments);
 
-		return new Task(task, arguments);
+		return new Task(task, arguments, this);
 	}
 
 	public Task function createRedirectTask(string url = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
 
 		var task = super.createRedirectTask(argumentCollection = arguments);
 
-		return new RedirectTask(task, arguments);
+		return new RedirectTask(task, arguments, this);
 	}
 
 	public Task function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
 
 		var task = super.createThreadTask(argumentCollection = arguments);
 
-		return new ThreadTask(task, arguments);
+		return new ThreadTask(task, arguments, this);
 	}
 
 	public Task function createIfTask(required string condition) {
 
 		var task = super.createIfTask(argumentCollection = arguments);
 
-		return new Task(task, arguments);
+		return new Task(task, arguments, this);
 	}
 
 	public Task function createElseTask(string condition = "") {
 
 		var task = super.createElseTask(argumentCollection = arguments);
 
-		return new Task(task, arguments);
+		return new Task(task, arguments, this);
 	}
 
 	public Task function createSetTask(required string name, required string expression, boolean overwrite = true) {
 
 		var task = super.createSetTask(argumentCollection = arguments);
 
-		return new SetTask(task, arguments);
+		return new SetTask(task, arguments, this);
 	}
 
 	public Event function createEvent(required string target, required string type, struct properties = {}) {

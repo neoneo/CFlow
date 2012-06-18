@@ -62,7 +62,8 @@
 			writeContents = [];
 
 			// keys are not unique
-			for (var i = 1; i <= ArrayLen(variables.keys); i++) {
+			var keyCount = ArrayLen(variables.keys);
+			for (var i = 1; i <= keyCount; i++) {
 				if (variables.keys[i] == arguments.key) {
 					ArrayAppend(writeContents, variables.contents[i]);
 				}
@@ -124,7 +125,8 @@
 
 		var data = arguments.response.getData();
 		// append generated content
-		for (var i = 1; i <= ArrayLen(data.keys); i++) {
+		var keyCount = ArrayLen(data.keys);
+		for (var i = 1; i <= keyCount; i++) {
 			append(data.contents[i], data.keys[i]);
 		}
 		// append headers

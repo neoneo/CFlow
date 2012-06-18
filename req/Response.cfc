@@ -63,7 +63,8 @@ component Response accessors="true" {
 			writeContents = [];
 
 			// keys are not unique
-			for (var i = 1; i <= ArrayLen(variables.keys); i++) {
+			var keyCount = ArrayLen(variables.keys);
+			for (var i = 1; i <= keyCount; i++) {
 				if (variables.keys[i] == arguments.key) {
 					ArrayAppend(writeContents, variables.contents[i]);
 				}

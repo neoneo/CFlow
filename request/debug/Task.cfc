@@ -19,11 +19,12 @@
  **/
 component Task implements="cflow.request.Task" {
 
-	public void function init(required Task task, required struct metadata) {
+	public void function init(required Task task, required struct metadata, required Context context) {
 
 		variables.task = arguments.task;
 		variables.metadata = StructCopy(arguments.metadata);
 		variables.metadata.type = getType();
+		variables.context = arguments.context;
 
 	}
 

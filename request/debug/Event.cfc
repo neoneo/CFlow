@@ -75,6 +75,10 @@ component Event extends="cflow.request.Event" {
 
 	}
 
+	public numeric function getTime() {
+		return GetTickCount() - variables.startTime;
+	}
+
 	package void function recordStart(required any metadata, string message = "") {
 
 		// record the message first
@@ -111,7 +115,8 @@ component Event extends="cflow.request.Event" {
 	package void function recordEndAll() {
 
 		// call recordEnd() n - 1 times (note the strictly smaller comparison operator)
-		for (var i = 1; i < ArrayLen(variables.children); i++) {
+		var count = ArrayLen(variables.children);
+		for (var i = 1; i < count; i++) {
 			recordEnd();
 		}
 

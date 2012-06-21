@@ -27,15 +27,15 @@ component ElseTask extends="IfTask" {
 
 	}
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 
 		var success = true;
 		if (!variables.hasCondition) {
 			// the subtasks have to run unconditionally
-			success = runSubtasks(arguments.event, arguments.response);
+			success = runSubtasks(arguments.event);
 		} else {
 			// conditional running of subtasks, which is implemented in the superclass
-			success = super.run(arguments.event, arguments.response);
+			success = super.run(arguments.event);
 		}
 
 		return success;

@@ -20,8 +20,8 @@ component Advice implements="Task" {
 		variables.task = arguments.task;
 	}
 
-	public boolean function run(required Event event, required Response response) {
-		return variables.task.run(arguments.event, arguments.response);
+	public boolean function run(required Event event) {
+		return variables.task.run(arguments.event);
 	}
 
 	public string function getType() {

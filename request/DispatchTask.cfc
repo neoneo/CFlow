@@ -31,19 +31,19 @@ component DispatchTask extends="ComplexTask" {
 
 	}
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 
 		// get the target and event from the respective parameters
 		var targetName = getTargetName(arguments.event);
 		var eventType = getEventType(arguments.event);
 
-		variables.context.dispatchEvent(arguments.event, arguments.response, targetName, eventType);
+		variables.context.dispatchEvent(arguments.event, targetName, eventType);
 		var canceled = arguments.event.isCanceled();
 		var aborted = arguments.event.isAborted();
 
 		if (canceled && !aborted) {
-			arguments.event.reset();
-			runSubtasks(arguments.event, arguments.response);
+			arguments.event.revert();
+			runSubtasks(arguments.event);
 			arguments.event.cancel();
 		}
 

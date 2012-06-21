@@ -7,23 +7,23 @@
 		variables.name = arguments.name;
 	}
 
-	public void function handleEvent(required string eventType, required Event event, required Response response) {
+	public void function handleEvent(required string eventType, required Event event) {
 
-		start(arguments.event, arguments.response);
+		start(arguments.event);
 
 		var canceled = arguments.event.isCanceled();
 		var aborted = arguments.event.isAborted();
 		if (!canceled && !aborted) {
-			this[arguments.eventType](arguments.event, arguments.response);
+			this[arguments.eventType](arguments.event);
 		}
 
 		canceled = arguments.event.isCanceled();
 		aborted = arguments.event.isAborted();
 		if (!aborted) {
 			if (canceled) {
-				arguments.event.reset();
+				arguments.event.revert();
 			}
-			end(arguments.event, arguments.response);
+			end(arguments.event);
 		}
 
 	}

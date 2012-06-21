@@ -24,7 +24,7 @@ component SetTask implements="Task" {
 
 	}
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 
 		if (variables.overwrite || !StructKeyExists(arguments.event, variables.name)) {
 			arguments.event[variables.name] = variables.parameter.getValue(arguments.event);

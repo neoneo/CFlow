@@ -198,7 +198,7 @@ component Compiler {
 
 		if (StructKeyExists(arguments.task, "sub")) {
 			FileWriteLine(file, "if (arguments.event.isCanceled()) {");
-			FileWriteLine(file, "arguments.event.reset();");
+			FileWriteLine(file, "arguments.event.revert();");
 			for (var subtask in arguments.task.sub) {
 				compileTask(subtask, file);
 			}

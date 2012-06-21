@@ -16,7 +16,7 @@
 
 component Event extends="cflow.request.Event" {
 
-	public void function init(required string target, required string type, struct properties = {}) {
+	public void function init() {
 
 		super.init(argumentCollection = arguments);
 		// create an array for recording debugging messages
@@ -38,6 +38,15 @@ component Event extends="cflow.request.Event" {
 	public void function abort() {
 		record("cflow.aborted");
 		super.abort();
+	}
+
+	public boolean function dispatch(required string eventType) {
+
+		recordStart({targetName = getTarget(), eventType = arguments.eventType}, "cflow.dispatch");
+		var result = super.dispatch(arguments.eventType);
+		recordEnd();
+
+		return result;
 	}
 
 	/**
@@ -126,11 +135,6 @@ component Event extends="cflow.request.Event" {
 		return variables.messages;
 	}
 
-	public void function setRejoin(required boolean value) {
-		// this method is defined with package access in the superclass
-		super.setRejoin(arguments.value);
-	}
-
 	/**
 	 * Returns the array in which to record messages.
 	 **/
@@ -146,6 +150,17 @@ component Event extends="cflow.request.Event" {
 		var children = getChildren();
 
 		return !ArrayIsEmpty(children) ? children[ArrayLen(children)] : {message = ""};
+	}
+
+	// PACKAGE OVERRIDES
+
+	public void function setRejoin(required boolean value) {
+		// this method is defined with package access in the superclass
+		super.setRejoin(arguments.value);
+	}
+
+	public Response function getResponse() {
+		return super.getResponse();
 	}
 
 }

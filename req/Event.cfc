@@ -65,7 +65,7 @@ component Event accessors="true" {
 
 	}
 
-	package void function reset() {
+	package void function revert() {
 		variables.canceled = false;
 	}
 

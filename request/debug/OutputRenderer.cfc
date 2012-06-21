@@ -83,6 +83,7 @@
 						<cfcase value="cflow.eventcanceled">Event #arguments.data.target#.#arguments.data.event# canceled</cfcase>
 						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.url#">#metadata.url#</a></cfcase>
 						<cfcase value="cflow.aborted">Request aborted</cfcase>
+						<cfcase value="cflow.dispatch">Dispatch #metadata.targetName#.#metadata.eventType#</cfcase><!--- programmatic event dispatch --->
 						<cfcase value="cflow.task">
 							<cfswitch expression="#metadata.type#">
 								<cfcase value="invoke">Invoke #metadata.controllerName#.#metadata.handlerName#</cfcase>

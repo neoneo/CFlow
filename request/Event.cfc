@@ -21,16 +21,25 @@ component Event accessors="true" {
 
 	variables.canceled = false;
 	variables.aborted = false;
-	variables.rejoin = true;
+	variables.rejoin = true; // the event is in the page thread by default
 
-	public void function init(required string target, required string type, struct properties = {}) {
-		setTarget(arguments.target);
-		setType(arguments.type)
+	public void function init(required Context context, required Response response, required string target, required string type, struct properties = {}) {
+
+		variables.context = arguments.context;
+		variables.response = arguments.response;
+		variables.target = arguments.target;
+		variables.type = arguments.type;
+
 		setProperties(arguments.properties);
+
 	}
 
 	public void function cancel() {
 		variables.canceled = true;
+	}
+
+	public void function revert() {
+		variables.canceled = false;
 	}
 
 	public boolean function isCanceled() {
@@ -64,15 +73,24 @@ component Event accessors="true" {
 		StructAppend(this, arguments.properties, false);
 	}
 
-	public void function reset() {
-		variables.canceled = false;
-	}
-
 	public boolean function willRejoin() {
 		return variables.rejoin;
 	}
 
+	public boolean function dispatch(required string eventType) {
+
+		var canceled = variables.canceled;
+		var success = variables.context.dispatchEvent(this, getTarget(), arguments.eventType);
+		variables.canceled = canceled;
+
+		return success;
+	}
+
 	// PACKAGE METHODS ============================================================================
+
+	package Response function getResponse() {
+		return variables.response;
+	}
 
 	package void function setTarget(required string value) {
 		variables.target = arguments.value;
@@ -84,6 +102,12 @@ component Event accessors="true" {
 
 	package void function setRejoin(required boolean value) {
 		variables.rejoin = arguments.value;
+	}
+
+	package void function merge(required Event event) {
+		// merge the properties and the response
+		setProperties(arguments.event.getProperties());
+		variables.response.merge(arguments.event.getResponse());
 	}
 
 }

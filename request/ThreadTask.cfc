@@ -32,20 +32,19 @@ component ThreadTask extends="ComplexTask" {
 
 	}
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 
 		switch (variables.action) {
 			case "run":
 				// run the subtasks within the thread
-				// for thread safety, the thread gets its own event and response objects
+				// for thread safety, the thread gets its own event object
 				thread action="run" name="#variables.name#" priority="#variables.priority#" properties="#arguments.event.getProperties()#" target="#arguments.event.getTarget()#" event="#arguments.event.getType()#" {
-					// create new event and response objects based on the attributes
-					// these objects are not passed in as attributes, because we need clean objects (in the case of the event object, mainly for debug mode)
+					// create a new event object based on the attributes
+					// these object is not passed in as an attribute, because we need a clean instance
 					// there is also a railo bug: https://issues.jboss.org/browse/RAILO-1926 (which is not going to be solved)
 					thread.event = variables.context.createEvent(attributes.target, attributes.event, attributes.properties);
 					thread.event.setRejoin(false);
-					thread.response = variables.context.createResponse();
-					runSubtasks(thread.event, thread.response);
+					runSubtasks(thread.event);
 				};
 				break;
 
@@ -71,9 +70,7 @@ component ThreadTask extends="ComplexTask" {
 						case "completed":
 						case "running":
 							// merge the event objects of the threads on the current event object
-							arguments.event.setProperties(cfthread[name].event); // this will append the properties of the thread event without overwriting
-							// the same for the response objects
-							arguments.response.merge(cfthread[name].response);
+							arguments.event.merge(cfthread[name].event);
 
 						// no break statement
 						case "not_started":

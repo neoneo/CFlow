@@ -16,7 +16,7 @@
 
 component RedirectTask extends="Task" {
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 
 		// check if the redirect should be displayed in the debug output
 		if (variables.context.getDisplayOutput() == "always") {
@@ -28,7 +28,7 @@ component RedirectTask extends="Task" {
 			arguments.event.abort();
 		} else {
 			// perform the redirect
-			super.run(arguments.event, arguments.response);
+			super.run(arguments.event);
 		}
 
 		return false;

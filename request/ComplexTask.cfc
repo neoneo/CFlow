@@ -21,7 +21,7 @@ component ComplexTask implements="Task" {
 
 	variables.subtasks = [];
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 		Throw(type = "cflow.notimplemented", message = "Not implemented");
 	}
 
@@ -33,12 +33,12 @@ component ComplexTask implements="Task" {
 		ArrayAppend(variables.subtasks, arguments.task);
 	}
 
-	private boolean function runSubtasks(required Event event, required Response response) {
+	private boolean function runSubtasks(required Event event) {
 
 		var success = true; // if a task has no subtasks, we want the flow to proceed
 
 		for (var task in variables.subtasks) {
-			success = task.run(arguments.event, arguments.response);
+			success = task.run(arguments.event);
 			if (!success) {
 				break;
 			}

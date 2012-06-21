@@ -28,7 +28,7 @@ component Task implements="cflow.request.Task" {
 
 	}
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 
 		var success = false;
 
@@ -38,12 +38,12 @@ component Task implements="cflow.request.Task" {
 		recordStart(arguments.event, metadata);
 
 		try {
-			success = variables.task.run(arguments.event, arguments.response);
+			success = variables.task.run(arguments.event);
 		} catch (any exception) {
 			// the exception may have been rethrown by a subtask, in which case the event is aborted already
 			if (!arguments.event.isAborted()) {
 				arguments.event.record({exception: exception}, "cflow.exception");
-				arguments.response.clear();
+				arguments.event.getResponse().clear();
 				arguments.event.abort();
 			}
 			// rethrow the exception in order to exit the flow

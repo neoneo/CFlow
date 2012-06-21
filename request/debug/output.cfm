@@ -87,7 +87,8 @@
 		background-color: #cf3;
 	}
 
-	#cflow .task > .message {
+	#cflow .task > .message,
+	#cflow .dispatch > .message {
 		background-color: #99f;
 	}
 

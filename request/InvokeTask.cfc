@@ -21,7 +21,7 @@ component InvokeTask extends="ComplexTask" {
 		variables.handlerName = arguments.handlerName;
 	}
 
-	public boolean function run(required Event event, required Response response) {
+	public boolean function run(required Event event) {
 
 		variables.controller[variables.handlerName](arguments.event);
 
@@ -29,8 +29,8 @@ component InvokeTask extends="ComplexTask" {
 		var aborted = arguments.event.isAborted();
 
 		if (canceled && !aborted) {
-			arguments.event.reset();
-			runSubtasks(arguments.event, arguments.response);
+			arguments.event.revert();
+			runSubtasks(arguments.event);
 		}
 
 		return !canceled && !aborted;

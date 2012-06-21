@@ -30,17 +30,17 @@ component Context extends="cflow.request.Context" accessors="true" {
 
 	}
 
-	public boolean function dispatchEvent(required Event event, required Response response, required string targetName, required string eventType) {
-		return super.dispatchEvent(arguments.event, arguments.response, arguments.targetName, arguments.eventType);
+	public boolean function dispatchEvent(required Event event, required string targetName, required string eventType) {
+		return super.dispatchEvent(arguments.event, arguments.targetName, arguments.eventType);
 	}
 
 	// TEMPLATE METHODS ===========================================================================
 
-	private void function runTasks(required Event event, required Response response) {
+	private void function runTasks(required Event event) {
 
 		var exceptionThrown = false;
 		try {
-			super.runTasks(arguments.event, arguments.response);
+			super.runTasks(arguments.event);
 		} catch (any exception) {
 			// end all open recordStart() calls, so that the hierarchy is closed
 			arguments.event.recordEndAll();
@@ -60,60 +60,60 @@ component Context extends="cflow.request.Context" accessors="true" {
 
 		}
 		if (display) {
-			renderOutput(arguments.event, arguments.response);
+			renderOutput(arguments.event);
 		}
 
 	}
 
-	private boolean function runStartTasks(required Event event, required Response response, required string targetName) {
+	private boolean function runStartTasks(required Event event) {
 
 		arguments.event.recordStart("cflow.starttasks");
 
-		var success = super.runStartTasks(arguments.event, arguments.response, arguments.targetName);
+		var success = super.runStartTasks(arguments.event);
 
 		arguments.event.recordEnd();
 
 		return success;
 	}
 
-	private boolean function runBeforeTasks(required Event event, required Response response, required string targetName) {
+	private boolean function runBeforeTasks(required Event event) {
 
 		arguments.event.recordStart("cflow.beforetasks");
 
-		var success = super.runBeforeTasks(arguments.event, arguments.response, arguments.targetName);
+		var success = super.runBeforeTasks(arguments.event);
 
 		arguments.event.recordEnd();
 
 		return success;
 	}
 
-	private boolean function runAfterTasks(required Event event, required Response response, required string targetName) {
+	private boolean function runAfterTasks(required Event event) {
 
 		arguments.event.recordStart("cflow.aftertasks");
 
-		var success = super.runAfterTasks(arguments.event, arguments.response, arguments.targetName);
+		var success = super.runAfterTasks(arguments.event);
 
 		arguments.event.recordEnd();
 
 		return success;
 	}
 
-	private boolean function runEndTasks(required Event event, required Response response, required string targetName) {
+	private boolean function runEndTasks(required Event event) {
 
 		arguments.event.recordStart("cflow.endtasks");
 
-		var success = super.runEndTasks(arguments.event, arguments.response, arguments.targetName);
+		var success = super.runEndTasks(arguments.event);
 
 		arguments.event.recordEnd();
 
 		return success;
 	}
 
-	private boolean function runEventTasks(required Event event, required Response response, required string targetName, required string eventType) {
+	private boolean function runEventTasks(required Event event) {
 
 		arguments.event.recordStart("cflow.eventtasks");
 
-		var success = super.runEventTasks(arguments.event, arguments.response, arguments.targetName, arguments.eventType);
+		var success = super.runEventTasks(arguments.event);
 
 		arguments.event.recordEnd();
 
@@ -122,10 +122,10 @@ component Context extends="cflow.request.Context" accessors="true" {
 
 	// OUTPUT METHODS =============================================================================
 
-	private void function renderOutput(required Event event, required Response response) {
+	private void function renderOutput(required Event event) {
 
 		arguments.event._debugoutput = variables.outputRenderer.render(arguments.event.getMessages());
-		variables.debugRenderTask.run(arguments.event, arguments.response);
+		variables.debugRenderTask.run(arguments.event);
 
 	}
 
@@ -213,7 +213,7 @@ component Context extends="cflow.request.Context" accessors="true" {
 	}
 
 	public Event function createEvent(required string target, required string type, struct properties = {}) {
-		return new Event(arguments.target, arguments.type, arguments.properties);
+		return new Event(this, createResponse(), arguments.target, arguments.type, arguments.properties);
 	}
 
 }

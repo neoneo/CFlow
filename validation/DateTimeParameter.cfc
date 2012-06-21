@@ -38,8 +38,8 @@ component DateTimeParameter {
 		// a percentage sign is not needed for this parameter, but to be consequent its use is allowed
 		// just remove it
 		local.expression = arguments.expression;
-		if (Left(local.expression) == "%") {
-			RemoveChars(local.expression, 1, 1);
+		if (Left(local.expression, 1) == "%") {
+			local.expression = RemoveChars(local.expression, 1, 1);
 		}
 
 		var date = Trim(ListFirst(local.expression, "+-"));
@@ -66,7 +66,7 @@ component DateTimeParameter {
 			Throw(
 				type = "cflow.validation",
 				message = "Expression '#local.expression#' is not a valid date/time expression",
-				detail = "If you pass in date strings, use slashes as the datepart separator"
+				detail = "If you pass in date literals, use slashes as the datepart separator"
 			);
 		}
 

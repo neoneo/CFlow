@@ -16,58 +16,24 @@
 
 component RedirectTask implements="Task" {
 
-	public void function init(required string type, required struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
+	public void function init(string url = "", string target = "", required string event = "", struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
 
-		switch (arguments.type) {
-			case "url":
-				// the url key should be present
-				variables.urlString = arguments.parameters.url;
-				variables.generate = false;
-				break;
+		if (Len(arguments.url) > 0) {
+			variables.isEventRedirect = false;
+			variables.url =  new cflow.util.Parameter(arguments.url);
+		} else {
+			variables.isEventRedirect = true;
+			// the request strategy should be present, target and event keys are optional in parameters
+			variables.requestStrategy = arguments.requestStrategy;
+			variables.target = new cflow.util.Parameter(arguments.target);
+			variables.event = new cflow.util.Parameter(arguments.event);
+		}
 
-			case "event":
-
-				variables.urlString = "";
-				variables.generate = true; // do we have to generate the url at runtime?
-
-				// the request manager should be present, as well as some keys in the parameters struct
-				variables.requestStrategy = arguments.requestStrategy;
-				variables.target = arguments.parameters.target;
-				variables.event = arguments.parameters.event;
-				// any other keys in the parameters struct are (fixed) url parameters
-				variables.parameters = StructCopy(arguments.parameters);
-				// remove the required arguments from the parameters
-				StructDelete(variables.parameters, "target");
-				StructDelete(variables.parameters, "event");
-				StructDelete(variables.parameters, "permanent");
-
-				// handle runtime parameters if present
-				if (StructKeyExists(variables.parameters, "parameters")) {
-					// this should be an array of parameters to be evaluated at runtime
-					// they can have the form '<name1> = <name2>', where name1 gives the name of the parameter and name2 gives the value (if it exists on the event)
-					// so convert them all to the same form
-					var runtimeParameters = [];
-					for (var parameter in variables.parameters.parameters) {
-						var runtimeParameter = {};
-						if (ListLen(parameter, "=") > 1) {
-							runtimeParameter.name = Trim(ListFirst(parameter, "="));
-							runtimeParameter.value = Trim(ListLast(parameter, "="));
-						} else {
-							// name and value are the same
-							runtimeParameter.name = Trim(parameter);
-							runtimeParameter.value = Trim(parameter);
-						}
-						ArrayAppend(runtimeParameters, runtimeParameter);
-					}
-					variables.runtimeParameters = runtimeParameters;
-					StructDelete(variables.parameters, "parameters");
-				} else {
-					// no runtime parameters
-					// the url is always the same, so we can generate it now
-					variables.urlString = arguments.requestStrategy.writeUrl(arguments.parameters.target, arguments.parameters.event, variables.parameters);
-					variables.generate = false;
-				}
-				break;
+		// handle runtime parameters if present
+		variables.parameters = {};
+		for (var name in arguments.parameters) {
+			// store the parameter in a Parameter instance; that instance will determine whether the value should be taken literally or be evaluated
+			variables.parameters[name] = new cflow.util.Parameter(arguments.parameters[name]);
 		}
 
 		if (arguments.permanent) {
@@ -89,22 +55,34 @@ component RedirectTask implements="Task" {
 		return "redirect";
 	}
 
-	private string function obtainUrl(required Event event) {
+	public string function obtainUrl(required Event event) {
 
-		var urlString = variables.urlString;
-
-		if (variables.generate) {
-			// this means we have to append runtime parameters onto the url
-			var parameters = StructCopy(variables.parameters);
-			for (var parameter in variables.runtimeParameters) {
-				if (StructKeyExists(arguments.event, parameter.value)) {
-					parameters[parameter.name] = arguments.event[parameter.value];
-				}
-			}
-			urlString = variables.requestStrategy.writeUrl(variables.target, variables.event, parameters);
+		local.url = "";
+		var parameters = {};
+		// get the values for the parameters to append on the url
+		for (var name in variables.parameters) {
+			// get the value using the event
+			parameters[name] = variables.parameters[name].getValue(arguments.event);
 		}
 
-		return urlString;
+		if (variables.isEventRedirect) {
+			local.url = variables.requestStrategy.writeUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
+		} else {
+			local.url = variables.url.getValue(arguments.event);
+			// only append if there are parameters
+			if (!StructIsEmpty(parameters)) {
+				if (local.url does not contain "?") {
+					local.url &= "?";
+				}
+				var queryString = "";
+				for (var name in parameters) {
+					queryString = ListAppend(queryString, name & "=" & UrlEncodedFormat(parameters[name]), "&");
+				}
+				local.url &= queryString;
+			}
+		}
+
+		return local.url;
 	}
 
 }

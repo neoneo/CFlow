@@ -14,40 +14,18 @@
    limitations under the License.
 */
 
-/**
- * The DebugTask is a decorator that is used when in debug mode.
- **/
-component DebugTask implements="Task" {
+component Advice implements="Task" {
 
-	public void function init(required Task task, required struct metadata) {
-
+	public void function init(required Task task) {
 		variables.task = arguments.task;
-		variables.metadata = StructCopy(arguments.metadata);
-		variables.metadata.type = getType();
-
 	}
 
 	public boolean function run(required Event event) {
-
-		success = true;
-
-		if (!arguments.event.isAborted()) {
-			arguments.event.record(variables.metadata, "cflow.task");
-
-			success = variables.task.run(arguments.event);
-
-			arguments.event.record(variables.metadata, "cflow.task");
-		}
-
-		return success;
+		return variables.task.run(arguments.event);
 	}
 
 	public string function getType() {
 		return variables.task.getType();
-	}
-
-	public void function addSubtask(required Task task) {
-		variables.task.addSubtask(arguments.task);
 	}
 
 }

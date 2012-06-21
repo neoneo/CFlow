@@ -14,30 +14,32 @@
    limitations under the License.
 */
 
-component Event {
+component Event accessors="true" {
+
+	property name="target" type="string" setter="false" default="";
+	property name="type" type="string" setter="false" default="";
 
 	variables.canceled = false;
+	variables.aborted = false;
+	variables.rejoin = true; // the event is in the page thread by default
 
-	public void function init(required string target, required string type, required struct properties, required Response response) {
+	public void function init(required Context context, required Response response, required string target, required string type, struct properties = {}) {
 
+		variables.context = arguments.context;
+		variables.response = arguments.response;
 		variables.target = arguments.target;
 		variables.type = arguments.type;
-		variables.response = arguments.response;
 
 		setProperties(arguments.properties);
 
 	}
 
-	public string function getTarget() {
-		return variables.target;
-	}
-
-	public string function getType() {
-		return variables.type;
-	}
-
 	public void function cancel() {
 		variables.canceled = true;
+	}
+
+	public void function revert() {
+		variables.canceled = false;
 	}
 
 	public boolean function isCanceled() {
@@ -45,14 +47,18 @@ component Event {
 	}
 
 	public void function abort() {
-		abort;
+		variables.aborted = true;
+	}
+
+	public boolean function isAborted() {
+		return variables.aborted;
 	}
 
 	public struct function getProperties() {
 
 		var properties = {};
 		for (var property in this) {
-			if (!IsCustomFunction(this[property])) {
+			if (StructKeyExists(this, property) && !IsCustomFunction(this[property])) {
 				properties[property] = this[property];
 			}
 		}
@@ -60,26 +66,48 @@ component Event {
 		return properties;
 	}
 
-	public void function setProperties(required struct properties) {
-
-		for (var property in arguments.properties) {
-			// the property could be null, so check for that too
-			if (StructKeyExists(arguments.properties, property) && (!StructKeyExists(this, property) || !IsCustomFunction(this[property]))) {
-				this[property] = arguments.properties[property];
-			}
-		}
-
-	}
-
 	/**
-	* Returns a copy of the event, with its canceled flag reset.
-	**/
-	public Event function clone() {
-		return new Event(getTarget(), getType(), getProperties(), getResponse());
+	 * Puts properties on the object. Existing properties are kept (no overwrites).
+	 **/
+	public void function setProperties(required struct properties) {
+		StructAppend(this, arguments.properties, false);
 	}
+
+	public boolean function willRejoin() {
+		return variables.rejoin;
+	}
+
+	public boolean function dispatch(required string eventType) {
+
+		var canceled = variables.canceled;
+		var success = variables.context.dispatchEvent(this, getTarget(), arguments.eventType);
+		variables.canceled = canceled;
+
+		return success;
+	}
+
+	// PACKAGE METHODS ============================================================================
 
 	package Response function getResponse() {
 		return variables.response;
+	}
+
+	package void function setTarget(required string value) {
+		variables.target = arguments.value;
+	}
+
+	package void function setType(required string value) {
+		variables.type = arguments.value;
+	}
+
+	package void function setRejoin(required boolean value) {
+		variables.rejoin = arguments.value;
+	}
+
+	package void function merge(required Event event) {
+		// merge the properties and the response
+		setProperties(arguments.event.getProperties());
+		variables.response.merge(arguments.event.getResponse());
 	}
 
 }

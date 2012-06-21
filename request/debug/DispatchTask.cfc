@@ -1,4 +1,4 @@
-<!---
+/*
    Copyright 2012 Neo Neo
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +12,17 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
---->
+*/
 
-<cffunction name="invokeMethod" access="private" output="false" returntype="any">
-	<cfargument name="component" type="component" required="true">
-	<cfargument name="method" type="string" required="true">
-	<cfargument name="parameters" type="struct" required="false" default="#{}#">
+component DispatchTask extends="Task" {
 
-	<cfinvoke component="#arguments.component#" method="#arguments.method#" argumentCollection="#arguments.parameters#" returnvariable="local.result"></cfinvoke>
+	private void function recordStart(required Event event, required struct metadata) {
+		// append the target and event that are actually going to be dispatched
+		arguments.metadata.dispatchTargetName = variables.task.getTargetName(arguments.event);
+		arguments.metadata.dispatchEventType = variables.task.getEventType(arguments.event);
 
-	<cfif StructKeyExists(local, "result")>
-		<cfreturn local.result>
-	</cfif>
-</cffunction>
+		super.recordStart(arguments.event, arguments.metadata);
+
+	}
+
+}

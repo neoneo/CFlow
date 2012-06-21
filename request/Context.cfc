@@ -21,6 +21,13 @@ component Context accessors="true" {
 	property name="viewMapping" type="string" default="";
 	property name="requestStrategy" type="RequestStrategy";
 
+	// target and event to dispatch if no target or event is specified
+	property name="defaultTarget" type="string" default="";
+	property name="defaultEvent" type="string" default="";
+	// target and event to dispatch if an unknown event is handled (only applicable if implicitTasks is false)
+	property name="undefinedTarget" type="string" default="";
+	property name="undefinedEvent" type="string" default="";
+
 	variables.controllers = {}; // controllers are static, so we need only one instance of each
 	variables.tasks = {
 		event = {},
@@ -30,64 +37,202 @@ component Context accessors="true" {
 		after = {}
 	};
 
-	// just create an instance of the default request manager
+	// just create an instance of the default request strategy
 	// if it is not needed, it will be garbage collected
 	// assuming this will only occur once in the life of the application, it's not a big cost
-	variables.requestStrategy = new DefaultRequestStrategy(this);
+	variables.requestStrategy = new DefaultRequestStrategy();
 
+	/**
+	 * Extracts the request parameters using the request strategy and starts the event handling cycle.
+	 **/
 	public Response function handleRequest() {
 
-		var requestParameters = getRequestStrategy().collectParameters();
-		if (StructKeyExists(requestParameters, "parameters")) {
-			local.response = handleEvent(requestParameters.target, requestParameters.event, requestParameters.parameters);
-		} else {
-			local.response = handleEvent(requestParameters.target, requestParameters.event);
-		}
+		var parameters = getRequestStrategy().collectParameters();
 
-		return local.response;
+		// if no target or event is given, revert to the default target and/ or event
+		var target = StructKeyExists(parameters, "target") ? parameters.target : variables.defaultTarget;
+		var event = StructKeyExists(parameters, "event") ? parameters.event : variables.defaultEvent;
+
+		return handleEvent(target, event, parameters);
 	}
 
 	/**
-	 * Fires an event on the given target.
+	 * Runs the event handling cycle.
 	 **/
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
-		var response = createResponse();
-		var event = createEvent(arguments.targetName, arguments.eventType, arguments.parameters, response);
+		var event = createEvent(arguments.targetName, arguments.eventType, arguments.parameters);
 
-		var success = runStartTasks(event);
+		runTasks(event);
+
+		return event.getResponse();
+	}
+
+	/**
+	 * Runs the before, after and event tasks associated with the event.
+	 **/
+	public boolean function dispatchEvent(required Event event, required string targetName, required string eventType) {
+
+		local.targetName = arguments.event.getTarget();
+		local.eventType = arguments.event.getType();
+		arguments.event.setTarget(arguments.targetName);
+		arguments.event.setType(arguments.eventType);
+
+		var success = runBeforeTasks(arguments.event, arguments.targetName);
+
+		if (success) {
+			success = runEventTasks(arguments.event, arguments.targetName, arguments.eventType);
+		}
+
+		if (success) {
+			success = runAfterTasks(arguments.event, arguments.targetName);
+		}
+
+		arguments.event.setTarget(local.targetName);
+		arguments.event.setType(local.eventType);
+
+		return success;
+	}
+
+	// TEMPLATE METHODS ===========================================================================
+
+	/**
+	 * Calls the template methods in order.
+	 **/
+	private void function runTasks(required Event event) {
+
+		var targetName = arguments.event.getTarget();
+		var eventType = arguments.event.getType();
+
+		var success = runStartTasks(arguments.event);
 
 		// only run the event task if we have success
 		if (success) {
-			success = dispatchEvent(event);
+			success = dispatchEvent(arguments.event, targetName, eventType);
 		}
 
-		// the end tasks are always run
-		if (!success) {
-			// for the remainder, we need an event object with its canceled flag reset
-			event = event.clone();
+		// the end tasks are always run, unless the event is aborted
+		if (!arguments.event.isAborted()) {
+			if (!success) {
+				// for the remainder, we need an event object with its canceled flag revert
+				arguments.event.revert();
+			}
+
+			runEndTasks(arguments.event);
 		}
 
-		runEndTasks(event);
-
-		return response;
 	}
 
-	public boolean function dispatchEvent(required Event event) {
+	private boolean function runStartTasks(required Event event) {
+		return getPhaseTask("start", arguments.event.getTarget()).run(arguments.event);
+	}
 
-		var success = runBeforeTasks(arguments.event);
+	private boolean function runBeforeTasks(required Event event) {
+		return getPhaseTask("before", arguments.event.getTarget()).run(arguments.event);
+	}
 
-		if (success) {
-			success = runEventTasks(arguments.event);
-		}
+	private boolean function runAfterTasks(required Event event) {
+		return getPhaseTask("after", arguments.event.getTarget()).run(arguments.event);
+	}
 
-		if (success) {
-			success = runAfterTasks(arguments.event);
+	private boolean function runEndTasks(required Event event) {
+		return getPhaseTask("end", arguments.event.getTarget()).run(arguments.event);
+	}
+
+	private boolean function runEventTasks(required Event event) {
+
+		var success = true; // if nothing happens in this event, we still want to return true (an event does not have to be defined or have tasks)
+		// check if there are tasks for this event
+		var targetName = arguments.event.getTarget();
+		var eventType = arguments.event.getType();
+		if (StructKeyExists(variables.tasks.event, targetName) && StructKeyExists(variables.tasks.event[targetName], eventType)) {
+			success = variables.tasks.event[targetName][eventType].run(arguments.event);
+		} else {
+			if (getImplicitTasks()) {
+				var task = createPhaseTask();
+				// if there is a controller with the name of the target, create an invoke task that invokes the handler by the name of the event type
+				var controllerName = getComponentName(targetName, getControllerMapping());
+				if (componentExists(controllerName)) {
+					task.addSubtask(createInvokeTask(targetName, eventType));
+				}
+				// always create a render task that renders a view in a directory with the name of the target, that has the same name as the event type
+				task.addSubtask(createRenderTask(targetName & "/" & eventType));
+				// register this task, so that next time it is picked up immediately
+				register(task, "event", targetName, eventType);
+
+				success = task.run(arguments.event);
+			} else {
+				// dispatch the undefined event, if applicable
+				if (Len(variables.undefinedTarget) > 0 && Len(variables.undefinedEvent) > 0 && (targetName != variables.undefinedTarget || eventType != variables.undefinedEvent)) {
+					local.targetName = targetName;
+					local.eventType = eventType;
+					// if the current target exists, dispatch the event on that target, otherwise dispatch on the undefined target
+					// also do that if the undefined event was dispatched already
+					if (!StructKeyExists(variables.tasks.event, targetName) || eventType == variables.undefinedEvent) {
+						local.targetName = variables.undefinedTarget;
+					}
+					local.eventType = variables.undefinedEvent;
+
+					success = dispatchEvent(arguments.event, local.targetName, local.eventType);
+				}
+			}
 		}
 
 		return success;
 	}
 
+	/**
+	 * Returns the task for the given phase and event.
+	 **/
+	private Task function getPhaseTask(required string phase, required string targetName) {
+
+		if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
+			variables.tasks[arguments.phase][arguments.targetName] = createPhaseTask();
+		}
+
+		return variables.tasks[arguments.phase][arguments.targetName];
+	}
+
+	/**
+	 * Returns the controller with the given name.
+	 **/
+	private component function getController(required string name) {
+
+		if (!StructKeyExists(variables.controllers, arguments.name)) {
+			var controllerName = getComponentName(arguments.name, getControllerMapping());
+			if (!componentExists(controllerName)) {
+				Throw(type = "cflow.request", message = "Controller #controllerName# does not exist");
+			}
+
+			variables.controllers[arguments.name] = new "#controllerName#"();
+		}
+
+		return variables.controllers[arguments.name];
+	}
+
+	/**
+	 * Returns true if the component with the given name can be instantiated.
+	 **/
+	private boolean function componentExists(required string fullName) {
+
+		var componentPath = ExpandPath("/" & Replace(arguments.fullName, ".", "/", "all") & ".cfc");
+
+		return FileExists(componentPath);
+	}
+
+	private string function getComponentName(required string name, string mapping = "") {
+
+		var componentName = arguments.name;
+		if (Len(arguments.mapping) > 0) {
+			componentName = arguments.mapping & "." & componentName;
+		}
+
+		return componentName;
+	}
+
+	/**
+	 * Registers the task for the phase and target, and (if applicable) the event.
+	 **/
 	public void function register(required Task task, required string phase, required string targetName, string eventType) {
 
 		var phaseTask = JavaCast("null", 0);
@@ -125,99 +270,26 @@ component Context accessors="true" {
 
 	}
 
-	// TEMPLATE METHODS ===========================================================================
-
-	private boolean function runStartTasks(required Event event) {
-		return getPhaseTask("start", arguments.event.getTarget()).run(arguments.event);
-	}
-
-	private boolean function runBeforeTasks(required Event event) {
-		return getPhaseTask("before", arguments.event.getTarget()).run(arguments.event);
-	}
-
-	private boolean function runAfterTasks(required Event event) {
-		return getPhaseTask("after", arguments.event.getTarget()).run(arguments.event);
-	}
-
-	private boolean function runEndTasks(required Event event) {
-		return getPhaseTask("end", arguments.event.getTarget()).run(arguments.event);
-	}
-
-	private boolean function runEventTasks(required Event event) {
-
-		var task = JavaCast("null", 0);
-		// check if there are tasks for this event
-		var targetName = arguments.event.getTarget();
-		var eventType = arguments.event.getType();
-		if (StructKeyExists(variables.tasks.event, targetName) && StructKeyExists(variables.tasks.event[targetName], eventType)) {
-			task = variables.tasks.event[targetName][eventType];
-		} else {
-			task = createPhaseTask();
-			if (getImplicitTasks()) {
-				// we now assume there is a controller with the name of the target, that exposes a method with the name of the event type
-				task.addSubtask(createInvokeTask(targetName, eventType));
-				// and that there is a template in a directory with the name of the target, that has the same name as the event type
-				task.addSubtask(createRenderTask(targetName & "/" & eventType));
-				// add this task to the cache, so that next time we can reuse it
-				variables.tasks.event[targetName][eventType] = task;
-			}
-		}
-
-		return task.run(arguments.event);
-	}
-
-	/**
-	 * Returns the task for the given phase and event.
-	 **/
-	private Task function getPhaseTask(required string phase, required string targetName) {
-
-		if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
-			variables.tasks[arguments.phase][arguments.targetName] = createPhaseTask();
-		}
-
-		return variables.tasks[arguments.phase][arguments.targetName];
-	}
-
-	private Controller function getController(required string name) {
-
-		if (!StructKeyExists(variables.controllers, arguments.name)) {
-			var controllerName = arguments.name;
-			if (Len(getControllerMapping()) > 0) {
-				controllerName = getControllerMapping() & "." & controllerName;
-			}
-			variables.controllers[arguments.name] = new "#controllerName#"(this);
-		}
-
-		return variables.controllers[arguments.name];
-	}
-
 	// FACTORY METHODS ============================================================================
 
-	public InvokeTask function createInvokeTask(required string controllerName, required string methodName) {
-		return new InvokeTask(getController(arguments.controllerName), arguments.methodName);
+	public InvokeTask function createInvokeTask(required string controllerName, required string handlerName) {
+		return new InvokeTask(getController(arguments.controllerName), arguments.handlerName);
 	}
 
-	public DispatchTask function createDispatchTask(required string targetName, required string eventType, boolean cancelFailed = true) {
-		return new DispatchTask(this, arguments.targetName, arguments.eventType, arguments.cancelFailed);
+	public DispatchTask function createDispatchTask(required string targetName, required string eventType) {
+		return new DispatchTask(this, arguments.targetName, arguments.eventType);
 	}
 
 	public RenderTask function createRenderTask(required string view) {
 		return new RenderTask(arguments.view, getViewMapping(), getRequestStrategy());
 	}
 
-	/**
-	 * Creates a RedirectTask.
-	 *
-	 * @param	{String}	type		the redirect type: url or event
-	 * @param	{Struct}	parameters	the parameters specific to the type of redirect (see below)
-	 * @param	{Boolean}	permanent	whether the redirect is permanent or not [false]
-	 *
-	 * Redirect types:
-	 * url		The parameters struct should have a url key that contains the explicit url to redirect to
-	 * event	The parameters struct should have target and event keys, and may have additional keys that are included as url parameters
-	 **/
-	public RedirectTask function createRedirectTask(required string type, required struct parameters, boolean permanent = false) {
-		return new RedirectTask(arguments.type, arguments.parameters, arguments.permanent, getRequestStrategy());
+	public RedirectTask function createRedirectTask(string url = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
+		return new RedirectTask(arguments.url, arguments.target, arguments.event, arguments.parameters, arguments.permanent, getRequestStrategy());
+	}
+
+	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
+		return new ThreadTask(this, arguments.action, arguments.name, arguments.priority, arguments.timeout);
 	}
 
 	public IfTask function createIfTask(required string condition) {
@@ -228,30 +300,19 @@ component Context accessors="true" {
 		return new ElseTask(arguments.condition);
 	}
 
-	public SetTask function createSetTask(required string name, required string expression) {
-		return new SetTask(arguments.name, arguments.expression);
+	public SetTask function createSetTask(required string name, required string expression, boolean overwrite = true) {
+		return new SetTask(arguments.name, arguments.expression, arguments.overwrite);
 	}
 
 	public PhaseTask function createPhaseTask() {
 		return new PhaseTask();
 	}
 
-	package Event function createEvent(required string targetName, required string eventType, required struct event, Response response) {
-
-		// if event is an Event, we take the response from there
-		// if not, we expect a Response object in the arguments
-		if (IsInstanceOf(arguments.event, "Event")) {
-			local.properties = arguments.event.getProperties();
-			local.response = arguments.event.getResponse();
-		} else {
-			local.properties = arguments.event;
-			local.response = arguments.response;
-		}
-
-		return new Event(arguments.targetName, arguments.eventType, local.properties, local.response);
+	public Event function createEvent(required string target, required string type, struct parameters = {}) {
+		return new Event(this, createResponse(), arguments.target, arguments.type, arguments.parameters);
 	}
 
-	private Response function createResponse() {
+	public Response function createResponse() {
 		return new Response();
 	}
 

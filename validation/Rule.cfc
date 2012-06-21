@@ -34,7 +34,7 @@ component Rule {
 		return arguments.data[variables.fieldName];
 	}
 
-	// this method is included for working with sets
+	// this method is included for cases where the tested value is a set
 	private array function toArray(required any value) {
 
 		var result = JavaCast("null", 0);

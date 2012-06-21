@@ -14,9 +14,7 @@
    limitations under the License.
 --->
 
-<cffunction name="header" access="private" returntype="void">
-	<cfargument name="name" type="string" required="true">
-	<cfargument name="value" type="string" required="true">
-
-	<cfheader name="#arguments.name#" value="#arguments.value#">
-</cffunction>
+<cfset response = attributes.response>
+<cfset requestStrategy = attributes.requeststrategy>
+<cfset StructAppend(variables, attributes.data, true)>
+<cfinclude template="#attributes.view#">

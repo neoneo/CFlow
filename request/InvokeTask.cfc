@@ -16,42 +16,28 @@
 
 component InvokeTask extends="ComplexTask" {
 
-	//if (!StructKeyExists(GetFunctionList(), "invoke")) {
-		include "../static/invoke.cfm";
-	//}
-
-	public void function init(required Controller controller, required string method) {
-
+	public void function init(required component controller, required string handlerName) {
 		variables.controller = arguments.controller;
-		variables.method = arguments.method;
-
+		variables.handlerName = arguments.handlerName;
 	}
 
 	public boolean function run(required Event event) {
 
-		invokeMethod(getController(), getMethod(), arguments);
+		variables.controller[variables.handlerName](arguments.event);
 
-		var success = !arguments.event.isCanceled();
-		if (!success) {
-			if (hasSubtasks()) {
-				runSubtasks(arguments.event.clone());
-			}
+		var canceled = arguments.event.isCanceled();
+		var aborted = arguments.event.isAborted();
+
+		if (canceled && !aborted) {
+			arguments.event.revert();
+			runSubtasks(arguments.event);
 		}
 
-		return success;
+		return !canceled && !aborted;
 	}
 
 	public string function getType() {
 		return "invoke";
-	}
-
-
-	private Controller function getController() {
-		return variables.controller;
-	}
-
-	private string function getMethod() {
-		return variables.method;
 	}
 
 }

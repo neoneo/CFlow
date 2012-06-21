@@ -22,41 +22,44 @@ component DispatchTask extends="ComplexTask" {
 	 * @param	{Context}	context			the context of the application
 	 * @param	{String}	targetName		the target of the event to dispatch
 	 * @param	{String}	eventType		the type of the event to dispatch
-	 * @param	{Boolean}	cancelFailed	if true, cancels the originating event if the dispatched event is canceled
 	 **/
-	public void function init(required Context context, required string targetName, required string eventType, boolean cancelFailed = true) {
+	public void function init(required Context context, required string targetName, required string eventType) {
 
 		variables.context = arguments.context;
-		variables.targetName = arguments.targetName;
-		variables.eventType = arguments.eventType;
-		variables.cancelFailed = arguments.cancelFailed;
+		variables.targetName = new cflow.util.Parameter(arguments.targetName);
+		variables.eventType = new cflow.util.Parameter(arguments.eventType);
 
 	}
 
 	public boolean function run(required Event event) {
 
-		// create a new event object with the properties of the event object that is passed in
-		var dispatch = getContext().createEvent(variables.targetName, variables.eventType, arguments.event); //.getProperties(), arguments.event.getResponse());
+		// get the target and event from the respective parameters
+		var targetName = getTargetName(arguments.event);
+		var eventType = getEventType(arguments.event);
 
-		var success = getContext().dispatchEvent(dispatch);
+		variables.context.dispatchEvent(arguments.event, targetName, eventType);
+		var canceled = arguments.event.isCanceled();
+		var aborted = arguments.event.isAborted();
 
-		if (!success && variables.cancelFailed) {
-			if (hasSubtasks()) {
-				runSubtasks(arguments.event.clone());
-			}
+		if (canceled && !aborted) {
+			arguments.event.revert();
+			runSubtasks(arguments.event);
 			arguments.event.cancel();
 		}
 
-		return success;
+		return !canceled && !aborted;
 	}
 
 	public string function getType() {
 		return "dispatch";
 	}
 
+	public string function getTargetName(required Event event) {
+		return variables.targetName.getValue(arguments.event);
+	}
 
-	private Context function getContext() {
-		return variables.context;
+	public string function getEventType(required Event event) {
+		return variables.eventType.getValue(arguments.event);
 	}
 
 }

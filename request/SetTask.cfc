@@ -16,16 +16,19 @@
 
 component SetTask implements="Task" {
 
-	public void function init(required string name, required string expression) {
+	public void function init(required string name, required string expression, boolean overwrite = true) {
 
 		variables.name = arguments.name;
 		variables.parameter = new cflow.util.Parameter(arguments.expression);
+		variables.overwrite = arguments.overwrite;
 
 	}
 
 	public boolean function run(required Event event) {
 
-		arguments.event[variables.name] = variables.parameter.getValue(arguments.event);
+		if (variables.overwrite || !StructKeyExists(arguments.event, variables.name)) {
+			arguments.event[variables.name] = variables.parameter.getValue(arguments.event);
+		}
 
 		return true;
 	}

@@ -1,4 +1,4 @@
-<!---
+/*
    Copyright 2012 Neo Neo
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +12,12 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
---->
+*/
 
-<cffunction name="content" access="private" returntype="void">
-	<cfargument name="type" type="string" required="true">
+interface {
 
-	<cfcontent type="#arguments.type#">
-</cffunction>
+	public struct function collectParameters();
+
+	public string function writeUrl(required string target, required string event, struct parameters);
+
+}

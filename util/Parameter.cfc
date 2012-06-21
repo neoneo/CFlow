@@ -37,7 +37,7 @@ component Parameter {
 		}
 
 		if (variables.evaluate) {
-			variables.expression = new cflow.util.Evaluator(local.expression);
+			variables.expression = new Evaluator(local.expression);
 		} else {
 			variables.expression = local.expression;
 		}

@@ -20,7 +20,7 @@ component XmlReader {
 	variables.abstractTargetNames = []; // list of targets that are abstract
 	variables.defaultControllers = {}; // default controllers per target
 
-	variables.complexTaskTypes = ["invoke", "dispatch", "if", "else", "thread"]; // complex tasks are tasks that can contain other tasks
+	variables.complexTaskTypes = ["invoke", "dispatch", "if", "else"]; // complex tasks are tasks that can contain other tasks
 
 	public void function init(required Context context) {
 		variables.context = arguments.context;
@@ -197,7 +197,6 @@ component XmlReader {
 
 	private void function compileIncludes() {
 
-		// first get all the top level includes and process them
 		var targets = StructFindKey(variables.tasks, "includes", "all");
 
 		// there can be includes that include other includes
@@ -283,73 +282,6 @@ component XmlReader {
 			targets = StructFindKey(variables.tasks, "includes", "all");
 		}
 
-		// now process any includes that are defined in an event
-		// those includes must specify an event
-		// in this case there can be recursion too
-		var includes = StructFindValue(variables.tasks, "include", "all");
-		// remove items that use the value 'include' but are not includes
-		for (var i = ArrayLen(includes); i >= 1; i--) {
-			if (includes[i].key != "$type") {
-				ArrayDeleteAt(includes, i);
-			}
-		}
-
-		var count = ArrayLen(includes);
-		while (!ArrayIsEmpty(includes)) {
-			// loop backwards over the includes, because one include is generally going to be replaced by more than one task
-			// in the case of multiple includes in one event, looping forward would invalidate the path to the include entry
-			for (var i = ArrayLen(includes); i >= 1; i--) {
-				var include = includes[i];
-				// target and event are mandatory attributes
-				if (!StructKeyExists(variables.tasks, include.owner.target)) {
-					Throw(type = "cflow.request", message = "Included target '#include.owner.target#' not found");
-				}
-				var target = variables.tasks[include.owner.target];
-
-				// the event must be defined in this target
-				if (!StructKeyExists(target.events, include.owner.event)) {
-					Throw(type = "cflow.request", message = "Included target '#include.owner.target#' does not define event '#include.owner.event#'");
-				}
-				// get the tasks that have to be inserted instead of the include
-				var eventTasks = target.events[include.owner.event];
-				// if these tasks contain an include, do not proceed
-				var eventIncludes = StructFindValue({t = eventTasks}, "include", "all"); // put the event tasks in a struct to be able to call StructFindValue()
-				var proceed = true;
-				for (var eventInclude in eventIncludes) {
-					if (eventInclude.key == "$type") {
-						proceed = false;
-						break;
-					}
-				}
-
-				if (proceed) {
-					// get a reference to the parent array of the include from the path
-					// the path is of the form ".target.events.eventType[taskIndex].$type", but there can be deeper nesting
-					// first pick up the array index
-					var indices = REMatch("[0-9]+(?=])", include.path); // there can be more than one, but we want only the last one
-					var index = Val(indices[ArrayLen(indices)]);
-					// cut off the index and .$type from the path
-					var path = Left(include.path, Len(include.path) - Len("[#index#].$type"));
-					// get the reference
-					var parent = Evaluate("variables.tasks#path#");
-					// remove the include entry
-					ArrayDeleteAt(parent, index);
-					// insert the include's tasks at that position
-					for (var j = ArrayLen(eventTasks); j >= 1; j--) {
-						// insert a duplicate, since changes such as the default controller will be applied to the tasks later
-						ArrayInsertAt(parent, index, Duplicate(eventTasks[j]));
-					}
-					// remove the include struct
-					ArrayDeleteAt(includes, i);
-				}
-			}
-
-			count--;
-			if (count < 0) {
-				Throw(type = "cflow.request", message = "Circular reference detected in includes");
-			}
-		}
-
 	}
 
 	/**
@@ -365,7 +297,7 @@ component XmlReader {
 				// find all tasks that have no controller specified
 				var tasks = StructFindValue(target, "invoke", "all");
 				for (var task in tasks) {
-					if (task.key == "$type") {
+					if (task.owner.$type == "invoke") {
 						if (!StructKeyExists(task.owner, "controller")) {
 							// explicitly set the controller
 							task.owner.controller = variables.defaultControllers[name];
@@ -388,9 +320,9 @@ component XmlReader {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "dispatch", "all");
 			for (var task in tasks) {
-				if (task.key == "$type") {
+				if (task.owner.$type == "dispatch") {
 					if (!StructKeyExists(task.owner, "target")) {
-						task.owner["target"] = name;
+						task.owner.target = name;
 					}
 					// if the event goes to the same target, and is defined immediately in the before or after phase, this would cause an infinite loop
 					if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
@@ -422,9 +354,9 @@ component XmlReader {
 
 			var tasks = StructFindValue(target, "render", "all");
 			for (task in tasks) {
-				if (task.key == "$type") {
+				if (task.owner.$type == "render") {
 					if (arguments.eventPhase && task.path contains ".events." || !arguments.eventPhase && task.path does not contain ".events.") {
-						// check for the existence of a view attribute, as some other task could have an attribute with the value 'render'
+					// check for the existence of a view attribute, as some other task could have an attribute with the value 'render'
 						// prepend the target name as the directory name
 						task.owner.view = name & "/" & task.owner.view;
 					}
@@ -445,11 +377,11 @@ component XmlReader {
 			// for dispatch task with no target use the current target
 			var tasks = StructFindValue(target, "redirect", "all");
 			for (var task in tasks) {
-				if (task.key == "$type") {
+				if (task.owner.$type == "redirect") {
 					// do nothing if the redirect is to a fixed url, or if it has a target already
 					if (!StructKeyExists(task.owner, "url")) {
 						if (!StructKeyExists(task.owner, "target")) {
-							task.owner["target"] = name;
+							task.owner.target = name;
 						}
 
 						// if the redirect goes to the same target and is defined outside the event phase, this would cause an infinite loop
@@ -486,9 +418,9 @@ component XmlReader {
 			switch (arguments.task.$type) {
 				case "invoke":
 					if (!StructKeyExists(arguments.task, "controller")) {
-						Throw(type = "cflow.request", message = "No controller associated with invoke task for handler '#arguments.task.handler#'");
+						Throw(type = "cflow.request", message = "No controller associated with invoke task for method '#arguments.task.method#'");
 					}
-					instance = variables.context.createInvokeTask(arguments.task.controller, arguments.task.handler);
+					instance = variables.context.createInvokeTask(arguments.task.controller, arguments.task.method);
 					break;
 
 				case "dispatch":
@@ -500,20 +432,28 @@ component XmlReader {
 					break;
 
 				case "redirect":
-					local.url = StructKeyExists(arguments.task, "url") ? arguments.task.url : "";
-					var target = StructKeyExists(arguments.task, "target") ? arguments.task.target : ""
-					var event = StructKeyExists(arguments.task, "event") ? arguments.task.event : ""
+					var permanent = false;
+					if (StructKeyExists(arguments.task, "permanent")) {
+						permanent = arguments.task.permanent;
+					}
+
 					var parameters = StructCopy(arguments.task);
-					var permanent = StructKeyExists(arguments.task, "permanent") && arguments.task.permanent;
-					// delete the formal attributes so the additional attributes are left
 					StructDelete(parameters, "$type");
 					StructDelete(parameters, "permanent");
-					StructDelete(parameters, "url");
-					StructDelete(parameters, "target");
-					StructDelete(parameters, "event");
-					StructDelete(parameters, "advice");
 
-					instance = variables.context.createRedirectTask(local.url, target, event, parameters, permanent);
+					// there are two types of redirects: to an event and to a url
+					// depending on the type, the constructor expects different parameters
+					var type = "event";
+					if (StructKeyExists(arguments.task, "url")) {
+						// the redirect should be to the url defined here
+						type = "url";
+					}
+					// if there is a parameters attribute present, convert the value to an array
+					//if (StructKeyExists(parameters, "parameters")) {
+					//	parameters.parameters = ListToArray(parameters.parameters);
+					//}
+
+					instance = variables.context.createRedirectTask(type, parameters, permanent);
 					break;
 
 				case "if":
@@ -531,52 +471,16 @@ component XmlReader {
 					var overwrite = !StructKeyExists(arguments.task, "overwrite") || arguments.task.overwrite;
 					StructDelete(attributes, "$type");
 					StructDelete(attributes, "overwrite");
-					StructDelete(attributes, "advice");
-
-					var name = ListFirst(StructKeyList(attributes)); // pick up the attribute (=variable) name
-					var expression = arguments.task[name]; // pick up the attribute value (the expression)
+					var name = ListFirst(StructKeyList(attributes));
+					var expression = arguments.task[name];
 					instance = variables.context.createSetTask(name, expression, overwrite);
 					break;
-
-				case "thread":
-					// all attributes are optional
-					var action = StructKeyExists(arguments.task, "action") ? arguments.task.action : "run";
-					var name = StructKeyExists(arguments.task, "name") ? arguments.task.name : "";
-					var priority = StructKeyExists(arguments.task, "priority") ? arguments.task.priority : "normal";
-					var timeout = StructKeyExists(arguments.task, "timeout") ? arguments.task.timeout : 0;
-					var duration = StructKeyExists(arguments.task, "duration") ? arguments.task.duration : 0;
-
-					instance = variables.context.createThreadTask(action, name, priority, timeout, duration);
-					break;
-
-				case "task":
-					// create an instance of the component, and pass all attributes as arguments except the default attributes
-					var argumentCollection = {};
-					// workaround for Railo bug 1798, can't use StructCopy to copy xml structs
-					var fixedAttributes = ["component", "advice"];
-					for (var attribute in xmlAttributes) {
-						if (ArrayFind(fixedAttributes, attribute) == 0) {
-							argumentCollection[attribute] = xmlAttributes[attribute];
-						}
-					}
-					instance = new "#xmlAttributes.component#"(argumentCollection = argumentCollection);
-					break;
-
 			}
 
 			// check for subtasks
 			if (StructKeyExists(arguments.task, "sub")) {
 				for (var subtask in arguments.task.sub) {
 					instance.addSubtask(createTask(subtask));
-				}
-			}
-
-			// check if the task should be decorated by an advice
-			if (StructKeyExists(arguments.task, "advice")) {
-				var advices = ListToArray(arguments.task.advice);
-				// the first advice should be invoked first, so it is the last one to decorate the task
-				for (var i = ArrayLen(advices); i >= 1; i--) {
-					instance = new "#advices[i]#"(instance);
 				}
 			}
 		}

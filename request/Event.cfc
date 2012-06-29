@@ -80,6 +80,7 @@ component Event accessors="true" {
 	public boolean function dispatch(required string eventType) {
 
 		var canceled = variables.canceled;
+		variables.canceled = false;
 		var success = variables.context.dispatchEvent(this, getTarget(), arguments.eventType);
 		variables.canceled = canceled;
 

@@ -19,7 +19,8 @@ component Context extends="cflow.request.Context" accessors="true" {
 	// displayOutput property: always | exception | noredirect | never | <time in milliseconds>
 	// the getter is overridden below
 	property name="displayOutput" type="string" default="always" getter="false";
-	property name="remoteAddresses" type="array";
+	property name="remoteAddresses" type="array"; // array of addresses that receive output
+	property name="serverName" type="string"; // only requests to this server name receive output
 
 	public void function init() {
 
@@ -28,10 +29,6 @@ component Context extends="cflow.request.Context" accessors="true" {
 		// create a (non-debug) render task
 		variables.debugRenderTask = super.createRenderTask("output");
 
-	}
-
-	public boolean function dispatchEvent(required Event event, required string targetName, required string eventType) {
-		return super.dispatchEvent(arguments.event, arguments.targetName, arguments.eventType);
 	}
 
 	// TEMPLATE METHODS ===========================================================================
@@ -130,15 +127,15 @@ component Context extends="cflow.request.Context" accessors="true" {
 	}
 
 	/**
-	 * Returns whether to display debug output, as if the output would be rendered right now.
-	 * This method takes into account the time that the event already has taken, if applicable.
+	 * Returns the display output setting, based on the context of the current request.
 	 **/
 	public string function getDisplayOutput() {
 
 		var displayOutput = variables.displayOutput;
-		if (!StructKeyExists(variables, "remoteAddresses") || ArrayFind(variables.remoteAddresses, cgi.remote_addr) > 0) {
+		if (!StructKeyExists(variables, "remoteAddresses") || ArrayFind(variables.remoteAddresses, cgi.remote_addr) > 0
+			&& !StructKeyExists(variables, "serverName") || cgi.server_name == variables.serverName) {
 			if (IsNumeric(displayOutput)) {
-				// the time allowed for the event to complete has been set
+				// the time allowed for the event to complete was set
 				if (arguments.event.getTime() >= Val(displayOutput)) {
 					// time has elapsed, always display
 					displayOutput = "always";
@@ -148,6 +145,7 @@ component Context extends="cflow.request.Context" accessors="true" {
 				}
 			}
 		} else {
+			// request originates from address not on the whitelist
 			displayOutput = "never";
 		}
 

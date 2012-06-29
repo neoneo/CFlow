@@ -28,6 +28,16 @@ component Result {
 
 	}
 
+	public void function addMessage(required string name, required string message) {
+
+		if (!StructKeyExists(variables.messages, arguments.name)) {
+			variables.messages[arguments.name] = [];
+		}
+		ArrayAppend(variables.messages[arguments.name], arguments.message);
+		variables.passed = false;
+
+	}
+
 	public boolean function isPassed(string name) {
 
 		var passed = variables.passed;

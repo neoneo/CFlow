@@ -82,6 +82,7 @@ component XmlReader {
 		setViewDirectories(false);
 
 		// process all include nodes
+		setDefaultIncludeTargets(); // includes within an event may have no target
 		compileIncludes();
 
 		// set all invoke tasks' controllers without a controller to the default controller of the target
@@ -193,6 +194,24 @@ component XmlReader {
 		}
 
 		return tasks;
+	}
+
+	private void function setDefaultIncludeTargets() {
+
+		for (var name in variables.tasks) {
+			var target = variables.tasks[name];
+
+			// for includes within an event, and with no target, use the current target
+			var tasks = StructFindValue(target, "include", "all");
+			for (var task in tasks) {
+				if (task.key == "$type") {
+					if (!StructKeyExists(task.owner, "target")) {
+						task.owner["target"] = name;
+					}
+				}
+			}
+		}
+
 	}
 
 	private void function compileIncludes() {
@@ -442,18 +461,20 @@ component XmlReader {
 		for (var name in variables.tasks) {
 			var target = variables.tasks[name];
 
-			// for dispatch task with no target use the current target
+			// for redirect tasks with no target use the current target, but only if an event is defined
 			var tasks = StructFindValue(target, "redirect", "all");
 			for (var task in tasks) {
 				if (task.key == "$type") {
 					// do nothing if the redirect is to a fixed url, or if it has a target already
 					if (!StructKeyExists(task.owner, "url")) {
-						if (!StructKeyExists(task.owner, "target")) {
+						// only insert the target if there is an event
+						// if neither is specified, the redirect should go to the default event
+						if (!StructKeyExists(task.owner, "target") && StructKeyExists(task.owner, "event")) {
 							task.owner["target"] = name;
 						}
 
 						// if the redirect goes to the same target and is defined outside the event phase, this would cause an infinite loop
-						if (task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
+						if (StructKeyExists(task.owner, "target") && task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
 							Throw(
 								type = "cflow.request",
 								message = "Redirecting to event '#task.owner.event#' on the current target '#name#' will cause an infinite loop",

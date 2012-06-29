@@ -163,4 +163,8 @@ component Event extends="cflow.request.Event" {
 		return super.getResponse();
 	}
 
+	public void function merge(required Event event) {
+		super.merge(arguments.event);
+	}
+
 }

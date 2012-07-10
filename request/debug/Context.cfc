@@ -132,8 +132,8 @@ component Context extends="cflow.request.Context" accessors="true" {
 	public string function getDisplayOutput() {
 
 		var displayOutput = variables.displayOutput;
-		if (!StructKeyExists(variables, "remoteAddresses") || ArrayFind(variables.remoteAddresses, cgi.remote_addr) > 0
-			&& !StructKeyExists(variables, "serverName") || cgi.server_name == variables.serverName) {
+		if ((!StructKeyExists(variables, "remoteAddresses") || ArrayFind(variables.remoteAddresses, cgi.remote_addr)) > 0
+			&& (!StructKeyExists(variables, "serverName") || cgi.server_name == variables.serverName)) {
 			if (IsNumeric(displayOutput)) {
 				// the time allowed for the event to complete was set
 				if (arguments.event.getTime() >= Val(displayOutput)) {

@@ -33,8 +33,4 @@ component StringRule extends="Rule" {
 		return variables.caseSensitive ? Compare(arguments.value1, arguments.value2) == 0 : CompareNoCase(arguments.value1, arguments.value2) == 0;
 	}
 
-	private boolean function getCaseSensitive() {
-		return variables.caseSensitive;
-	}
-
 }

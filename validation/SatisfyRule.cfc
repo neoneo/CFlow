@@ -17,11 +17,23 @@
 component SatisfyRule extends="Rule" {
 
 	public void function init(required string condition) {
-		variables.evaluator = new cflow.util.Evaluator(arguments.condition);
+		variables.evaluator = new Evaluator(arguments.condition);
 	}
 
 	public boolean function test(required struct data) {
 		return variables.evaluator.execute(arguments.data);
+	}
+
+	public string function script() {
+
+		// assume the expression used by the evaluator is correct Javascript
+		var expression = Replace(variables.evaluator.getExpression(), "arguments.", "", "all");
+
+		return "
+			function (data) {
+				return #expression#;
+			}
+		";
 	}
 
 }

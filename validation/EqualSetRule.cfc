@@ -31,4 +31,23 @@ component EqualSetRule extends="SetRule" {
 		return result;
 	}
 
+	public string function script() {
+
+		return "
+			function (data) {
+				var result = false;
+
+				var set = data.#variables.fieldName#;
+				var compareSet = (#variables.parameter.script()#)(data);
+
+				if (set.length === compareSet.length) {
+					result = this.isSubset(set, compareSet);
+				}
+
+				return result;
+			}
+		";
+	}
+
+
 }

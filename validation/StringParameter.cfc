@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component NumericParameter extends="Parameter" {
+component StringParameter extends="Parameter" {
 
 	public string function getValue(required struct data) {
 		return ToString(super.getValue(arguments.data));

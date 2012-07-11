@@ -39,4 +39,28 @@ component IntersectionRule extends="SetRule" {
 		return result;
 	}
 
+	public string function script() {
+
+		return "
+			function (data) {
+				var result = false;
+
+				var set = data.#variables.fieldName#;
+				var size = set.length;
+				var compareSet = (#variables.parameter.script()#)(data);
+
+				var i = 0;
+				while (!result && i < size) {
+					if (this.isElement(set[i], compareSet)) {
+						result = true;
+					}
+					i++;
+				}
+
+				return result;
+			}
+		";
+
+	}
+
 }

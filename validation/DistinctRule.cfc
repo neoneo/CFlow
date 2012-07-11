@@ -46,4 +46,29 @@ component DistinctRule extends="Rule" {
 		return result;
 	}
 
+	public string function script() {
+
+		var comparison = variables.caseSensitive ? "set[i] !== set[j]" : "set[i].toLowerCase() !== set[j].toLowerCase()";
+
+		return "
+			function (data) {
+				var result = true;
+				var set = data.#variables.fieldName#;
+				var count = set.length;
+
+				var i = 0;
+				while (result && i < count - 1) {
+					var j = i + 1;
+					while (result && j < count) {
+						result = #comparison#;
+						j++;
+					}
+					i++;
+				}
+
+				return result;
+			}
+		";
+	}
+
 }

@@ -22,9 +22,9 @@
  **/
 component Parameter {
 
-	public void function init(required string expression) {
+	variables.evaluate = false;
 
-		variables.evaluate = false;
+	public void function init(required string expression) {
 
 		local.expression = arguments.expression;
 		if (Left(local.expression, 1) == "%") {
@@ -37,15 +37,16 @@ component Parameter {
 		}
 
 		if (variables.evaluate) {
-			variables.expression = new Evaluator(local.expression);
+			variables.evaluator = new Evaluator(local.expression);
 		} else {
-			variables.expression = local.expression;
+			// the expression is some literal
+			variables.value = local.expression;
 		}
 
 	}
 
 	public any function getValue(required struct data) {
-		return variables.evaluate ? variables.expression.execute(arguments.data) : variables.expression;
+		return variables.evaluate ? variables.evaluator.execute(arguments.data) : variables.value;
 	}
 
 }

@@ -17,7 +17,15 @@
 component ExistRule extends="Rule" {
 
 	public boolean function test(required struct data) {
-		return StructKeyExists(arguments.data, getField());
+		return StructKeyExists(arguments.data, variables.fieldName);
+	}
+
+	public string function script() {
+		return "
+			function (data) {
+				return typeof data.#variables.fieldName# !== ""undefined"";
+			}
+		";
 	}
 
 }

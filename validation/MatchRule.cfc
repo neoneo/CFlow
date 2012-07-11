@@ -21,7 +21,26 @@ component MatchRule extends="Rule" {
 	}
 
 	public boolean function test(required struct data) {
-		return IsValid("regex", arguments.data[getField()], variables.pattern);
+		return IsValid("regex", arguments.data[variables.fieldName], variables.pattern);
+	}
+
+	public string function script() {
+
+		// escape slashes
+		var pattern = Replace(variables.pattern, "/", "\/", "all");
+		// IsValid() only matches complete strings, so adjust the pattern for this if necessary
+		if (Left(pattern, 1) != "^") {
+			pattern = "^" & pattern;
+		}
+		if (Right(pattern, 1) != "$") {
+			pattern &= "$";
+		}
+
+		return "
+			function (data) {
+				return /#pattern#/.test(data.#variables.fieldName#);
+			}
+		";
 	}
 
 }

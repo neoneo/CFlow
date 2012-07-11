@@ -23,4 +23,12 @@ component ElementRule extends="SetRule" {
 		return isElement(getValue(arguments.data), getParameterValue(arguments.data));
 	}
 
+	public string function script() {
+		return "
+			function (data) {
+				return this.isElement(data.#variables.fieldName#, (#variables.parameter.script()#)(data));
+			}
+		";
+	}
+
 }

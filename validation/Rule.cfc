@@ -18,16 +18,22 @@ component Rule {
 
 	variables.fieldName = "";
 
+	/**
+	 * Tests the rule for the given data struct. If the rule passes, returns true, otherwise false.
+	 **/
 	public boolean function test(required struct data) {
+		Throw(type = "cflow.notimplemented", message = "Not implemented");
+	}
+
+	/**
+	 * Returns the script that performs the test on the client-side.
+	 **/
+	public string function script() {
 		Throw(type = "cflow.notimplemented", message = "Not implemented");
 	}
 
 	public void function setField(required string fieldName) {
 		variables.fieldName = arguments.fieldName;
-	}
-
-	private string function getField() {
-		return variables.fieldName;
 	}
 
 	private any function getValue(required struct data) {

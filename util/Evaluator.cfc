@@ -38,4 +38,8 @@ component Evaluator {
 		return Evaluate(variables.expression);
 	}
 
+	public string function getExpression() {
+		return variables.expression;
+	}
+
 }

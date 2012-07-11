@@ -19,16 +19,30 @@ component ContainRule extends="StringRule" {
 	public boolean function test(required struct data) {
 
 		var value = getValue(arguments.data);
-		var compareValue = getParameterValue(arguments.data);
+		var parameterValue = getParameterValue(arguments.data);
 		var result = false;
 
-		if (getCaseSensitive()) {
-			result = Find(compareValue, value) > 0;
+		if (variables.caseSensitive) {
+			result = Find(parameterValue, value) > 0;
 		} else {
-			result = value contains compareValue;
+			result = FindNoCase(parameterValue, value) > 0;
 		}
 
 		return result;
+	}
+
+	public string function script() {
+
+		var comparison = variables.caseSensitive ? "value.indexOf(parameterValue)" : "value.toLowerCase().indexOf(parameterValue.toLowerCase())";
+
+		return "
+			function (data) {
+				var value = data.#variables.fieldName#;
+				var parameterValue = (#variables.parameter.script()#)(data);
+
+				return #comparison# > -1;
+			}
+		";
 	}
 
 }

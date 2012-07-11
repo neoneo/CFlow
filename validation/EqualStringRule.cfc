@@ -24,4 +24,20 @@ component EqualStringRule extends="StringRule" {
 		return compareValues(value, compareValue);
 	}
 
+	public string function script() {
+
+		var leftValue = "data.#variables.fieldName#";
+		var rightValue = "(#variables.parameter.script()#)(data)";
+		if (!variables.caseSensitive) {
+			leftValue &= ".toLowerCase()";
+			rightValue &= ".toLowerCase()";
+		}
+
+		return "
+			function (data) {
+				return #leftValue# === #rightValue#;
+			}
+		";
+	}
+
 }

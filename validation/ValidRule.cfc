@@ -23,7 +23,7 @@ component ValidRule extends="Rule" {
 	public boolean function test(required struct data) {
 
 		var result = false;
-		var value = arguments.data[getField()];
+		var value = arguments.data[variables.fieldName];
 
 		switch (variables.type) {
 
@@ -75,6 +75,59 @@ component ValidRule extends="Rule" {
 		}
 
 		return result;
+	}
+
+	public string function script() {
+
+		var expression = "";
+		/*switch (variables.type) {
+
+			case "numeric":
+			case "integer":
+				if (LSIsNumeric(value)) {
+					value = LSParseNumber(value);
+				} else if (IsNumeric(value)) {
+					value = Val(value);
+				}
+				result = StructKeyExists(local, "value") && IsValid(variables.type, value);
+				if (result) {
+					arguments.data[variables.fieldName] = value;
+				}
+				break;
+
+			case "guid":
+			case "boolean":
+			case "email":
+			case "url":
+			case "creditcard":
+				result = IsValid(variables.type, value);
+				break;
+
+			case "time":
+				value = ListChangeDelims(value, ":", "."); // also accept . as a delimiter
+			case "date":
+			case "datetime":
+				if (LSIsDate(value)) {
+					result = true;
+					value = LSParseDateTime(value);
+				} else if (IsDate(value)) {
+					result = true;
+					value = ParseDateTime(value);
+				}
+				if (result) {
+					arguments.data[variables.fieldName] = value;
+				}
+				break;
+
+			case "website":
+				result = IsValid("url", value) && REFind("^http[s]?://", value) == 1;
+				break;
+
+			case "color":
+				result = IsValid("regex", value,"^([0-9A-Fa-f]){6}$");
+				break;
+		}*/
+
 	}
 
 }

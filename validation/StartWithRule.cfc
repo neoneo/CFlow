@@ -24,4 +24,18 @@ component StartWithRule extends="StringRule" {
 		return compareValues(value, parameterValue);
 	}
 
+	public string function script() {
+
+		var comparison = variables.caseSensitive ? "value.indexOf(parameterValue)" : "value.toLowerCase().indexOf(parameterValue.toLowerCase())";
+
+		return "
+			function (data) {
+				var value = data.#variables.fieldName#;
+				var parameterValue = (#variables.parameter.script()#)(data);
+
+				return #comparison# === 0;
+			}
+		";
+	}
+
 }

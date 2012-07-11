@@ -16,13 +16,10 @@
 
 component SetParameter extends="Parameter" {
 
-	variables.hasValue = false; // whether an array was passed in
-
 	public void function init(required any value) {
 
 		if (IsArray(arguments.value)) {
 			variables.value = arguments.value;
-			variables.hasValue = true;
 		} else {
 			super.init(arguments.value);
 		}
@@ -31,19 +28,38 @@ component SetParameter extends="Parameter" {
 
 	public array function getValue(required struct data) {
 
-		var value = JavaCast("null", 0);
-
-		if (variables.hasValue) {
-			value = variables.value;
-		} else {
-			value = super.getValue(arguments.data);
-			if (!IsArray(value)) {
-				// interpret the value as a comma separated list
-				value = ListToArray(value);
-			}
+		var	value = super.getValue(arguments.data);
+		if (!IsArray(value)) {
+			// interpret the value as a comma separated list
+			value = ListToArray(value);
 		}
 
 		return value;
+	}
+
+	public string function script() {
+
+		var result = "";
+		if (variables.evaluate) {
+			result = super.script();
+		} else {
+			var expression = "";
+			if (IsArray(variables.value)) {
+				// convert the array to a Javascript array literal
+				expression = SerializeJSON(variables.value);
+			} else {
+				// the value is a comma separated list
+				expression = """" & Replace(variables.value, """", "\""", "all") & """" & ".split("","")";
+			}
+
+			result = "
+				function (data) {
+					return #expression#;
+				}
+			";
+		}
+
+		return result;
 	}
 
 }

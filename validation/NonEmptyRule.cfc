@@ -17,7 +17,15 @@
 component NonEmptyRule extends="Rule" {
 
 	public boolean function test(required struct data) {
-		return Len(arguments.data[getField()]) > 0;
+		return Len(getValue(arguments.data)) > 0;
+	}
+
+	public string function script() {
+		return "
+			function (data) {
+				return data.#variables.fieldName#.length > 0;
+			}
+		";
 	}
 
 }

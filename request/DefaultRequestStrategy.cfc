@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component DefaultRequestStrategy implements="RequestStrategy" accessors="true" {
+component DefaultRequestStrategy implements="RequestStrategy" {
 
 	public string function writeUrl(required string target, required string event, struct parameters) {
 

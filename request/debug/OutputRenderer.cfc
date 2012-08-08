@@ -79,7 +79,7 @@
 						<cfcase value="cflow.beforetasks">Before</cfcase>
 						<cfcase value="cflow.aftertasks">After</cfcase>
 						<cfcase value="cflow.endtasks">End</cfcase>
-						<cfcase value="cflow.eventtasks">Event</cfcase>
+						<cfcase value="cflow.eventtasks">Event #arguments.data.target#.#arguments.data.event#</cfcase>
 						<cfcase value="cflow.eventcanceled">Event #arguments.data.target#.#arguments.data.event# canceled</cfcase>
 						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.url#">#metadata.url#</a></cfcase>
 						<cfcase value="cflow.aborted">Request aborted</cfcase>

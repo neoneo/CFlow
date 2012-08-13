@@ -210,6 +210,20 @@ component Context extends="cflow.request.Context" accessors="true" {
 		return new SetTask(task, arguments, this);
 	}
 
+	public Task function createAbortTask() {
+
+		var task = super.createAbortTask(argumentCollection = arguments);
+
+		return new Task(task, arguments, this);
+	}
+
+	public Task function createCancelTask() {
+
+		var task = super.createCancelTask(argumentCollection = arguments);
+
+		return new Task(task, arguments, this);
+	}
+
 	public Event function createEvent(required string target, required string type, struct properties = {}) {
 		return new Event(this, createResponse(), arguments.target, arguments.type, arguments.properties);
 	}

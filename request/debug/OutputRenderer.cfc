@@ -82,7 +82,7 @@
 						<cfcase value="cflow.eventtasks">Event #arguments.data.target#.#arguments.data.event#</cfcase>
 						<cfcase value="cflow.eventcanceled">Event #arguments.data.target#.#arguments.data.event# canceled</cfcase>
 						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.url#">#metadata.url#</a></cfcase>
-						<cfcase value="cflow.aborted">Request aborted</cfcase>
+						<cfcase value="cflow.aborted">Aborted</cfcase>
 						<cfcase value="cflow.dispatch">Dispatch #metadata.targetName#.#metadata.eventType#</cfcase><!--- programmatic event dispatch --->
 						<cfcase value="cflow.task">
 							<cfswitch expression="#metadata.type#">
@@ -128,6 +128,8 @@
 										</cfcase>
 									</cfswitch>
 								</cfcase>
+								<cfcase value="abort">Abort</cfcase>
+								<cfcase value="cancel">Cancel event</cfcase>
 							</cfswitch>
 						</cfcase>
 						<cfcase value="cflow.joinedthread">

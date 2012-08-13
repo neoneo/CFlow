@@ -570,6 +570,14 @@ component XmlReader {
 					instance = variables.context.createThreadTask(action, name, priority, timeout, duration);
 					break;
 
+				case "abort":
+					instance = variables.context.createAbortTask();
+					break;
+
+				case "cancel":
+					instance = variables.context.createCancelTask();
+					break;
+
 				case "task":
 					// create an instance of the component, and pass all attributes as arguments except the default attributes
 					var argumentCollection = {};

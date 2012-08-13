@@ -308,6 +308,14 @@ component Context accessors="true" {
 		return new PhaseTask();
 	}
 
+	public AbortTask function createAbortTask() {
+		return new AbortTask();
+	}
+
+	public CancelTask function createCancelTask() {
+		return new CancelTask();
+	}
+
 	public Event function createEvent(required string target, required string type, struct parameters = {}) {
 		return new Event(this, createResponse(), arguments.target, arguments.type, arguments.parameters);
 	}

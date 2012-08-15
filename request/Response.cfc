@@ -51,7 +51,9 @@
 	}
 
 	/**
-	 * Default implementation for writing html and json.
+	 * Writes content to the output.
+	 * The key argument can be a regular expression. All matched keys will be written to the output. If an empty string is passed in, all keys will be written (default).
+	 * The clearContents argument determines whether the contents that are written will be cleared. If false, subsequent calls to write() may output the same content.
 	 **/
 	public void function write(string key = "", boolean clearContents = true) {
 
@@ -64,7 +66,7 @@
 			// keys are not unique
 			var keyCount = ArrayLen(variables.keys);
 			for (var i = 1; i <= keyCount; i++) {
-				if (variables.keys[i] == arguments.key) {
+				if (IsValid("regex", variables.keys[i], arguments.key)) {
 					ArrayAppend(writeContents, variables.contents[i]);
 				}
 			}
@@ -109,7 +111,7 @@
 		} else {
 			// the key doesn't have to exist, or there can be more than one occurrence
 			for (var i = ArrayLen(variables.keys); i >= 1; i--) {
-				if (variables.keys[i] == arguments.key) {
+				if (IsValid("regex", variables.keys[i], arguments.key)) {
 					ArrayDeleteAt(variables.contents, i);
 					ArrayDeleteAt(variables.keys, i);
 				}
@@ -123,7 +125,7 @@
 	 **/
 	public void function merge(required Response response) {
 
-		var data = arguments.response.getData();
+		var data = arguments.response.data();
 		// append generated content
 		var keyCount = ArrayLen(data.keys);
 		for (var i = 1; i <= keyCount; i++) {
@@ -136,7 +138,7 @@
 
 	}
 
-	package struct function getData() {
+	package struct function data() {
 		return {
 			keys = variables.keys,
 			contents = variables.contents,

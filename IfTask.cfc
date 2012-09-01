@@ -17,7 +17,7 @@
 component IfTask extends="ComplexTask" {
 
 	public void function init(required string condition) {
-		variables.evaluator = new cflow.util.Evaluator(arguments.condition);
+		variables.evaluator = new Evaluator(arguments.condition);
 	}
 
 	public void function addSubtask(required Task task) {

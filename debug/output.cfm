@@ -169,6 +169,7 @@
 
 		function mouseout(e) {
 			e.currentTarget.classList.remove("hover");
+			e.stopPropagation();
 		};
 
 		function click(e) {

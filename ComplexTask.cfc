@@ -22,11 +22,11 @@ component ComplexTask implements="Task" {
 	variables.subtasks = [];
 
 	public boolean function run(required Event event) {
-		Throw(type = "cflow.notimplemented", message = "Not implemented");
+		Throw(type = "cflow", message = "Not implemented");
 	}
 
 	public string function getType() {
-		Throw(type = "cflow.notimplemented", message = "Not implemented");
+		Throw(type = "cflow", message = "Not implemented");
 	}
 
 	public void function addSubtask(required Task task) {

@@ -100,7 +100,7 @@ component ThreadTask extends="ComplexTask" {
 	public void function addSubtask(required Task task) {
 		// subtasks only have meaning if action = run
 		if (variables.action != "run") {
-			Throw(type = "cflow.request", message = "Thread task with action '#variables.action#' cannot contain subtasks");
+			Throw(type = "cflow", message = "Thread task with action '#variables.action#' cannot contain subtasks");
 		}
 
 		super.addSubtask(arguments.task);

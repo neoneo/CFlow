@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component Event extends="cflow.request.Event" {
+component Event extends="../Event" {
 
 	public void function init() {
 

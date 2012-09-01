@@ -26,8 +26,8 @@ component DispatchTask extends="ComplexTask" {
 	public void function init(required Context context, required string targetName, required string eventType) {
 
 		variables.context = arguments.context;
-		variables.targetName = new cflow.util.Parameter(arguments.targetName);
-		variables.eventType = new cflow.util.Parameter(arguments.eventType);
+		variables.targetName = new Parameter(arguments.targetName);
+		variables.eventType = new Parameter(arguments.eventType);
 
 	}
 

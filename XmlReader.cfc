@@ -230,7 +230,7 @@ component XmlReader {
 				for (var include in includes) {
 					// get the tasks that belong to this include
 					if (!StructKeyExists(variables.tasks, include.target)) {
-						Throw(type = "cflow.request", message = "Included target '#include.target#' not found");
+						Throw(type = "cflow", message = "Included target '#include.target#' not found");
 					}
 					var includeTarget = variables.tasks[include.target];
 					// if the target has includes, we have to wait until those are resolved
@@ -243,7 +243,7 @@ component XmlReader {
 									// the owner key contains a reference to the original tasks struct, so we can modify it
 									target.owner.events[include.event] = Duplicate(includeTarget.events[include.event]);
 								} else {
-									Throw(type = "cflow.request", message = "Event '#include.event#' not found in included target '#include.target#'");
+									Throw(type = "cflow", message = "Event '#include.event#' not found in included target '#include.target#'");
 								}
 							}
 						} else {
@@ -296,7 +296,7 @@ component XmlReader {
 
 			count--;
 			if (count < 0) {
-				Throw(type = "cflow.request", message = "Circular reference detected in includes");
+				Throw(type = "cflow", message = "Circular reference detected in includes");
 			}
 
 			targets = StructFindKey(variables.tasks, "includes", "all");
@@ -321,13 +321,13 @@ component XmlReader {
 				var include = includes[i];
 				// target and event are mandatory attributes
 				if (!StructKeyExists(variables.tasks, include.owner.target)) {
-					Throw(type = "cflow.request", message = "Included target '#include.owner.target#' not found");
+					Throw(type = "cflow", message = "Included target '#include.owner.target#' not found");
 				}
 				var target = variables.tasks[include.owner.target];
 
 				// the event must be defined in this target
 				if (!StructKeyExists(target.events, include.owner.event)) {
-					Throw(type = "cflow.request", message = "Included target '#include.owner.target#' does not define event '#include.owner.event#'");
+					Throw(type = "cflow", message = "Included target '#include.owner.target#' does not define event '#include.owner.event#'");
 				}
 				// get the tasks that have to be inserted instead of the include
 				var eventTasks = target.events[include.owner.event];
@@ -365,7 +365,7 @@ component XmlReader {
 
 			count--;
 			if (count < 0) {
-				Throw(type = "cflow.request", message = "Circular reference detected in includes");
+				Throw(type = "cflow", message = "Circular reference detected in includes");
 			}
 		}
 
@@ -414,7 +414,7 @@ component XmlReader {
 					// if the event goes to the same target, and is defined immediately in the before or after phase, this would cause an infinite loop
 					if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
 						Throw(
-							type = "cflow.request",
+							type = "cflow",
 							message = "Dispatching event '#task.owner.event#' to the current target '#name#' will cause an infinite loop",
 							detail = "Do not define dispatch tasks without a target in the before or after phases, unless the task is run conditionally"
 						);
@@ -476,7 +476,7 @@ component XmlReader {
 						// if the redirect goes to the same target and is defined outside the event phase, this would cause an infinite loop
 						if (StructKeyExists(task.owner, "target") && task.owner.target == name && task.path does not contain ".events." && task.path does not contain ".sub[") {
 							Throw(
-								type = "cflow.request",
+								type = "cflow",
 								message = "Redirecting to event '#task.owner.event#' on the current target '#name#' will cause an infinite loop",
 								detail = "Do not define redirect tasks without a target outside the event phase, unless the task is run conditionally"
 							);
@@ -507,7 +507,7 @@ component XmlReader {
 			switch (arguments.task.$type) {
 				case "invoke":
 					if (!StructKeyExists(arguments.task, "controller")) {
-						Throw(type = "cflow.request", message = "No controller associated with invoke task for handler '#arguments.task.handler#'");
+						Throw(type = "cflow", message = "No controller associated with invoke task for handler '#arguments.task.handler#'");
 					}
 					instance = variables.context.createInvokeTask(arguments.task.controller, arguments.task.handler);
 					break;

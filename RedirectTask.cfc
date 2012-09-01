@@ -20,20 +20,20 @@ component RedirectTask implements="Task" {
 
 		if (Len(arguments.url) > 0) {
 			variables.isEventRedirect = false;
-			variables.url =  new cflow.util.Parameter(arguments.url);
+			variables.url =  new Parameter(arguments.url);
 		} else {
 			variables.isEventRedirect = true;
 			// the request strategy should be present, target and event keys are optional in parameters
 			variables.requestStrategy = arguments.requestStrategy;
-			variables.target = new cflow.util.Parameter(arguments.target);
-			variables.event = new cflow.util.Parameter(arguments.event);
+			variables.target = new Parameter(arguments.target);
+			variables.event = new Parameter(arguments.event);
 		}
 
 		// handle runtime parameters if present
 		variables.parameters = {};
 		for (var name in arguments.parameters) {
 			// store the parameter in a Parameter instance; that instance will determine whether the value should be taken literally or be evaluated
-			variables.parameters[name] = new cflow.util.Parameter(arguments.parameters[name]);
+			variables.parameters[name] = new Parameter(arguments.parameters[name]);
 		}
 
 		if (arguments.permanent) {

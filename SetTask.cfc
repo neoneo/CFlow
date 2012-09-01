@@ -14,14 +14,27 @@
    limitations under the License.
 */
 
-component EqualDateTimeRule extends="DateTimeRule" {
+component SetTask implements="Task" {
 
-	public boolean function test(required struct data) {
+	public void function init(required string name, required string expression, boolean overwrite = true) {
 
-		var value = getValue(arguments.data);
-		var compareValue = getParameterValue(arguments.data);
+		variables.name = arguments.name;
+		variables.parameter = new Parameter(arguments.expression);
+		variables.overwrite = arguments.overwrite;
 
-		return DateCompare(value, compareValue) == 0;
+	}
+
+	public boolean function run(required Event event) {
+
+		if (variables.overwrite || !StructKeyExists(arguments.event, variables.name)) {
+			arguments.event[variables.name] = variables.parameter.getValue(arguments.event);
+		}
+
+		return true;
+	}
+
+	public string function getType() {
+		return "set";
 	}
 
 }

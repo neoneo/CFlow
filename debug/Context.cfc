@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component Context extends="cflow.request.Context" accessors="true" {
+component Context extends="../Context" accessors="true" {
 
 	// displayOutput property: always | exception | noredirect | never | <time in milliseconds>
 	// the getter is overridden below
@@ -25,7 +25,7 @@ component Context extends="cflow.request.Context" accessors="true" {
 	public void function init() {
 
 		variables.outputRenderer = new OutputRenderer();
-		setViewMapping("/cflow/request/debug");
+		setViewMapping("debug"); // this is now a path relative to the framework root
 		// create a (non-debug) render task
 		variables.debugRenderTask = super.createRenderTask("output");
 

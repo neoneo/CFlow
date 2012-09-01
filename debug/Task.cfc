@@ -17,7 +17,7 @@
 /**
  * Task is a decorator that is used when in debug mode.
  **/
-component Task implements="cflow.request.Task" {
+component Task implements="cflow.Task" {
 
 	public void function init(required Task task, required struct metadata, required Context context) {
 

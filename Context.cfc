@@ -201,7 +201,7 @@ component Context accessors="true" {
 		if (!StructKeyExists(variables.controllers, arguments.name)) {
 			var controllerName = getComponentName(arguments.name, getControllerMapping());
 			if (!componentExists(controllerName)) {
-				Throw(type = "cflow.request", message = "Controller #controllerName# does not exist");
+				Throw(type = "cflow", message = "Controller #controllerName# does not exist");
 			}
 
 			variables.controllers[arguments.name] = new "#controllerName#"();
@@ -250,7 +250,7 @@ component Context accessors="true" {
 
 			case "event":
 				if (!StructKeyExists(arguments, "eventType")) {
-					Throw(type = "cflow.request", message = "Event type is required when registering tasks for the event phase");
+					Throw(type = "cflow", message = "Event type is required when registering tasks for the event phase");
 				}
 				if (!StructKeyExists(variables.tasks.event, arguments.targetName)) {
 					variables.tasks.event[arguments.targetName] = {};
@@ -262,7 +262,7 @@ component Context accessors="true" {
 				break;
 
 			default:
-				Throw(type = "cflow.request", message = "Unknown phase '#arguments.phase#'");
+				Throw(type = "cflow", message = "Unknown phase '#arguments.phase#'");
 				break;
 		}
 

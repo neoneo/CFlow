@@ -16,19 +16,14 @@
 
 component Event extends="../Event" {
 
-	public void function init() {
+	// create an array for recording debugging messages
+	variables.messages = [];
+	variables.children = [variables.messages]; // an array of arrays that contain messages; the last one is the one that is written to
+	variables.tickCount = GetTickCount();
+	variables.startTime = variables.tickCount;
 
-		super.init(argumentCollection = arguments);
-		// create an array for recording debugging messages
-		variables.messages = [];
-		variables.children = [variables.messages]; // an array of arrays that contain messages; the last one is the one that is written to
-		variables.tickCount = GetTickCount();
-		variables.startTime = variables.tickCount;
-
-		// some messages imply the abort message that will follow them:
-		variables.impliedAbortMessages = ["cflow.exception", "cflow.redirect"];
-
-	}
+	// some messages imply the abort message that will follow them:
+	variables.impliedAbortMessages = ["cflow.exception", "cflow.redirect"];
 
 	public void function cancel() {
 		record("cflow.eventcanceled");

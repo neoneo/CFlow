@@ -104,13 +104,37 @@ component Context accessors="true" {
 		var targetName = arguments.event.getTarget();
 		var eventType = arguments.event.getType();
 
-		var success = runStartTasks(arguments.event);
+		// check if the event is defined
+		if (!isEventDefined(targetName, eventType)) {
+			if (getImplicitTasks()) {
+				// create a task according to the conventions
+				var task = createPhaseTask();
+				// if there is a controller with the name of the target, create an invoke task that invokes the handler by the name of the event type
+				var controllerName = getComponentName(targetName, getControllerMapping());
+				if (componentExists(controllerName)) {
+					task.addSubtask(createInvokeTask(targetName, eventType));
+				}
+				// always create a render task that renders a view in a directory with the name of the target, that has the same name as the event type
+				task.addSubtask(createRenderTask(targetName & "/" & eventType));
+				// register this task, so that next time it is picked up immediately
+				register(task, "event", targetName, eventType);
+			} else {
+				// if there is an undefined event, and it is not the current event, run its tasks
+				if (Len(variables.undefinedTarget) > 0 && Len(variables.undefinedEvent) > 0 && (targetName != variables.undefinedTarget || eventType != variables.undefinedEvent)) {
+					targetName = variables.undefinedTarget;
+					eventType = variables.undefinedEvent;
+					// overwrite the event target and type
+					arguments.event.setTarget(targetName);
+					arguments.event.setType(eventType);
+				}
+			}
+		}
 
+		var success = runStartTasks(arguments.event);
 		// only run the event task if we have success
 		if (success) {
 			success = dispatchEvent(arguments.event, targetName, eventType);
 		}
-
 		// the end tasks are always run, unless the event is aborted
 		if (!arguments.event.isAborted()) {
 			if (!success) {
@@ -140,57 +164,38 @@ component Context accessors="true" {
 	}
 
 	private boolean function runEventTasks(required Event event) {
+		return getPhaseTask("event", arguments.event.getTarget(), arguments.event.getType()).run(arguments.event);
+	}
 
-		var success = true; // if nothing happens in this event, we still want to return true (an event does not have to be defined or have tasks)
-		// check if there are tasks for this event
-		var targetName = arguments.event.getTarget();
-		var eventType = arguments.event.getType();
-		if (StructKeyExists(variables.tasks.event, targetName) && StructKeyExists(variables.tasks.event[targetName], eventType)) {
-			success = variables.tasks.event[targetName][eventType].run(arguments.event);
-		} else {
-			if (getImplicitTasks()) {
-				var task = createPhaseTask();
-				// if there is a controller with the name of the target, create an invoke task that invokes the handler by the name of the event type
-				var controllerName = getComponentName(targetName, getControllerMapping());
-				if (componentExists(controllerName)) {
-					task.addSubtask(createInvokeTask(targetName, eventType));
-				}
-				// always create a render task that renders a view in a directory with the name of the target, that has the same name as the event type
-				task.addSubtask(createRenderTask(targetName & "/" & eventType));
-				// register this task, so that next time it is picked up immediately
-				register(task, "event", targetName, eventType);
-
-				success = task.run(arguments.event);
-			} else {
-				// dispatch the undefined event, if applicable
-				if (Len(variables.undefinedTarget) > 0 && Len(variables.undefinedEvent) > 0 && (targetName != variables.undefinedTarget || eventType != variables.undefinedEvent)) {
-					local.targetName = targetName;
-					local.eventType = eventType;
-					// if the current target exists, dispatch the event on that target, otherwise dispatch on the undefined target
-					// also do that if the undefined event was dispatched already
-					if (!StructKeyExists(variables.tasks.event, targetName) || eventType == variables.undefinedEvent) {
-						local.targetName = variables.undefinedTarget;
-					}
-					local.eventType = variables.undefinedEvent;
-
-					success = dispatchEvent(arguments.event, local.targetName, local.eventType);
-				}
-			}
-		}
-
-		return success;
+	private boolean function isEventDefined(required string targetName, required string eventType) {
+		return StructKeyExists(variables.tasks.event, arguments.targetName) && StructKeyExists(variables.tasks.event[targetName], arguments.eventType);
 	}
 
 	/**
-	 * Returns the task for the given phase and event.
+	 * Returns the task for the given phase and target.
 	 **/
-	private Task function getPhaseTask(required string phase, required string targetName) {
+	private Task function getPhaseTask(required string phase, required string targetName, string eventType) {
 
-		if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
-			variables.tasks[arguments.phase][arguments.targetName] = createPhaseTask();
+		switch (arguments.phase) {
+			case "event":
+				if (!StructKeyExists(variables.tasks.event, arguments.targetName)) {
+					variables.tasks.event[arguments.targetName] = {};
+				}
+				if (!StructKeyExists(variables.tasks.event[arguments.targetName], arguments.eventType)) {
+					variables.tasks.event[arguments.targetName][arguments.eventType] = createPhaseTask();
+				}
+				phaseTask = variables.tasks.event[arguments.targetName][arguments.eventType];
+				break;
+
+			default:
+				if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
+					variables.tasks[arguments.phase][arguments.targetName] = createPhaseTask();
+				}
+				phaseTask = variables.tasks[arguments.phase][arguments.targetName];
+				break;
 		}
 
-		return variables.tasks[arguments.phase][arguments.targetName];
+		return phaseTask;
 	}
 
 	/**
@@ -242,23 +247,14 @@ component Context accessors="true" {
 			case "end":
 			case "before":
 			case "after":
-				if (!StructKeyExists(variables.tasks[arguments.phase], arguments.targetName)) {
-					variables.tasks[arguments.phase][arguments.targetName] = createPhaseTask();
-				}
-				phaseTask = variables.tasks[arguments.phase][arguments.targetName];
+				phaseTask = getPhaseTask(arguments.phase, arguments.targetName);
 				break;
 
 			case "event":
 				if (!StructKeyExists(arguments, "eventType")) {
 					Throw(type = "cflow", message = "Event type is required when registering tasks for the event phase");
 				}
-				if (!StructKeyExists(variables.tasks.event, arguments.targetName)) {
-					variables.tasks.event[arguments.targetName] = {};
-				}
-				if (!StructKeyExists(variables.tasks.event[arguments.targetName], arguments.eventType)) {
-					variables.tasks.event[arguments.targetName][arguments.eventType] = createPhaseTask();
-				}
-				phaseTask = variables.tasks.event[arguments.targetName][arguments.eventType];
+				phaseTask = getPhaseTask(arguments.phase, arguments.targetName, arguments.eventType);
 				break;
 
 			default:

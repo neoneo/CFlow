@@ -14,24 +14,11 @@
    limitations under the License.
 */
 
-component RedirectTask extends="Task" {
+/**
+ * The OutputStrategy generates the debug output, based upon the array of debug messages.
+ **/
+interface {
 
-	public boolean function run(required Event event) {
-
-		// check if the redirect should be displayed in the debug output
-		if (variables.context.getDisplayOutput(arguments.event) == "always") {
-			// we just record the fact that normally a redirect should occur right now
-			arguments.event.record({
-				url = variables.task.obtainUrl(arguments.event)
-			}, "cflow.redirect");
-			// abort the rest of the flow
-			arguments.event.abort();
-		} else {
-			// perform the redirect
-			super.run(arguments.event);
-		}
-
-		return false;
-	}
+	public string function generate(required array messages);
 
 }

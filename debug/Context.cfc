@@ -17,19 +17,13 @@
 component Context extends="../Context" accessors="true" {
 
 	// displayOutput property: always | exception | noredirect | never | <time in milliseconds>
-	// the getter is overridden below
+	// the getter is defined below
 	property name="displayOutput" type="string" default="always" getter="false";
-	property name="remoteAddresses" type="array"; // array of addresses that receive output
+	property name="remoteAddresses" type="array"; // address whitelist that receives output
 	property name="serverName" type="string"; // only requests to this server name receive output
+	property name="outputStrategy" type="OutputStrategy";
 
-	public void function init() {
-
-		variables.outputRenderer = new OutputRenderer();
-		setViewMapping("debug"); // this is now a path relative to the framework root
-		// create a (non-debug) render task
-		variables.debugRenderTask = super.createRenderTask("output");
-
-	}
+	variables.outputStrategy = new DefaultOutputStrategy();
 
 	// TEMPLATE METHODS ===========================================================================
 
@@ -45,7 +39,7 @@ component Context extends="../Context" accessors="true" {
 		}
 
 		var display = false;
-		switch (getDisplayOutput()) {
+		switch (getDisplayOutput(arguments.event)) {
 			case "exception":
 				display = exceptionThrown;
 				break;
@@ -121,15 +115,46 @@ component Context extends="../Context" accessors="true" {
 
 	private void function renderOutput(required Event event) {
 
-		arguments.event._debugoutput = variables.outputRenderer.render(arguments.event.getMessages());
-		variables.debugRenderTask.run(arguments.event);
+		var debugoutput = variables.outputStrategy.generate(arguments.event.getMessages());
+		var response = arguments.event.getResponse();
+
+		// get all the content from the response
+		savecontent variable="local.content" {response.write();};
+
+		// append the debugoutput, depending on the type of content
+		switch (response.getType()) {
+			case "HTML":
+				if (local.content contains "</body>") {
+					response.append(Replace(local.content, "</body>", debugoutput & "</body>"));
+				} else {
+					response.append(local.content);
+					response.append(debugoutput);
+				}
+				break;
+
+			case "JSON":
+				// if the data is a struct, put the debugoutput on it
+				// otherwise ignore it
+				var data = DeserializeJSON(local.content);
+				if (IsStruct(data)) {
+					data["_debugoutput"] = ReplaceList(debugoutput, "#Chr(9)#,#Chr(10)#,#Chr(13)#", "");
+				}
+				response.append(data);
+				break;
+
+			default:
+				response.append(local.content);
+				response.append(debugoutput);
+				break;
+
+		}
 
 	}
 
 	/**
 	 * Returns the display output setting, based on the context of the current request.
 	 **/
-	public string function getDisplayOutput() {
+	public string function getDisplayOutput(required Event event) {
 
 		var displayOutput = variables.displayOutput;
 		if ((!StructKeyExists(variables, "remoteAddresses") || ArrayFind(variables.remoteAddresses, cgi.remote_addr)) > 0

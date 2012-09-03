@@ -19,7 +19,7 @@ component RedirectTask extends="Task" {
 	public boolean function run(required Event event) {
 
 		// check if the redirect should be displayed in the debug output
-		if (variables.context.getDisplayOutput(arguments.event) == "always") {
+		if (variables.context.getGenerateOutput(arguments.event) == "always") {
 			// we just record the fact that normally a redirect should occur right now
 			arguments.event.record({
 				url = variables.task.obtainUrl(arguments.event)

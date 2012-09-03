@@ -16,9 +16,9 @@
 
 component Context extends="../Context" accessors="true" {
 
-	// displayOutput property: always | exception | noredirect | never | <time in milliseconds>
+	// generateOutput property: always | exception | noredirect | never | <time in milliseconds>
 	// the getter is defined below
-	property name="displayOutput" type="string" default="always" getter="false";
+	property name="generateOutput" type="string" default="always" getter="false";
 	property name="remoteAddresses" type="array"; // address whitelist that receives output
 	property name="serverName" type="string"; // only requests to this server name receive output
 	property name="outputStrategy" type="OutputStrategy";
@@ -38,19 +38,19 @@ component Context extends="../Context" accessors="true" {
 			exceptionThrown = true;
 		}
 
-		var display = false;
-		switch (getDisplayOutput(arguments.event)) {
+		var generate = false;
+		switch (getGenerateOutput(arguments.event)) {
 			case "exception":
-				display = exceptionThrown;
+				generate = exceptionThrown;
 				break;
 
 			case "always":
 			case "noredirect":
-				display = true;
+				generate = true;
 				break;
 
 		}
-		if (display) {
+		if (generate) {
 			renderOutput(arguments.event);
 		}
 
@@ -154,27 +154,27 @@ component Context extends="../Context" accessors="true" {
 	/**
 	 * Returns the display output setting, based on the context of the current request.
 	 **/
-	public string function getDisplayOutput(required Event event) {
+	public string function getGenerateOutput(required Event event) {
 
-		var displayOutput = variables.displayOutput;
+		var generateOutput = variables.generateOutput;
 		if ((!StructKeyExists(variables, "remoteAddresses") || ArrayFind(variables.remoteAddresses, cgi.remote_addr)) > 0
 			&& (!StructKeyExists(variables, "serverName") || cgi.server_name == variables.serverName)) {
-			if (IsNumeric(displayOutput)) {
+			if (IsNumeric(generateOutput)) {
 				// the time allowed for the event to complete was set
-				if (arguments.event.getTime() >= Val(displayOutput)) {
+				if (arguments.event.getTime() >= Val(generateOutput)) {
 					// time has elapsed, always display
-					displayOutput = "always";
+					generateOutput = "always";
 				} else {
 					// time has not yet elapsed, only display if an exception occurs
-					displayOutput = "exception";
+					generateOutput = "exception";
 				}
 			}
 		} else {
 			// request originates from address not on the whitelist
-			displayOutput = "never";
+			generateOutput = "never";
 		}
 
-		return displayOutput;
+		return generateOutput;
 	}
 
 	// FACTORY METHODS ============================================================================

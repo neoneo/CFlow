@@ -23,10 +23,10 @@ component DebugContext extends="cflow.Context" accessors="true" {
 	property name="generateOutput" type="string" getter="false";
 	property name="remoteAddresses" type="array"; // address whitelist that receives output
 	property name="serverName" type="string"; // only requests to this server name receive output
-	property name="outputStrategy" type="DebugOutputStrategy";
+	property name="debugOutputStrategy" type="DebugOutputStrategy";
 
 	variables.generateOutput = "always";
-	variables.outputStrategy = new DefaultDebugOutputStrategy();
+	variables.debugOutputStrategy = new DefaultDebugOutputStrategy();
 
 	// TEMPLATE METHODS ===========================================================================
 
@@ -118,7 +118,7 @@ component DebugContext extends="cflow.Context" accessors="true" {
 
 	private void function renderOutput(required Event event) {
 
-		var debugoutput = variables.outputStrategy.generate(arguments.event.getMessages());
+		var debugoutput = variables.debugOutputStrategy.generate(arguments.event.getMessages());
 		var response = arguments.event.getResponse();
 
 		// get all the content from the response

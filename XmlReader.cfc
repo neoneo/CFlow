@@ -522,8 +522,8 @@ component XmlReader {
 
 				case "redirect":
 					local.url = StructKeyExists(arguments.task, "url") ? arguments.task.url : "";
-					var target = StructKeyExists(arguments.task, "target") ? arguments.task.target : ""
-					var event = StructKeyExists(arguments.task, "event") ? arguments.task.event : ""
+					var target = StructKeyExists(arguments.task, "target") ? arguments.task.target : "";
+					var event = StructKeyExists(arguments.task, "event") ? arguments.task.event : "";
 					var parameters = StructCopy(arguments.task);
 					var permanent = StructKeyExists(arguments.task, "permanent") && arguments.task.permanent;
 					// delete the formal attributes so the additional attributes are left

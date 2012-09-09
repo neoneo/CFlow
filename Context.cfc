@@ -172,7 +172,7 @@ component Context accessors="true" {
 	}
 
 	/**
-	 * Returns the task for the given phase and target.
+	 * Returns the task for the given phase, target and (if applicable) event.
 	 **/
 	private Task function getPhaseTask(required string phase, required string targetName, string eventType) {
 
@@ -280,8 +280,8 @@ component Context accessors="true" {
 		return new RenderTask(arguments.view, getViewMapping(), getRequestStrategy());
 	}
 
-	public RedirectTask function createRedirectTask(string url = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
-		return new RedirectTask(arguments.url, arguments.target, arguments.event, arguments.parameters, arguments.permanent, getRequestStrategy());
+	public RedirectTask function createRedirectTask(string location = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
+		return new RedirectTask(arguments.location, arguments.target, arguments.event, arguments.parameters, arguments.permanent, getRequestStrategy());
 	}
 
 	public ThreadTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {

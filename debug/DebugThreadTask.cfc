@@ -14,7 +14,9 @@
    limitations under the License.
 */
 
-component ThreadTask extends="Task" {
+import cflow.Event;
+
+component ThreadTask extends="DebugTask" {
 
 	private void function recordEnd(required Event event, required struct metadata) {
 

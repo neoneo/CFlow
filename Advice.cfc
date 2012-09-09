@@ -20,6 +20,9 @@ component Advice implements="Task" {
 		variables.task = arguments.task;
 	}
 
+	/**
+	 * Override this method to implement the advice and call super.
+	 **/
 	public boolean function run(required Event event) {
 		return variables.task.run(arguments.event);
 	}

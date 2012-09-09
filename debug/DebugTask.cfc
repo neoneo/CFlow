@@ -14,10 +14,14 @@
    limitations under the License.
 */
 
+import cflow.Context;
+import cflow.Task;
+import cflow.Event;
+
 /**
  * Task is a decorator that is used when in debug mode.
  **/
-component Task implements="../Task" {
+component DebugTask implements="cflow.Task" {
 
 	public void function init(required Task task, required struct metadata, required Context context) {
 
@@ -42,7 +46,7 @@ component Task implements="../Task" {
 		} catch (any exception) {
 			// the exception may have been rethrown by a subtask, in which case the event is aborted already
 			if (!arguments.event.isAborted()) {
-				arguments.event.record({exception: exception}, "cflow.exception");
+				arguments.event.record({exception = exception}, "cflow.exception");
 				arguments.event.getResponse().clear();
 				arguments.event.abort();
 			}

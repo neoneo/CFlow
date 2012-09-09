@@ -14,7 +14,7 @@
    limitations under the License.
 --->
 
-<cfcomponent displayname="DefaultOutputStrategy" implements="OutputStrategy" output="false">
+<cfcomponent displayname="DefaultOutputStrategy" implements="DebugOutputStrategy" output="false">
 
 	<cffunction name="render" access="public" output="false" returntype="string">
 		<cfargument name="messages" type="array" required="true">
@@ -183,12 +183,12 @@
 							<cfset var tagContext = exception.tagContext>
 							<cfset var i = 0>
 							<p><strong>#tagContext[1].template#: line #tagContext[1].line#</strong></p>
-							<code>#tagContext[1].codePrintHTML#</code>
+							<code>#getCodeSnippet(tagContext[1])#</code>
 							<ol>
 								<cfloop from="2" to="#ArrayLen(tagContext)#" index="i">
 								<li>
 									<p>#tagContext[i].template#: line #tagContext[i].line#</p>
-									<code class="hidden">#tagContext[i].codePrintHTML#</code>
+									<code class="hidden">#getCodeSnippet(tagContext[i])#</code>
 								</li>
 								</cfloop>
 							</ol>
@@ -390,5 +390,37 @@
 
 		<cfreturn debugoutput>
 	</cffunction>
+
+	<cfscript>
+	/**
+	 * Returns the code snippet of the tag context in the exception.
+	 **/
+	private string function getCodeSnippet(required struct tagContext) {
+
+		var result = "";
+
+		var file = FileOpen(arguments.tagContext.template, "read");
+		var lineNumber = arguments.tagContext.line;
+
+		var startLine = Max(arguments.tagContext.line - 2, 0);
+		var endLine = arguments.tagContext.line + 2;
+
+		for (var i = 1; i < startLine; i++) {
+			FileReadLine(file);
+		}
+
+		for (var i = startLine; i <= endLine; i++) {
+			var line = i & ": " & FileReadLine(file);
+			if (i == lineNumber) {
+				line = "<strong>" & line & "</strong>";
+			}
+			result &= line & "<br>";
+		}
+
+		FileClose(file);
+
+		return result;
+	}
+	</cfscript>
 
 </cfcomponent>

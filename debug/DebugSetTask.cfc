@@ -14,7 +14,9 @@
    limitations under the License.
 */
 
-component SetTask extends="Task" {
+import cflow.Event;
+
+component SetTask extends="DebugTask" {
 
 	private void function recordStart(required Event event, required struct metadata) {
 
@@ -27,11 +29,7 @@ component SetTask extends="Task" {
 	private void function recordEnd(required Event event, required struct metadata) {
 
 		// now we can get the value from the event
-		// if the task has caused an exception, the value will not have been set
-		// in that case the event is aborted (if the event was aborted before the task was run, we wouldn't arrive here)
-		if (!arguments.event.isAborted()) {
-			arguments.metadata.value = arguments.event[arguments.metadata.name];
-		}
+		arguments.metadata.value = arguments.event[arguments.metadata.name];
 		super.recordEnd(arguments.event, arguments.metadata);
 
 	}

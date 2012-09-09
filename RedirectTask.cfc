@@ -16,11 +16,11 @@
 
 component RedirectTask implements="Task" {
 
-	public void function init(string url = "", string target = "", required string event = "", struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
+	public void function init(string location = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
 
-		if (Len(arguments.url) > 0) {
+		if (Len(arguments.location) > 0) {
 			variables.isEventRedirect = false;
-			variables.url =  new Parameter(arguments.url);
+			variables.location =  new Parameter(arguments.location);
 		} else {
 			variables.isEventRedirect = true;
 			// the request strategy should be present, target and event keys are optional in parameters
@@ -66,7 +66,7 @@ component RedirectTask implements="Task" {
 		}
 
 		if (variables.isEventRedirect) {
-			local.url = variables.requestStrategy.writeUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
+			local.url = variables.requestStrategy.createUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
 		} else {
 			local.url = variables.url.getValue(arguments.event);
 			// only append if there are parameters

@@ -16,8 +16,8 @@
 
 <cfcomponent displayname="Response" accessors="true" output="false">
 
-	<cfproperty name="type" type="string" default="HTML">
-	<cfproperty name="contentKey" type="string" default="">
+	<cfproperty name="type" type="string">
+	<cfproperty name="contentKey" type="string">
 
 	<cfscript>
 
@@ -31,6 +31,9 @@
 		variables.contents = [];
 		variables.keys = [];
 		variables.headers = [];
+
+		setType("HTML");
+		setContentKey("");
 
 	}
 
@@ -72,7 +75,7 @@
 			}
 		}
 
-		switch (getType()) {
+		switch (variables.type) {
 			case "html":
 			case "text":
 				for (var content in writeContents) {

@@ -14,16 +14,19 @@
    limitations under the License.
 */
 
-component Context extends="../Context" accessors="true" {
+import cflow.Event;
+
+component DebugContext extends="cflow.Context" accessors="true" {
 
 	// generateOutput property: always | exception | noredirect | never | <time in milliseconds>
 	// the getter is defined below
-	property name="generateOutput" type="string" default="always" getter="false";
+	property name="generateOutput" type="string" getter="false";
 	property name="remoteAddresses" type="array"; // address whitelist that receives output
 	property name="serverName" type="string"; // only requests to this server name receive output
-	property name="outputStrategy" type="OutputStrategy";
+	property name="outputStrategy" type="DebugOutputStrategy";
 
-	variables.outputStrategy = new DefaultOutputStrategy();
+	variables.generateOutput = "always";
+	variables.outputStrategy = new DefaultDebugOutputStrategy();
 
 	// TEMPLATE METHODS ===========================================================================
 
@@ -179,78 +182,78 @@ component Context extends="../Context" accessors="true" {
 
 	// FACTORY METHODS ============================================================================
 
-	public Task function createInvokeTask(required string controllerName, required string handlerName) {
+	public DebugTask function createInvokeTask(required string controllerName, required string handlerName) {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);
 
-		return new Task(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
-	public Task function createDispatchTask(required string targetName, required string eventType) {
+	public DebugTask function createDispatchTask(required string targetName, required string eventType) {
 
 		var task = super.createDispatchTask(argumentCollection = arguments);
 
-		return new DispatchTask(task, arguments, this);
+		return new DebugDispatchTask(task, arguments, this);
 	}
 
-	public Task function createRenderTask(required string view) {
+	public DebugTask function createRenderTask(required string view) {
 
 		var task = super.createRenderTask(argumentCollection = arguments);
 
-		return new Task(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
-	public Task function createRedirectTask(string url = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
+	public DebugTask function createRedirectTask(string location = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {
 
-		var task = super.createRedirectTask(argumentCollection = arguments);
+		var task = super.createRedirectTask(arguments.location, arguments.target, arguments.event, arguments.parameters, arguments.permanent);
 
-		return new RedirectTask(task, arguments, this);
+		return new DebugRedirectTask(task, arguments, this);
 	}
 
-	public Task function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
+	public DebugTask function createThreadTask(string action = "run", string name = "", string priority = "normal", numeric timeout = 0, numeric duration = 0) {
 
 		var task = super.createThreadTask(argumentCollection = arguments);
 
-		return new ThreadTask(task, arguments, this);
+		return new DebugThreadTask(task, arguments, this);
 	}
 
-	public Task function createIfTask(required string condition) {
+	public DebugTask function createIfTask(required string condition) {
 
 		var task = super.createIfTask(argumentCollection = arguments);
 
-		return new Task(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
-	public Task function createElseTask(string condition = "") {
+	public DebugTask function createElseTask(string condition = "") {
 
 		var task = super.createElseTask(argumentCollection = arguments);
 
-		return new Task(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
-	public Task function createSetTask(required string name, required string expression, boolean overwrite = true) {
+	public DebugTask function createSetTask(required string name, required string expression, boolean overwrite = true) {
 
 		var task = super.createSetTask(argumentCollection = arguments);
 
-		return new SetTask(task, arguments, this);
+		return new DebugSetTask(task, arguments, this);
 	}
 
-	public Task function createAbortTask() {
+	public DebugTask function createAbortTask() {
 
 		var task = super.createAbortTask(argumentCollection = arguments);
 
-		return new Task(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
-	public Task function createCancelTask() {
+	public DebugTask function createCancelTask() {
 
 		var task = super.createCancelTask(argumentCollection = arguments);
 
-		return new Task(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
-	public Event function createEvent(required string target, required string type, struct properties = {}) {
-		return new Event(this, createResponse(), arguments.target, arguments.type, arguments.properties);
+	public DebugEvent function createEvent(required string target, required string type, struct properties = {}) {
+		return new DebugEvent(this, createResponse(), arguments.target, arguments.type, arguments.properties);
 	}
 
 }

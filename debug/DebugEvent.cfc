@@ -14,15 +14,22 @@
    limitations under the License.
 */
 
-component Event extends="../Event" {
+component DebugEvent extends="cflow.Event" {
 
 	// create an array for recording debugging messages
-	variables.messages = [];
-	variables.children = [variables.messages]; // an array of arrays that contain messages; the last one is the one that is written to
+	variables.messages = CreateObject("java", "java.util.ArrayList").init();
+	// the fact that events can dispatch events, and tasks can contain tasks, means that this is a recursive thing
+	// we need to know when a branch in the tree ends
+	// therefore, for every branch in the tree we need a messages array
+	// so create an array that will contain the message arrays of the currently active branches
+	// the last item (an array) in that array will be the currently running branch, so we write messages to that array
+	variables.branches = CreateObject("java", "java.util.ArrayList").init();
+	// start writing to the messages array
+	ArrayAppend(variables.branches, variables.messages);
 	variables.tickCount = GetTickCount();
 	variables.startTime = variables.tickCount;
 
-	// some messages imply the abort message that will follow them:
+	// some messages imply the abort message that will follow:
 	variables.impliedAbortMessages = ["cflow.exception", "cflow.redirect"];
 
 	public void function cancel() {
@@ -74,7 +81,7 @@ component Event extends="../Event" {
 			if (StructKeyExists(local, "metadata")) {
 				transport.metadata = local.metadata;
 			}
-			ArrayAppend(getChildren(), transport);
+			ArrayAppend(getBranch(), transport);
 		}
 
 	}
@@ -85,30 +92,34 @@ component Event extends="../Event" {
 
 	package void function recordStart(required any metadata, string message = "") {
 
+		// a new branch starts
 		// record the message first
 		record(arguments.metadata, arguments.message);
-		// create a child messages array
-		var children = [];
+		// create a messages array
+		var messages = CreateObject("java", "java.util.ArrayList").init();
 		// put it on the last recorded message
+		// this is the message that spawns the new branch
 		var lastMessage = getLastMessage();
-		lastMessage.children = children;
+		lastMessage.children = messages;
 		// keep the tick count for later
 		lastMessage.tickCount = GetTickCount();
-		// push it on the array of children arrays
-		ArrayAppend(variables.children, children);
+		// push it on the branches array
+		// this makes this branch the active one
+		ArrayAppend(variables.branches, messages);
 
 	}
 
 	package void function recordEnd() {
 
-		// remove the last children array
-		ArrayDeleteAt(variables.children, ArrayLen(variables.children));
-		// the last message is now the message that is ended here
-		var lastMessage = getLastMessage();
+		// remove the last messages array
+		ArrayDeleteAt(variables.branches, ArrayLen(variables.branches));
 
+		// the last message is now the branch that has ended here
+		var lastMessage = getLastMessage();
+		// update it it with some statistics
 		var tickCount = GetTickCount();
 		lastMessage.duration = tickCount - lastMessage.tickCount; // time between start and end calls
-		lastMessage.time = tickCount - variables.startTime // total time elapsed since object instantiation
+		lastMessage.time = tickCount - variables.startTime; // total time elapsed since object instantiation
 		StructDelete(lastMessage, "tickCount");
 
 	}
@@ -119,7 +130,7 @@ component Event extends="../Event" {
 	package void function recordEndAll() {
 
 		// call recordEnd() n - 1 times (note the strictly smaller comparison operator)
-		var count = ArrayLen(variables.children);
+		var count = ArrayLen(variables.branches);
 		for (var i = 1; i < count; i++) {
 			recordEnd();
 		}
@@ -133,18 +144,18 @@ component Event extends="../Event" {
 	/**
 	 * Returns the array in which to record messages.
 	 **/
-	private array function getChildren() {
-		return variables.children[ArrayLen(variables.children)];
+	public array function getBranch() {
+		return variables.branches[ArrayLen(variables.branches)];
 	}
 
 	/**
-	 * Returns the last message of the children array.
+	 * Returns the last message of the branches array.
 	 **/
 	private struct function getLastMessage() {
 
-		var children = getChildren();
+		var branches = getBranch();
 
-		return !ArrayIsEmpty(children) ? children[ArrayLen(children)] : {message = ""};
+		return !ArrayIsEmpty(branches) ? branches[ArrayLen(branches)] : {message = ""};
 	}
 
 	// PACKAGE OVERRIDES
@@ -154,7 +165,7 @@ component Event extends="../Event" {
 		super.setRejoin(arguments.value);
 	}
 
-	public Response function getResponse() {
+	public cflow.Response function getResponse() {
 		return super.getResponse();
 	}
 

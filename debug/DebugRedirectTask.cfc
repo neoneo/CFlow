@@ -24,7 +24,7 @@ component RedirectTask extends="DebugTask" {
 		if (variables.context.getGenerateOutput(arguments.event) == "always") {
 			// we just record the fact that normally a redirect should occur right now
 			arguments.event.record({
-				url = variables.task.obtainUrl(arguments.event)
+				location = variables.task.obtainUrl(arguments.event)
 			}, "cflow.redirect");
 			// abort the rest of the flow
 			arguments.event.abort();

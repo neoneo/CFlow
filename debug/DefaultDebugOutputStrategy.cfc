@@ -85,7 +85,7 @@
 							<cfset eventTasks = true>
 						</cfcase>
 						<cfcase value="cflow.eventcanceled">Event #arguments.data.target#.#arguments.data.event# canceled</cfcase>
-						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.url#">#metadata.url#</a></cfcase>
+						<cfcase value="cflow.redirect">Redirect to <a href="#metadata.location#">#metadata.location#</a></cfcase>
 						<cfcase value="cflow.aborted">Aborted</cfcase>
 						<cfcase value="cflow.dispatch">Dispatch #metadata.targetName#.#metadata.eventType#</cfcase><!--- programmatic event dispatch --->
 						<cfcase value="cflow.task">
@@ -409,8 +409,8 @@
 			FileReadLine(file);
 		}
 
-		for (var i = startLine; i <= endLine; i++) {
-			var line = i & ": " & FileReadLine(file);
+		for (var i = startLine; i <= endLine && !FileIsEOF(file); i++) {
+			var line = i & ": " & HTMLEditFormat(FileReadLine(file));
 			if (i == lineNumber) {
 				line = "<strong>" & line & "</strong>";
 			}

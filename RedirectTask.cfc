@@ -57,7 +57,7 @@ component RedirectTask implements="Task" {
 
 	public string function obtainUrl(required Event event) {
 
-		local.url = "";
+		local.location = "";
 		var parameters = {};
 		// get the values for the parameters to append on the url
 		for (var name in variables.parameters) {
@@ -66,23 +66,23 @@ component RedirectTask implements="Task" {
 		}
 
 		if (variables.isEventRedirect) {
-			local.url = variables.requestStrategy.createUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
+			local.location = variables.requestStrategy.createUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
 		} else {
-			local.url = variables.url.getValue(arguments.event);
+			local.location = variables.location.getValue(arguments.event);
 			// only append if there are parameters
 			if (!StructIsEmpty(parameters)) {
-				if (local.url does not contain "?") {
-					local.url &= "?";
+				if (local.location does not contain "?") {
+					local.location &= "?";
 				}
 				var queryString = "";
 				for (var name in parameters) {
 					queryString = ListAppend(queryString, name & "=" & UrlEncodedFormat(parameters[name]), "&");
 				}
-				local.url &= queryString;
+				local.location &= queryString;
 			}
 		}
 
-		return local.url;
+		return local.location;
 	}
 
 }

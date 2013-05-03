@@ -20,12 +20,12 @@ component DebugContext extends="cflow.Context" accessors="true" {
 
 	// generateOutput property: always | exception | noredirect | never | <time in milliseconds>
 	// the getter is defined below
-	property name="generateOutput" type="string" getter="false";
+	property name="generateOutput" type="string" default="always";
 	property name="remoteAddresses" type="array"; // address whitelist that receives output
 	property name="serverName" type="string"; // only requests to this server name receive output
+	property name="cacheControllers" type="boolean" default="true"; // whether to cache the controllers for invoke tasks
 	property name="debugOutputStrategy" type="DebugOutputStrategy";
 
-	variables.generateOutput = "always";
 	variables.debugOutputStrategy = new DefaultDebugOutputStrategy();
 
 	// TEMPLATE METHODS ===========================================================================
@@ -178,6 +178,10 @@ component DebugContext extends="cflow.Context" accessors="true" {
 		}
 
 		return generateOutput;
+	}
+
+	private component function getController(required string name) {
+		return getCacheControllers() ? super.getController(arguments.name) : createController(arguments.name);
 	}
 
 	// FACTORY METHODS ============================================================================

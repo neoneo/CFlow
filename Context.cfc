@@ -204,15 +204,20 @@ component Context accessors="true" {
 	private component function getController(required string name) {
 
 		if (!StructKeyExists(variables.controllers, arguments.name)) {
-			var controllerName = getComponentName(arguments.name, getControllerMapping());
-			if (!componentExists(controllerName)) {
-				Throw(type = "cflow", message = "Controller #controllerName# does not exist");
-			}
-
-			variables.controllers[arguments.name] = new "#controllerName#"();
+			variables.controllers[arguments.name] = createController(arguments.name);
 		}
 
 		return variables.controllers[arguments.name];
+	}
+
+	private component function createController(required string name) {
+
+		var controllerName = getComponentName(arguments.name, getControllerMapping());
+		if (!componentExists(controllerName)) {
+			Throw(type = "cflow", message = "Controller #controllerName# does not exist");
+		}
+
+		return new "#controllerName#"();
 	}
 
 	/**

@@ -181,17 +181,19 @@
 
 							<!--- stack trace --->
 							<cfset var tagContext = exception.tagContext>
-							<cfset var i = 0>
-							<p><strong>#tagContext[1].template#: line #tagContext[1].line#</strong></p>
-							<code>#getCodeSnippet(tagContext[1])#</code>
-							<ol>
-								<cfloop from="2" to="#ArrayLen(tagContext)#" index="i">
-								<li>
-									<p>#tagContext[i].template#: line #tagContext[i].line#</p>
-									<code class="hidden">#getCodeSnippet(tagContext[i])#</code>
-								</li>
-								</cfloop>
-							</ol>
+							<cfif not ArrayIsEmpty(tagContext)>
+								<cfset var i = 0>
+								<p><strong>#tagContext[1].template#: line #tagContext[1].line#</strong></p>
+								<code>#getCodeSnippet(tagContext[1])#</code>
+								<ol>
+									<cfloop from="2" to="#ArrayLen(tagContext)#" index="i">
+									<li>
+										<p>#tagContext[i].template#: line #tagContext[i].line#</p>
+										<code class="hidden">#getCodeSnippet(tagContext[i])#</code>
+									</li>
+									</cfloop>
+								</ol>
+							</cfif>
 						</cfif>
 						<cfif dumpMetadata>
 							<cfdump var="#metadata#">

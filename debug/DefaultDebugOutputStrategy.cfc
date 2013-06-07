@@ -194,6 +194,10 @@
 									</cfloop>
 								</ol>
 							</cfif>
+							<div class="stacktrace">
+								<strong>Java stack trace</strong>
+								<pre class="hidden">#exception.stacktrace#</pre>
+							</div>
 						</cfif>
 						<cfif dumpMetadata>
 							<cfdump var="#metadata#">
@@ -238,6 +242,8 @@
 				}
 
 				#cflow ol > li {
+					font-family: Verdana, sans-serif;
+					font-size: 9pt;
 					padding: 0px;
 					border: 2px dashed transparent;
 				}
@@ -348,6 +354,15 @@
 					display: block;
 				}
 
+				#cflow .exception .stacktrace {
+					margin-top: 12px;
+					cursor: pointer;
+				}
+
+				#cflow .exception .stacktrace > pre {
+					font-family: inherit;
+				}
+
 				#cflow .hidden {
 					display: none !important;
 				}
@@ -383,7 +398,7 @@
 						node.addEventListener("mouseout", mouseout);
 					});
 
-					Array.prototype.forEach.call(document.querySelectorAll("#cflow li"), function (node) {
+					Array.prototype.forEach.call(document.querySelectorAll("#cflow li, #cflow li.exception .stacktrace"), function (node) {
 						node.addEventListener("click", click);
 					});
 				})();

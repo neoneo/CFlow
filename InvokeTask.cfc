@@ -23,7 +23,7 @@ component InvokeTask extends="ComplexTask" {
 
 	public boolean function run(required Event event) {
 
-		Invoke(variables.controller, variables.handlerName, [arguments.event]);
+		Invoke(variables.controller, variables.handlerName, {1 = arguments.event});
 
 		var canceled = arguments.event.isCanceled();
 		var aborted = arguments.event.isAborted();

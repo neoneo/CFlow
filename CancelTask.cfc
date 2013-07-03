@@ -20,7 +20,7 @@ component CancelTask implements="Task" {
 
 		arguments.event.cancel();
 
-		return true;
+		return false;
 	}
 
 	public string function getType() {

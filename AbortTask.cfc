@@ -20,7 +20,7 @@ component AbortTask implements="Task" {
 
 		arguments.event.abort();
 
-		return true;
+		return false;
 	}
 
 	public string function getType() {

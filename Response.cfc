@@ -26,6 +26,7 @@
 		variables.contentTypes = {
 			html = "text/html",
 			json = "application/json",
+			xml = "application/xml",
 			text = "text/plain"
 		};
 		variables.contents = [];
@@ -82,6 +83,23 @@
 					if (IsSimpleValue(content)) {
 						result &= content;
 					}
+				}
+				break;
+
+			case "xml":
+				var i = 0;
+				for (var content in writeContents) {
+					if (IsSimpleValue(content)) {
+						i += 1;
+						if (!IsXML(content)) {
+							content = "<![CDATA[" & content & "]]>";
+						}
+						// TODO: handle the case if one of the parts already has a header <?xml?>
+						result &= content;
+					}
+				}
+				if (i != 1) {
+					result = "<response>" & result & "</response>";
 				}
 				break;
 

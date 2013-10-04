@@ -20,7 +20,7 @@ component DebugContext extends="cflow.Context" accessors="true" {
 
 	// generateOutput property: always | exception | noredirect | never | <time in milliseconds>
 	// the getter is defined below
-	property name="generateOutput" type="string" default="always";
+	property name="generateOutput" type="string" default="always" getter="false";
 	property name="remoteAddresses" type="array"; // address whitelist that receives output
 	property name="serverName" type="string"; // only requests to this server name receive output
 	property name="cacheControllers" type="boolean" default="true"; // whether to cache the controllers for invoke tasks
@@ -39,6 +39,7 @@ component DebugContext extends="cflow.Context" accessors="true" {
 			// end all open recordStart() calls, so that the hierarchy is closed
 			arguments.event.recordEndAll();
 			exceptionThrown = true;
+			header statuscode="500" statustext="#exception.message#";
 		}
 
 		var generate = false;
@@ -200,7 +201,7 @@ component DebugContext extends="cflow.Context" accessors="true" {
 		return new DebugDispatchTask(task, arguments, this);
 	}
 
-	public DebugTask function createRenderTask(required string view) {
+	public DebugTask function createRenderTask(required string view, string key = "") {
 
 		var task = super.createRenderTask(argumentCollection = arguments);
 

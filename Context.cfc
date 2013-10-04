@@ -281,8 +281,8 @@ component Context accessors="true" {
 		return new DispatchTask(this, arguments.targetName, arguments.eventType);
 	}
 
-	public RenderTask function createRenderTask(required string view) {
-		return new RenderTask(arguments.view, getViewMapping(), getRequestStrategy());
+	public RenderTask function createRenderTask(required string view, string key = "") {
+		return new RenderTask(arguments.view, getViewMapping(), arguments.key, getRequestStrategy());
 	}
 
 	public RedirectTask function createRedirectTask(string location = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false) {

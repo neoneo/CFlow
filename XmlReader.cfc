@@ -517,7 +517,7 @@ component XmlReader {
 					break;
 
 				case "render":
-					instance = variables.context.createRenderTask(arguments.task.view);
+					instance = variables.context.createRenderTask(arguments.task.view, StructKeyExists(arguments.task, "key") ? arguments.task.key : "");
 					break;
 
 				case "redirect":

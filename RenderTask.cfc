@@ -17,15 +17,15 @@
 <cfcomponent displayname="RenderTask" implements="Task" output="false">
 
 	<cfscript>
-	public void function init(required string view, string mapping = "", RequestStrategy requestStrategy) {
+	public void function init(required string view, string mapping = "", string key = "", RequestStrategy requestStrategy) {
 
 		variables.view = arguments.view;
 		if (Len(arguments.mapping) > 0) {
 			// prepend the given mapping
 			variables.view = arguments.mapping & "/" & variables.view;
 		}
-		// use the view without the mapping for the response key
-		variables.key = arguments.view;
+		// if no key is provided, use the view without the mapping
+		variables.key = Len(arguments.key) > 0 ? arguments.key : arguments.view;
 
 		variables.requestStrategy = arguments.requestStrategy;
 

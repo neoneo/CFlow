@@ -116,7 +116,7 @@ component DebugEvent extends="cflow.Event" {
 
 		// the last message is now the branch that has ended here
 		var lastMessage = getLastMessage();
-		// update it it with some statistics
+		// update it with some statistics
 		var tickCount = GetTickCount();
 		lastMessage.duration = tickCount - lastMessage.tickCount; // time between start and end calls
 		lastMessage.time = tickCount - variables.startTime; // total time elapsed since object instantiation

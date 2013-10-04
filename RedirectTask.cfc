@@ -71,9 +71,7 @@ component RedirectTask implements="Task" {
 			local.location = variables.location.getValue(arguments.event);
 			// only append if there are parameters
 			if (!StructIsEmpty(parameters)) {
-				if (local.location does not contain "?") {
-					local.location &= "?";
-				}
+				local.location &= (local.location contains "?" ? "&" : "?");
 				var queryString = "";
 				for (var name in parameters) {
 					queryString = ListAppend(queryString, name & "=" & UrlEncodedFormat(parameters[name]), "&");

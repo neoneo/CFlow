@@ -236,7 +236,6 @@
 				}
 
 				#cflow ol {
-					list-style-type: none;
 					margin: 0;
 					padding: 0 12px;
 				}
@@ -246,6 +245,7 @@
 					font-size: 9pt;
 					padding: 0px;
 					border: 2px dashed transparent;
+					list-style-type: none;
 				}
 
 				#cflow ol > li.hover {

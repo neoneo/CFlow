@@ -18,6 +18,8 @@ component Event accessors="true" {
 
 	property name="target" type="string" setter="false" default="";
 	property name="type" type="string" setter="false" default="";
+	property name="originalTarget" type="string" setter="false" default="";
+	property name="originalType" type="string" setter="false" default="";
 
 	variables.canceled = false;
 	variables.aborted = false;
@@ -29,6 +31,9 @@ component Event accessors="true" {
 		variables.response = arguments.response;
 		variables.target = arguments.target;
 		variables.type = arguments.type;
+
+		variables.originalTarget = arguments.target;
+		variables.originalType = arguments.type;
 
 		setProperties(arguments.properties);
 

@@ -138,7 +138,7 @@ component Context accessors="true" {
 		// the end tasks are always run, unless the event is aborted
 		if (!arguments.event.isAborted()) {
 			if (!success) {
-				// for the remainder, we need an event object with its canceled flag revert
+				// for the remainder, we need an event object with its canceled flag reverted
 				arguments.event.revert();
 			}
 
@@ -167,7 +167,7 @@ component Context accessors="true" {
 		return getPhaseTask("event", arguments.event.getTarget(), arguments.event.getType()).run(arguments.event);
 	}
 
-	private boolean function isEventDefined(required string targetName, required string eventType) {
+	public boolean function isEventDefined(required string targetName, required string eventType) {
 		return StructKeyExists(variables.tasks.event, arguments.targetName) && StructKeyExists(variables.tasks.event[targetName], arguments.eventType);
 	}
 
@@ -225,14 +225,15 @@ component Context accessors="true" {
 	 **/
 	private boolean function componentExists(required string fullName) {
 
-		var componentPath = ExpandPath("/" & Replace(arguments.fullName, ".", "/", "all") & ".cfc");
+		var componentPath = ExpandPath("/" & ListChangeDelims(arguments.fullName, "/", ".") & ".cfc");
 
 		return FileExists(componentPath);
 	}
 
 	private string function getComponentName(required string name, string mapping = "") {
 
-		var componentName = arguments.name;
+		// let arguments.name accept slashes as well as dots for delimiters
+		var componentName = ListChangeDelims(arguments.name, ".", "/");
 		if (Len(arguments.mapping) > 0) {
 			componentName = arguments.mapping & "." & componentName;
 		}

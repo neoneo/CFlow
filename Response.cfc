@@ -54,6 +54,18 @@
 
 	}
 
+	public void function status(required numeric code, string text) {
+
+		var header = {
+			statuscode = arguments.code,
+		}
+		if (StructKeyExists(arguments, "text")) {
+			header.text = arguments.text;
+		}
+		ArrayAppend(variables.headers, header);
+
+	}
+
 	/**
 	 * Writes content to the output.
 	 * The key argument can be a regular expression. All matched keys will be written to the output. If an empty string is passed in, all keys will be written (default).
@@ -172,7 +184,7 @@
 
 		<cfcontent type="#variables.contentTypes[getType()]#">
 		<cfloop array="#variables.headers#" index="header">
-			<cfheader name="#header.name#" value="#header.value#">
+			<cfheader attributecollection="#header#">
 		</cfloop>
 
 	</cffunction>

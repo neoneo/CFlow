@@ -29,10 +29,10 @@ component XmlReader {
 	public struct function read(required string path) {
 
 		var absolutePath = ExpandPath(arguments.path);
-		var list = DirectoryList(absolutePath, true, "name", "*.xml");
+		var list = DirectoryList(absolutePath, true, "path", "*.xml");
 
-		for (var name in list) {
-			readFile(absolutePath & "/" & name);
+		for (var path in list) {
+			readFile(path);
 		}
 
 		return variables.tasks;
@@ -103,6 +103,9 @@ component XmlReader {
 		return variables.tasks;
 	}
 
+	/**
+	 * Reads an xml file containing one or more targets.
+	 **/
 	private void function readFile(required string path) {
 
 		var content = FileRead(arguments.path);

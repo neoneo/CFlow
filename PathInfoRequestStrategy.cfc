@@ -55,6 +55,22 @@ component PathInfoRequestStrategy implements="RequestStrategy" accessors="true" 
 				// REST request
 				parameters.target = pathInfo;
 				parameters.event = LCase(cgi.request_method);
+				// pick up the request body
+				var headers = GetHTTPRequestData();
+				var content = headers.content;
+				parameters.content = content;
+				switch (cgi.http_accept) {
+					case "application/json":
+						if (IsJSON(content)) {
+							parameters.content = DeserializeJSON(content);
+						}
+						break;
+					case "application/xml":
+						if (IsXML(content)) {
+							parameters.content = ParseXML(content);
+						}
+						break;
+				}
 			} else {
 				var partCount = ListLen(pathInfo, "/");
 				if (partCount > 1) {

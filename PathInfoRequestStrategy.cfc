@@ -17,6 +17,7 @@
 component PathInfoRequestStrategy implements="RequestStrategy" accessors="true" {
 
 	property name="restPaths" type="array";
+	property name="idPattern" type="string" default="[0-9]+";
 
 	setRestPaths([]);
 
@@ -47,13 +48,28 @@ component PathInfoRequestStrategy implements="RequestStrategy" accessors="true" 
 		StructAppend(parameters, form, false);
 
 		if (Len(cgi.path_info) > 1) {
-			var pathInfo = RemoveChars(cgi.path_info, 1, 1); // remove the leading slash
-
 			if (ArrayFind(getRestPaths(), function (path) {
 				return Left(cgi.path_info, Len(arguments.path)) == arguments.path;
 			}) > 0) {
 				// REST request
-				parameters.target = pathInfo;
+				// split the path into parts and check if one or more parts are id's
+				// the remaining parts together form the target
+				// the following only works for paths of the form /author/1/book/2 (alternating name and id)
+				// this will result in target 'author/book' and parameters author=1, book=2
+				var parts = ListToArray(cgi.path_info, "/");
+				var target = "";
+				var pattern = getIdPattern();
+				var name = "id"; // a default name for an id parameter if the path starts with one
+				for (var part in parts) {
+					if (IsValid("regex", part, pattern)) {
+						parameters[name] = part;
+						name &= part; // append the part (the id) to the name in case the next part is also an id
+					} else {
+						target = ListAppend(target, part, "/");
+						name = part; // if an id follows, its parameter will get this name
+					}
+				}
+				parameters.target = target;
 				parameters.event = LCase(cgi.request_method);
 				// pick up the request body
 				var headers = GetHTTPRequestData();
@@ -72,15 +88,16 @@ component PathInfoRequestStrategy implements="RequestStrategy" accessors="true" 
 						break;
 				}
 			} else {
-				var partCount = ListLen(pathInfo, "/");
+				var partCount = ListLen(cgi.path_info, "/");
 				if (partCount > 1) {
 					// the event is the last part, the first parts are the target
-					parameters.target = ListDeleteAt(pathInfo, partCount, "/");
-					parameters.event = ListLast(pathInfo, "/");
+					parameters.target = ListDeleteAt(cgi.path_info, partCount, "/");
+					parameters.event = ListLast(cgi.path_info, "/");
 				} else {
-					parameters.target = pathInfo;
+					parameters.target = cgi.path_info;
 					// event will revert to default
 				}
+				parameters.target = RemoveChars(parameters.target, 1, 1); // remove leading slash
 			}
 		}
 

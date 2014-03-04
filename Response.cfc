@@ -124,7 +124,9 @@
 						ArrayAppend(serializeContents, content);
 					}
 				}
-				result = ArrayLen(serializeContents) == 1 ? SerializeJSON(serializeContents[1]) : SerializeJSON(serializeContents);
+				if (!ArrayIsEmpty(serializeContents)) {
+					result = ArrayLen(serializeContents) == 1 ? SerializeJSON(serializeContents[1]) : SerializeJSON(serializeContents);
+				}
 				break;
 		}
 

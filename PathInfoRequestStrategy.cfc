@@ -61,6 +61,7 @@ component PathInfoRequestStrategy implements="RequestStrategy" accessors="true" 
 				var pattern = getIdPattern();
 				var name = "id"; // a default name for an id parameter if the path starts with one
 				for (var part in parts) {
+					part = UrlDecode(part);
 					if (IsValid("regex", part, pattern)) {
 						parameters[name] = part;
 						name &= part; // append the part (the id) to the name in case the next part is also an id

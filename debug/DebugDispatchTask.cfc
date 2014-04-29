@@ -16,7 +16,7 @@
 
 import cflow.Event;
 
-component DebugDispatchTask extends="DebugTask" {
+component DebugDispatchTask extends="DebugComplexTask" {
 
 	private void function recordStart(required Event event, required struct metadata) {
 		// append the target and event that are actually going to be dispatched

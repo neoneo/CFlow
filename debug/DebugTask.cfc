@@ -63,10 +63,6 @@ component DebugTask implements="cflow.Task" {
 		return variables.task.getType();
 	}
 
-	public void function addSubtask(required Task task) {
-		variables.task.addSubtask(arguments.task);
-	}
-
 	private void function recordStart(required Event event, required struct metadata) {
 		arguments.event.recordStart(arguments.metadata, "cflow.task");
 	}

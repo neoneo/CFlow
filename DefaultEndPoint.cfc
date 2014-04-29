@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component DefaultRequestStrategy implements="RequestStrategy" {
+component DefaultEndPoint implements="EndPoint" {
 
 	public string function createUrl(required string target, required string event, struct parameters) {
 

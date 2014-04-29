@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component PathInfoRequestStrategy implements="RequestStrategy" accessors="true" {
+component PathInfoEndPoint implements="EndPoint" accessors="true" {
 
 	property name="restPaths" type="array";
 	property name="idPattern" type="string" default="[0-9]+";

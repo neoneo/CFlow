@@ -35,7 +35,7 @@ component Event accessors="true" {
 		variables.originalTarget = arguments.target;
 		variables.originalType = arguments.type;
 
-		setProperties(arguments.properties);
+		append(arguments.properties);
 
 	}
 
@@ -74,8 +74,12 @@ component Event accessors="true" {
 	/**
 	 * Puts properties on the object. Existing properties are kept (no overwrites).
 	 **/
-	public void function setProperties(required struct properties) {
+	public void function append(required struct properties) {
 		StructAppend(this, arguments.properties, false);
+	}
+
+	public boolean function keyExists(required string key) {
+		return StructKeyExists(this, arguments.key);
 	}
 
 	public boolean function willRejoin() {
@@ -112,7 +116,7 @@ component Event accessors="true" {
 
 	package void function merge(required Event event) {
 		// merge the properties and the response
-		setProperties(arguments.event.getProperties());
+		append(arguments.event.getProperties());
 		variables.response.merge(arguments.event.getResponse());
 	}
 

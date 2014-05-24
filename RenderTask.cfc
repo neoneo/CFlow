@@ -17,7 +17,7 @@
 <cfcomponent displayname="RenderTask" implements="Task" output="false">
 
 	<cfscript>
-	public void function init(required string view, string mapping = "", string key = "", RequestStrategy requestStrategy) {
+	public void function init(required string view, required string mapping, required string key, required EndPoint endPoint) {
 
 		variables.view = arguments.view;
 		if (Len(arguments.mapping) > 0) {
@@ -27,7 +27,7 @@
 		// if no key is provided, use the view without the mapping
 		variables.key = Len(arguments.key) > 0 ? arguments.key : arguments.view;
 
-		variables.requestStrategy = arguments.requestStrategy;
+		variables.endPoint = arguments.endPoint;
 
 	}
 
@@ -51,7 +51,7 @@
 		<cfset arguments.response.setContentKey(variables.key)>
 
 		<cfsavecontent variable="local.content">
-			<cfmodule template="render.cfm" view="#variables.view#.cfm" response="#arguments.response#" data="#arguments.data#" requeststrategy="#variables.requestStrategy#">
+			<cfmodule template="render.cfm" view="#variables.view#.cfm" response="#arguments.response#" data="#arguments.data#" endpoint="#variables.endPoint#">
 		</cfsavecontent>
 
 		<!--- depending on the content key is not thread safe, so we pass the key explicitly --->

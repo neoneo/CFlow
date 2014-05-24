@@ -15,6 +15,6 @@
 --->
 
 <cfset response = attributes.response>
-<cfset requestStrategy = attributes.requeststrategy>
+<cfset endPoint = attributes.endpoint>
 <cfset StructAppend(variables, attributes.data, true)>
 <cfinclude template="#attributes.view#">

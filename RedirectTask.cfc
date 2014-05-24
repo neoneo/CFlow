@@ -16,7 +16,7 @@
 
 component RedirectTask implements="Task" {
 
-	public void function init(string location = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false, RequestStrategy requestStrategy) {
+	public void function init(string location = "", string target = "", string event = "", struct parameters = {}, boolean permanent = false, EndPoint endPoint) {
 
 		if (Len(arguments.location) > 0) {
 			variables.isEventRedirect = false;
@@ -24,7 +24,7 @@ component RedirectTask implements="Task" {
 		} else {
 			variables.isEventRedirect = true;
 			// the request strategy should be present, target and event keys are optional in parameters
-			variables.requestStrategy = arguments.requestStrategy;
+			variables.endPoint = arguments.endPoint;
 			variables.target = new Parameter(arguments.target);
 			variables.event = new Parameter(arguments.event);
 		}
@@ -66,7 +66,7 @@ component RedirectTask implements="Task" {
 		}
 
 		if (variables.isEventRedirect) {
-			local.location = variables.requestStrategy.createUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
+			local.location = variables.endPoint.createUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
 		} else {
 			local.location = variables.location.getValue(arguments.event);
 			// only append if there are parameters

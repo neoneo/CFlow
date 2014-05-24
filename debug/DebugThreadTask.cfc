@@ -16,7 +16,7 @@
 
 import cflow.Event;
 
-component ThreadTask extends="DebugTask" {
+component ThreadTask extends="DebugComplexTask" {
 
 	private void function recordEnd(required Event event, required struct metadata) {
 

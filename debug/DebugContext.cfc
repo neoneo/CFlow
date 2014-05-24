@@ -35,8 +35,6 @@ component DebugContext extends="cflow.Context" accessors="true" {
 		var exceptionThrown = false;
 		try {
 			super.runTasks(arguments.event);
-		} catch (cflow exception) {
-			rethrow;
 		} catch (any exception) {
 			// end all open recordStart() calls, so that the hierarchy is closed
 			arguments.event.recordEndAll();
@@ -67,6 +65,28 @@ component DebugContext extends="cflow.Context" accessors="true" {
 		arguments.event.recordStart("cflow.starttasks");
 
 		var success = super.runStartTasks(arguments.event);
+
+		arguments.event.recordEnd();
+
+		return success;
+	}
+
+	private boolean function runBeforeTasks(required Event event) {
+
+		arguments.event.recordStart("cflow.beforetasks");
+
+		var success = super.runBeforeTasks(arguments.event);
+
+		arguments.event.recordEnd();
+
+		return success;
+	}
+
+	private boolean function runAfterTasks(required Event event) {
+
+		arguments.event.recordStart("cflow.aftertasks");
+
+		var success = super.runAfterTasks(arguments.event);
 
 		arguments.event.recordEnd();
 
@@ -171,7 +191,7 @@ component DebugContext extends="cflow.Context" accessors="true" {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);
 
-		return new DebugComplexTask(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
 	public DebugTask function createDispatchTask(required string targetName, required string eventType) {
@@ -206,14 +226,14 @@ component DebugContext extends="cflow.Context" accessors="true" {
 
 		var task = super.createIfTask(argumentCollection = arguments);
 
-		return new DebugComplexTask(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
 	public DebugTask function createElseTask(string condition = "") {
 
 		var task = super.createElseTask(argumentCollection = arguments);
 
-		return new DebugComplexTask(task, arguments, this);
+		return new DebugTask(task, arguments, this);
 	}
 
 	public DebugTask function createSetTask(required string name, required string expression, boolean overwrite = true) {

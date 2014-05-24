@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-component XMLReader {
+component XmlReader {
 
 	variables.tasks = {}; // lists of tasks per target
 	variables.abstractTargetNames = []; // list of targets that are abstract
@@ -42,32 +42,30 @@ component XMLReader {
 
 		construct();
 
-		var phases = ["start", "end"];
+		var phases = ["start", "end", "before", "after"];
 		// variables.tasks is a struct where each key is a target name
 		for (var name in variables.tasks) {
-			variables.context.registerTarget(name);
 
 			var tasks = variables.tasks[name];
 			// tasks contains all the tasks for this target, stored by phase and by event
+			// first create tasks for all phases
 			for (var phase in phases) {
+				// always create the task, even if it remains empty, because otherwise the task is created for each request later
 				if (StructKeyExists(tasks, phase)) {
-					var contextMethod = "register#phase#Task";
 					for (var task in tasks[phase]) {
 						// register the task for the current phase under the target name
-						Invoke(variables.context, contextMethod, [createTask(task), name]);
+						variables.context.register(createTask(task), phase, name);
 					}
 				}
 			}
 
-			events = tasks.events;
-			// events is now a struct where keys are event types
-			for (var type in events) {
-				var event = events[type];
-				variables.context.registerEvent(name, type, event.access);
+			tasks = tasks.events;
+			// tasks is now a struct where keys are event types
+			for (var type in tasks) {
 				// loop over the tasks for this event and create subtasks
-				for (var task in event.tasks) {
+				for (var task in tasks[type]) {
 					// register the task for the given event
-					variables.context.registerEventTask(createTask(task), name, type);
+					variables.context.register(createTask(task), "event", name, type);
 				}
 			}
 		}
@@ -80,7 +78,7 @@ component XMLReader {
 
 	public struct function construct() {
 
-		// use the target as the view directory name for start and end tasks only (argument false)
+		// use the target as the view directory name for start, before, after, and end tasks only (argument false)
 		setViewDirectories(false);
 
 		// process all include nodes
@@ -145,8 +143,8 @@ component XMLReader {
 		}
 
 		var tasks = {};
-		for (var tagName in ["start", "end"]) {
-			var nodes = XMLSearch(arguments.node, tagName);
+		for (var tagName in ["start", "end", "before", "after"]) {
+			var nodes = XmlSearch(arguments.node, tagName);
 			// we expect at most 1 node of this type
 			if (!ArrayIsEmpty(nodes)) {
 				tasks[tagName] = getTasksFromChildNodes(nodes[1]);
@@ -154,15 +152,12 @@ component XMLReader {
 		}
 
 		tasks.events = {};
-		var eventNodes = XMLSearch(arguments.node, "event");
+		var eventNodes = XmlSearch(arguments.node, "event");
 		for (var eventNode in eventNodes) {
-			tasks.events[eventNode.xmlAttributes.type] = {
-				access = StructKeyExists(eventNode.xmlAttributes, "access") ? eventNode.xmlAttributes.access : "public",
-				tasks = getTasksFromChildNodes(eventNode)
-			}
+			tasks.events[eventNode.xmlAttributes.type] = getTasksFromChildNodes(eventNode);
 		}
 
-		var includeNodes = XMLSearch(arguments.node, "include");
+		var includeNodes = XmlSearch(arguments.node, "include");
 		if (!ArrayIsEmpty(includeNodes)) {
 			// create an array that will contain the includes in reverse source order
 			// the first include's tasks must be executed first, so they must be created last (see compileIncludes)
@@ -256,26 +251,30 @@ component XMLReader {
 							}
 						} else {
 							// the whole task list of the given target must be included
-							// if there are start tasks, they have to be prepended to the existing start tasks, respectively
-							if (StructKeyExists(includeTarget, "start")) {
-								// duplicate the task array, since it may be modified later when setting the default controller
-								var typeTasks = Duplicate(includeTarget.start);
-								if (StructKeyExists(target.owner, "start")) {
-									// append the existing tasks
-									for (task in target.owner.start) {
-										ArrayAppend(typeTasks, task);
+							// if there are start or before tasks, they have to be prepended to the existing start and before tasks, respectively
+							for (var type in ["start", "before"]) {
+								if (StructKeyExists(includeTarget, type)) {
+									// duplicate the task array, since it may be modified later when setting the default controller
+									var typeTasks = Duplicate(includeTarget[type]);
+									if (StructKeyExists(target.owner, type)) {
+										// append the existing tasks
+										for (task in target.owner[type]) {
+											ArrayAppend(typeTasks, task);
+										}
 									}
+									target.owner[type] =  typeTasks;
 								}
-								target.owner.start =  typeTasks;
 							}
-							// for end tasks, it's the other way around: we append those tasks to the array of existing tasks
-							if (StructKeyExists(includeTarget, "end")) {
-								var typeTasks = Duplicate(includeTarget.end);
-								if (!StructKeyExists(target.owner, "end")) {
-									target.owner.end = [];
-								}
-								for (task in typeTasks) {
-									ArrayAppend(target.owner.end, task);
+							// for end or after tasks, it's the other way around: we append those tasks to the array of existing tasks
+							for (var type in ["after", "end"]) {
+								if (StructKeyExists(includeTarget, type)) {
+									var typeTasks = Duplicate(includeTarget[type]);
+									if (!StructKeyExists(target.owner, type)) {
+										target.owner[type] = [];
+									}
+									for (task in typeTasks) {
+										ArrayAppend(target.owner[type], task);
+									}
 								}
 							}
 
@@ -414,6 +413,14 @@ component XMLReader {
 				if (task.key == "$type") {
 					if (!StructKeyExists(task.owner, "target")) {
 						task.owner["target"] = name;
+					}
+					// if the event goes to the same target, and is defined immediately in the before or after phase, this would cause an infinite loop
+					if (task.owner.target == name && (task.path contains ".before[" or task.path contains ".after[") && task.path does not contain ".sub[") {
+						Throw(
+							type = "cflow",
+							message = "Dispatching event '#task.owner.event#' to the current target '#name#' will cause an infinite loop",
+							detail = "Do not define dispatch tasks without a target in the before or after phases, unless the task is run conditionally"
+						);
 					}
 				}
 

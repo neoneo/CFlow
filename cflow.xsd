@@ -49,7 +49,7 @@
 	</xsd:element>
 	<xsd:element name="end" type="phase" />
 
-	<!-- Define a abstract task element to separate tasks from other elements. -->
+	<!-- Define an abstract task element to separate tasks from other elements. -->
 	<xsd:element name="task" type="task" abstract="true" />
 	<xsd:complexType name="task" />
 	<!-- Complex tasks are tasks that may contains other tasks. -->
@@ -115,7 +115,7 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="task">
-					<xsd:attribute name="template" type="nonemptystring" />
+					<xsd:attribute name="template" type="nonemptystring" use="required" />
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -149,7 +149,16 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="complexTask">
-					<xsd:attribute name="action" type="nonemptystring" />
+					<xsd:attribute name="action">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:enumeration value="join" />
+								<xsd:enumeration value="run" />
+								<xsd:enumeration value="sleep" />
+								<xsd:enumeration value="terminate" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:attribute>
 					<xsd:attribute name="name" type="nonemptystring" />
 					<xsd:attribute name="priority">
 						<xsd:simpleType>

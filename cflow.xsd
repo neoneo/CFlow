@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://neoneo.nl/cflow" targetNamespace="http://neoneo.nl/cflow" elementFormDefault="qualified">
+
+	<xsd:simpleType name="nonemptystring">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:pattern value=".*[^\s]+.*" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:element name="targets">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="target" minOccurs="1" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="target">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="start" minOccurs="0" maxOccurs="1" />
+				<xsd:element ref="event" minOccurs="0" maxOccurs="unbounded" />
+				<xsd:element ref="end" minOccurs="0" maxOccurs="1" />
+			</xsd:sequence>
+			<xsd:attribute name="name" type="nonemptystring" use="required" />
+			<xsd:attribute name="defaultlistener" type="nonemptystring" />
+			<xsd:attribute name="abstract" type="xsd:boolean" />
+		</xsd:complexType>
+	</xsd:element>
+
+	<!-- A phase element contains one or more tasks. -->
+	<xsd:complexType name="phase">
+		<xsd:sequence>
+			<xsd:element ref="task" minOccurs="1" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<!-- Phase elements -->
+	<xsd:element name="start" type="phase" />
+	<xsd:element name="event">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="phase">
+					<xsd:attribute name="type" type="nonemptystring" use="required" />
+					<xsd:attribute name="access" type="nonemptystring" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="end" type="phase" />
+
+	<!-- Define a abstract task element to separate tasks from other elements. -->
+	<xsd:element name="task" type="task" abstract="true" />
+	<xsd:complexType name="task" />
+	<!-- Complex tasks are tasks that may contains other tasks. -->
+	<xsd:complexType name="complexTask">
+		<xsd:complexContent>
+			<xsd:extension base="task">
+				<xsd:sequence>
+					<xsd:element ref="task" minOccurs="0" maxOccurs="unbounded" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<!-- Concrete task definitions. -->
+	<xsd:element name="abort" type="task" substitutionGroup="task" />
+
+	<xsd:element name="cancel" type="task" substitutionGroup="task" />
+
+	<xsd:element name="dispatch" substitutionGroup="task">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="complexTask">
+					<xsd:attribute name="target" type="nonemptystring" />
+					<xsd:attribute name="event" type="nonemptystring" use="required" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<!-- Else does not belong to the substitution group because it can only exist as a child of if. -->
+	<xsd:element name="else">
+		<xsd:complexType>
+			<xsd:attribute name="condition" type="nonemptystring" />
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="if" substitutionGroup="task">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="task">
+					<xsd:choice minOccurs="0" maxOccurs="unbounded">
+						<xsd:element ref="task" />
+						<xsd:element ref="else" />
+					</xsd:choice>
+					<xsd:attribute name="condition" type="nonemptystring" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="invoke" substitutionGroup="task">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="complexTask">
+					<xsd:attribute name="listener" type="nonemptystring" />
+					<xsd:attribute name="handler" type="nonemptystring" use="required" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="render" substitutionGroup="task">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="task">
+					<xsd:attribute name="template" type="nonemptystring" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="redirect" substitutionGroup="task">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="task">
+					<xsd:attribute name="url" type="nonemptystring" />
+					<xsd:attribute name="target" />
+					<xsd:attribute name="event" />
+					<xsd:anyAttribute processContents="skip" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="set" substitutionGroup="task">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="task">
+					<xsd:attribute name="overwrite" type="xsd:boolean" />
+					<xsd:anyAttribute processContents="skip" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="thread" substitutionGroup="task">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="complexTask">
+					<xsd:attribute name="action" type="nonemptystring" />
+					<xsd:attribute name="name" type="nonemptystring" />
+					<xsd:attribute name="priority">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:enumeration value="high" />
+								<xsd:enumeration value="low" />
+								<xsd:enumeration value="normal" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:attribute>
+					<xsd:attribute name="timeout" type="xsd:integer" />
+					<xsd:attribute name="duration" type="xsd:integer" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+</xsd:schema>

@@ -19,6 +19,21 @@
 	<xsd:element name="target">
 		<xsd:complexType>
 			<xsd:sequence>
+				<xsd:element name="include" minOccurs="0" maxOccurs="unbounded">
+					<xsd:complexType>
+						<xsd:attribute name="target" type="nonemptystring" use="required" />
+						<xsd:attribute name="event" type="nonemptystring" />
+						<xsd:attribute name="phase">
+							<xsd:simpleType>
+								<xsd:restriction base="xsd:string">
+									<xsd:enumeration value="start" />
+									<xsd:enumeration value="event" />
+									<xsd:enumeration value="end" />
+								</xsd:restriction>
+							</xsd:simpleType>
+						</xsd:attribute>
+					</xsd:complexType>
+				</xsd:element>
 				<xsd:element ref="start" minOccurs="0" maxOccurs="1" />
 				<xsd:element ref="event" minOccurs="0" maxOccurs="unbounded" />
 				<xsd:element ref="end" minOccurs="0" maxOccurs="1" />
@@ -92,7 +107,11 @@
 	<!-- Else does not belong to the substitution group because it can only exist as a child of if. -->
 	<xsd:element name="else">
 		<xsd:complexType>
-			<xsd:attribute name="condition" type="nonemptystring" />
+			<xsd:complexContent>
+				<xsd:extension base="task">
+					<xsd:attribute name="condition" type="nonemptystring" />
+				</xsd:extension>
+			</xsd:complexContent>
 		</xsd:complexType>
 	</xsd:element>
 
@@ -136,8 +155,9 @@
 			<xsd:complexContent>
 				<xsd:extension base="task">
 					<xsd:attribute name="url" type="nonemptystring" />
-					<xsd:attribute name="target" />
-					<xsd:attribute name="event" />
+					<xsd:attribute name="target" type="nonemptystring" />
+					<xsd:attribute name="event" type="nonemptystring" />
+					<xsd:attribute name="permanent" type="xsd:boolean" />
 					<xsd:anyAttribute processContents="skip" />
 				</xsd:extension>
 			</xsd:complexContent>

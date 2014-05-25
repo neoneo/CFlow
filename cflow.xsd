@@ -34,6 +34,7 @@
 		<xsd:sequence>
 			<xsd:element ref="task" minOccurs="1" maxOccurs="unbounded" />
 		</xsd:sequence>
+		<xsd:attribute name="advice" type="nonemptystring" />
 	</xsd:complexType>
 	<!-- Phase elements -->
 	<xsd:element name="start" type="phase" />
@@ -42,7 +43,14 @@
 			<xsd:complexContent>
 				<xsd:extension base="phase">
 					<xsd:attribute name="type" type="nonemptystring" use="required" />
-					<xsd:attribute name="access" type="nonemptystring" />
+					<xsd:attribute name="access">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:enumeration value="public" />
+								<xsd:enumeration value="private" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:attribute>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -51,7 +59,9 @@
 
 	<!-- Define an abstract task element to separate tasks from other elements. -->
 	<xsd:element name="task" type="task" abstract="true" />
-	<xsd:complexType name="task" />
+	<xsd:complexType name="task">
+		<xsd:attribute name="advice" type="nonemptystring" />
+	</xsd:complexType>
 	<!-- Complex tasks are tasks that may contains other tasks. -->
 	<xsd:complexType name="complexTask">
 		<xsd:complexContent>

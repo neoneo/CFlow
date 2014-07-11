@@ -18,17 +18,18 @@ component PathInfoEndPoint implements="EndPoint" accessors="true" {
 
 	property name="restPaths" type="array";
 	property name="idPattern" type="string" default="[0-9]+";
+	property name="defaultDocument" type="string" default="index.cfm";
 
 	setRestPaths([]);
 
 	public string function createUrl(required string target, required string event, struct parameters) {
 
-		var path = "";
+		var path = "/" & getDefaultDocument();
 		if (Len(arguments.target) > 0) {
-			path = "/" & UrlEncodedFormat(arguments.target);
+			path = ListAppend(path, arguments.target, "/");
 		}
 		if (Len(arguments.event) > 0) {
-			path = ListAppend(path, UrlEncodedFormat(arguments.event), "/");
+			path = ListAppend(path, arguments.event, "/");
 		}
 
 		var queryString = "";
@@ -39,7 +40,7 @@ component PathInfoEndPoint implements="EndPoint" accessors="true" {
 			queryString = "?" & queryString;
 		}
 
-		return "/index.cfm" & path & queryString;
+		return path & queryString;
 	}
 
 	public struct function collectParameters() {

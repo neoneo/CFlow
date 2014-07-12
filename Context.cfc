@@ -51,7 +51,7 @@ component Context accessors="true" {
 		var targetName = StructKeyExists(parameters, "target") ? parameters.target : variables.defaultTarget;
 		var eventType = StructKeyExists(parameters, "event") ? parameters.event : variables.defaultEvent;
 
-		if (!eventExists(targetName, eventType, variables.accessLevels.public)) {
+		if (!targetExists(targetName) || !eventExists(targetName, eventType, variables.accessLevels.public)) {
 			targetName = getUndefinedTarget();
 			eventType = getUndefinedEvent();
 		}

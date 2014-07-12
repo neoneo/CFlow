@@ -138,6 +138,11 @@
 
 	}
 
+	public void function writeAll() {
+		writeHeaders();
+		write();
+	}
+
 	public void function clear(string key = "") {
 
 		if (Len(arguments.key) == 0) {
@@ -188,6 +193,8 @@
 		<cfloop array="#variables.headers#" index="header">
 			<cfheader attributecollection="#header#">
 		</cfloop>
+
+		<cfset ArrayClear(variables.headers)>
 
 	</cffunction>
 

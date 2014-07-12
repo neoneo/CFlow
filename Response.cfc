@@ -160,6 +160,10 @@
 
 	}
 
+	public Array function keys() {
+		return variables.keys;
+	}
+
 	/**
 	 * Merges content and headers from the given Response instance onto the current instance.
 	 **/

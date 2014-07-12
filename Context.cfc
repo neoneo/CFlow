@@ -51,11 +51,6 @@ component Context accessors="true" {
 		var targetName = StructKeyExists(parameters, "target") ? parameters.target : variables.defaultTarget;
 		var eventType = StructKeyExists(parameters, "event") ? parameters.event : variables.defaultEvent;
 
-		if (!targetExists(targetName) || !eventExists(targetName, eventType, variables.accessLevels.public)) {
-			targetName = getUndefinedTarget();
-			eventType = getUndefinedEvent();
-		}
-
 		return handleEvent(targetName, eventType, parameters);
 	}
 
@@ -65,6 +60,11 @@ component Context accessors="true" {
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
 		var event = createEvent(arguments.targetName, arguments.eventType, arguments.parameters);
+
+		if (!targetExists(targetName) || !eventExists(targetName, eventType, variables.accessLevels.public)) {
+			event.setTarget(getUndefinedTarget());
+			event.setType(getUndefinedEvent());
+		}
 
 		runTasks(event);
 
@@ -80,11 +80,15 @@ component Context accessors="true" {
 		local.eventType = arguments.event.getType();
 		arguments.event.setTarget(arguments.targetName);
 		arguments.event.setType(arguments.eventType);
+		arguments.event.target = arguments.targetName;
+		arguments.event.event = arguments.eventType;
 
 		success = runEventTasks(arguments.event, arguments.targetName, arguments.eventType);
 
 		arguments.event.setTarget(local.targetName);
 		arguments.event.setType(local.eventType);
+		arguments.event.target = local.targetName;
+		arguments.event.event = local.eventType;
 
 		return success;
 	}

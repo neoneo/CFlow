@@ -25,14 +25,14 @@ component PathInfoEndPoint implements="EndPoint" accessors="true" {
 	public string function createUrl(required string target, required string event, struct parameters) {
 
 		var path = getDefaultDocument();
-		if (Len(path) > 0) {
-			path = "/" & path
-		}
 		if (Len(arguments.target) > 0) {
 			path &= "/" & arguments.target;
 		}
 		if (Len(arguments.event) > 0) {
 			path &= "/" & arguments.event;
+		}
+		if (!path.startsWith("/")) {
+			path = "/" & path
 		}
 
 		var queryString = "";

@@ -274,7 +274,7 @@ component Context accessors="true" {
 	private struct function getEvent(required string targetName, required string type) {
 		var target = getTarget(arguments.targetName);
 		if (!StructKeyExists(target, arguments.type)) {
-			Throw("Event '#arguments.eventType#' does not exist for target '#arguments.targetName#'", "cflow");
+			Throw("Event '#arguments.type#' does not exist for target '#arguments.targetName#'", "cflow");
 		}
 		return target[arguments.type];
 	}

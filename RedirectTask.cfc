@@ -23,7 +23,7 @@ component RedirectTask implements="Task" {
 			variables.location =  new Parameter(arguments.location);
 		} else {
 			variables.isEventRedirect = true;
-			// the request strategy should be present, target and event keys are optional in parameters
+			// the endpoint should be present, target and event keys are optional in parameters
 			variables.endPoint = arguments.endPoint;
 			variables.target = new Parameter(arguments.target);
 			variables.event = new Parameter(arguments.event);

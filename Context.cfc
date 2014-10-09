@@ -35,13 +35,13 @@ component Context accessors="true" {
 		public = 1
 	};
 
-	// just create an instance of the default request strategy
+	// just create an instance of the default endpoint
 	// if it is not needed, it will be garbage collected
 	// assuming this will only occur once in the life of the application, it's not a big cost
 	variables.endPoint = new DefaultEndPoint();
 
 	/**
-	 * Extracts the request parameters using the request strategy and starts the event handling cycle.
+	 * Extracts the request parameters using the endpoint and starts the event handling cycle.
 	 **/
 	public Response function handleRequest() {
 
@@ -275,7 +275,11 @@ component Context accessors="true" {
 	private struct function getEvent(required string targetName, required string type) {
 		var events = getTarget(arguments.targetName).events;
 		if (!StructKeyExists(events, arguments.type)) {
-			Throw("Event '#arguments.type#' does not exist for target '#arguments.targetName#'", "cflow");
+			if (StructKeyExists(events, "*")) {
+				events[arguments.type] = events["*"];
+			} else {
+				events[arguments.type] = {};
+			}
 		}
 		return events[arguments.type];
 	}

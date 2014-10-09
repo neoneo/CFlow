@@ -334,7 +334,7 @@ component XMLReader {
 					Throw(type = "cflow", message = "Included target '#include.owner.target#' does not define event '#include.owner.event#'");
 				}
 				// get the tasks that have to be inserted instead of the include
-				var eventTasks = target.events[include.owner.event];
+				var eventTasks = target.events[include.owner.event].tasks;
 				// if these tasks contain an include, do not proceed
 				var eventIncludes = StructFindValue({t = eventTasks}, "include", "all"); // put the event tasks in a struct to be able to call StructFindValue()
 				var proceed = true;

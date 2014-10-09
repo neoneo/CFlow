@@ -16,7 +16,7 @@
 
 component DefaultEndPoint implements="EndPoint" {
 
-	public string function createUrl(required string target, required string event, struct parameters) {
+	public string function createURL(required string target, required string event, struct parameters) {
 
 		var queryString = "";
 		if (Len(arguments.target) > 0) {

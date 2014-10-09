@@ -18,6 +18,6 @@ interface {
 
 	public struct function collectParameters();
 
-	public string function createUrl(required string target, required string event, struct parameters);
+	public string function createURL(required string target, required string event, struct parameters);
 
 }

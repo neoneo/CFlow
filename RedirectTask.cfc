@@ -66,7 +66,7 @@ component RedirectTask implements="Task" {
 		}
 
 		if (variables.isEventRedirect) {
-			local.location = variables.endPoint.createUrl(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
+			local.location = variables.endPoint.createURL(variables.target.getValue(arguments.event), variables.event.getValue(arguments.event), parameters);
 		} else {
 			local.location = variables.location.getValue(arguments.event);
 			// only append if there are parameters

@@ -22,7 +22,7 @@ component PathInfoEndPoint implements="EndPoint" accessors="true" {
 
 	setRestPaths([]);
 
-	public string function createUrl(required string target, required string event, struct parameters) {
+	public string function createURL(required string target, required string event, struct parameters) {
 
 		var path = getDefaultDocument();
 		if (Len(arguments.target) > 0) {

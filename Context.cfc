@@ -242,7 +242,9 @@ component Context accessors="true" {
 		if (targetExists(arguments.targetName)) {
 			Throw("Target '#arguments.targetName#' already exists", "cflow");
 		}
-		variables.targets[arguments.targetName] = {};
+		variables.targets[arguments.targetName] = {
+			events = {}
+		};
 	}
 
 	public boolean function targetExists(required string name) {
@@ -260,23 +262,22 @@ component Context accessors="true" {
 		if (eventExists(arguments.targetName, arguments.eventType)) {
 			Throw("Event '#arguments.eventType#' already exists for target '#arguments.targetName#'", "cflow");
 		}
-		var target = getTarget(arguments.targetName);
-		target[arguments.eventType] = {
+		getTarget(arguments.targetName).events[arguments.eventType] = {
 			accessLevel = variables.accessLevels[arguments.access]
 		};
 	}
 
 	public boolean function eventExists(required string targetName, required string type, numeric accessLevel = variables.accessLevels.private) {
-		var target = getTarget(arguments.targetName);
-		return StructKeyExists(target, arguments.type) && target[arguments.type].accessLevel >= arguments.accessLevel;
+		var events = getTarget(arguments.targetName).events;
+		return StructKeyExists(events, arguments.type) && events[arguments.type].accessLevel >= arguments.accessLevel;
 	}
 
 	private struct function getEvent(required string targetName, required string type) {
-		var target = getTarget(arguments.targetName);
-		if (!StructKeyExists(target, arguments.type)) {
+		var events = getTarget(arguments.targetName).events;
+		if (!StructKeyExists(events, arguments.type)) {
 			Throw("Event '#arguments.type#' does not exist for target '#arguments.targetName#'", "cflow");
 		}
-		return target[arguments.type];
+		return events[arguments.type];
 	}
 
 	public void function registerStartTask(required Task task, required string targetName) {

@@ -18,19 +18,19 @@ import cflow.Event;
 
 component SetTask extends="DebugTask" {
 
-	private void function recordStart(required Event event, required struct metadata) {
+	private void function debugStart(required Event event, required struct metadata) {
 
 		// the exists boolean tells whether the variable already existed before the task is run
 		arguments.metadata.exists = StructKeyExists(arguments.event, arguments.metadata.name);
-		super.recordStart(arguments.event, arguments.metadata);
+		super.debugStart(arguments.event, arguments.metadata);
 
 	}
 
-	private void function recordEnd(required Event event, required struct metadata) {
+	private void function debugEnd(required Event event, required struct metadata) {
 
 		// now we can get the value from the event
 		arguments.metadata.value = arguments.event[arguments.metadata.name];
-		super.recordEnd(arguments.event, arguments.metadata);
+		super.debugEnd(arguments.event, arguments.metadata);
 
 	}
 

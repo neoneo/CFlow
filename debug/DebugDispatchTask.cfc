@@ -18,12 +18,12 @@ import cflow.Event;
 
 component DebugDispatchTask extends="DebugComplexTask" {
 
-	private void function recordStart(required Event event, required struct metadata) {
+	private void function debugStart(required Event event, required struct metadata) {
 		// append the target and event that are actually going to be dispatched
 		arguments.metadata.dispatchTargetName = variables.task.getTargetName(arguments.event);
 		arguments.metadata.dispatchEventType = variables.task.getEventType(arguments.event);
 
-		super.recordStart(arguments.event, arguments.metadata);
+		super.debugStart(arguments.event, arguments.metadata);
 
 	}
 

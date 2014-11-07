@@ -18,7 +18,7 @@ import cflow.Event;
 
 component ThreadTask extends="DebugComplexTask" {
 
-	private void function recordEnd(required Event event, required struct metadata) {
+	private void function debugEnd(required Event event, required struct metadata) {
 
 		// if this is a join action, merge the event messages on the current event object
 		if (arguments.metadata.action == "join") {
@@ -27,7 +27,7 @@ component ThreadTask extends="DebugComplexTask" {
 			for (var name in names) {
 				// pick up the messages from the thread event object
 				// it is possible that the thread is terminated before the event object is created, so check for that
-				arguments.event.record({
+				arguments.event.debug({
 					name = name,
 					status = cfthread[name].status,
 					messages = StructKeyExists(cfthread[name], "event") ? cfthread[name].event.getMessages() : []
@@ -35,7 +35,7 @@ component ThreadTask extends="DebugComplexTask" {
 			}
 		}
 
-		super.recordEnd(arguments.event, arguments.metadata);
+		super.debugEnd(arguments.event, arguments.metadata);
 
 	}
 

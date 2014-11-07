@@ -33,20 +33,20 @@ component DebugEvent extends="cflow.Event" {
 	variables.impliedAbortMessages = ["cflow.exception", "cflow.redirect"];
 
 	public void function cancel() {
-		record("cflow.eventcanceled");
+		debug("cflow.eventcanceled");
 		super.cancel();
 	}
 
 	public void function abort() {
-		record("cflow.aborted");
+		debug("cflow.aborted");
 		super.abort();
 	}
 
 	public boolean function dispatch(required string eventType) {
 
-		recordStart({targetName = getTarget(), eventType = arguments.eventType}, "cflow.dispatch");
+		debugStart({targetName = getTarget(), eventType = arguments.eventType}, "cflow.dispatch");
 		var result = super.dispatch(arguments.eventType);
-		recordEnd();
+		debugEnd();
 
 		return result;
 	}
@@ -54,7 +54,7 @@ component DebugEvent extends="cflow.Event" {
 	/**
 	 * Records a debugging message. This message will be displayed in debug output.
 	 **/
-	public void function record(required any metadata, string message = "") {
+	public void function debug(required any metadata, string message = "") {
 
 		// if metadata is a simple value and message is not defined, we interpret metadata as the message
 		local.message = arguments.message;
@@ -90,11 +90,11 @@ component DebugEvent extends="cflow.Event" {
 		return GetTickCount() - variables.startTime;
 	}
 
-	package void function recordStart(required any metadata, string message = "") {
+	package void function debugStart(required any metadata, string message = "") {
 
 		// a new branch starts
 		// record the message first
-		record(arguments.metadata, arguments.message);
+		debug(arguments.metadata, arguments.message);
 		// create a messages array
 		var messages = CreateObject("java", "java.util.ArrayList").init();
 		// put it on the last recorded message
@@ -109,7 +109,7 @@ component DebugEvent extends="cflow.Event" {
 
 	}
 
-	package void function recordEnd() {
+	package void function debugEnd() {
 
 		// remove the last messages array
 		ArrayDeleteAt(variables.branches, ArrayLen(variables.branches));
@@ -125,14 +125,14 @@ component DebugEvent extends="cflow.Event" {
 	}
 
 	/**
-	 * Calls recordEnd() for all open recordStart() calls. This method is used as a shortcut when an exception needs to be handled.
+	 * Calls debugEnd() for all open debugStart() calls. This method is used as a shortcut when an exception needs to be handled.
 	 **/
-	package void function recordEndAll() {
+	package void function debugEndAll() {
 
-		// call recordEnd() n - 1 times (note the strictly smaller comparison operator)
+		// call debugEnd() n - 1 times (note the strictly smaller comparison operator)
 		var count = ArrayLen(variables.branches);
 		for (var i = 1; i < count; i++) {
-			recordEnd();
+			debugEnd();
 		}
 
 	}

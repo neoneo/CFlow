@@ -23,7 +23,7 @@ component RedirectTask extends="DebugTask" {
 		// check if the redirect should be displayed in the debug output
 		if (variables.context.getGenerateOutput(arguments.event) == "always") {
 			// we just record the fact that normally a redirect should occur right now
-			arguments.event.record({
+			arguments.event.debug({
 				location = variables.task.obtainUrl(arguments.event)
 			}, "cflow.redirect");
 			// abort the rest of the flow

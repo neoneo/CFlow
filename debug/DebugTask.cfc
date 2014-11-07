@@ -39,21 +39,21 @@ component DebugTask implements="cflow.Task" {
 		// create a copy of the metadata struct
 		// subclasses must be allowed to modify it before or after the task runs
 		var metadata = StructCopy(variables.metadata);
-		recordStart(arguments.event, metadata);
+		debugStart(arguments.event, metadata);
 
 		try {
 			success = variables.task.run(arguments.event);
 		} catch (any exception) {
 			// the exception may have been rethrown by a subtask, in which case the event is aborted already
 			if (!arguments.event.isAborted()) {
-				arguments.event.record({exception = exception}, "cflow.exception");
+				arguments.event.debug({exception = exception}, "cflow.exception");
 				arguments.event.getResponse().clear();
 				arguments.event.abort();
 			}
 			// rethrow the exception in order to exit the flow
 			rethrow;
 		} finally {
-			recordEnd(arguments.event, metadata);
+			debugEnd(arguments.event, metadata);
 		}
 
 		return success;
@@ -63,13 +63,13 @@ component DebugTask implements="cflow.Task" {
 		return variables.task.getType();
 	}
 
-	private void function recordStart(required Event event, required struct metadata) {
-		arguments.event.recordStart(arguments.metadata, "cflow.task");
+	private void function debugStart(required Event event, required struct metadata) {
+		arguments.event.debugStart(arguments.metadata, "cflow.task");
 	}
 
-	private void function recordEnd(required Event event, required struct metadata) {
+	private void function debugEnd(required Event event, required struct metadata) {
 		// metadata is not used, but can be used by subclasses
-		arguments.event.recordEnd();
+		arguments.event.debugEnd();
 	}
 
 }

@@ -38,8 +38,8 @@ component DebugContext extends="cflow.Context" accessors="true" {
 		} catch (cflow exception) {
 			rethrow;
 		} catch (any exception) {
-			// end all open recordStart() calls, so that the hierarchy is closed
-			arguments.event.recordEndAll();
+			// end all open debugStart() calls, so that the hierarchy is closed
+			arguments.event.debugEndAll();
 			exceptionThrown = true;
 			header statuscode="500" statustext="#exception.message#";
 		}
@@ -64,33 +64,33 @@ component DebugContext extends="cflow.Context" accessors="true" {
 
 	private boolean function runStartTasks(required Event event) {
 
-		arguments.event.recordStart("cflow.starttasks");
+		arguments.event.debugStart("cflow.starttasks");
 
 		var success = super.runStartTasks(arguments.event);
 
-		arguments.event.recordEnd();
+		arguments.event.debugEnd();
 
 		return success;
 	}
 
 	private boolean function runEndTasks(required Event event) {
 
-		arguments.event.recordStart("cflow.endtasks");
+		arguments.event.debugStart("cflow.endtasks");
 
 		var success = super.runEndTasks(arguments.event);
 
-		arguments.event.recordEnd();
+		arguments.event.debugEnd();
 
 		return success;
 	}
 
 	private boolean function runEventTasks(required Event event) {
 
-		arguments.event.recordStart("cflow.eventtasks");
+		arguments.event.debugStart("cflow.eventtasks");
 
 		var success = super.runEventTasks(arguments.event);
 
-		arguments.event.recordEnd();
+		arguments.event.debugEnd();
 
 		return success;
 	}
@@ -161,17 +161,13 @@ component DebugContext extends="cflow.Context" accessors="true" {
 		return generateOutput;
 	}
 
-	private component function getController(required string name) {
-		return getCacheControllers() ? super.getController(arguments.name) : createController(arguments.name);
-	}
-
 	// FACTORY METHODS ============================================================================
 
 	public DebugTask function createInvokeTask(required string controllerName, required string handlerName) {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);
 
-		return new DebugComplexTask(task, arguments, this);
+		return new DebugInvokeTask(task, arguments, this);
 	}
 
 	public DebugTask function createDispatchTask(required string targetName, required string eventType) {

@@ -39,7 +39,7 @@
 				<xsd:element ref="end" minOccurs="0" maxOccurs="1" />
 			</xsd:sequence>
 			<xsd:attribute name="name" type="nonemptystring" use="required" />
-			<xsd:attribute name="defaultlistener" type="nonemptystring" />
+			<xsd:attribute name="defaultcontroller" type="nonemptystring" />
 			<xsd:attribute name="abstract" type="xsd:boolean" />
 		</xsd:complexType>
 	</xsd:element>
@@ -77,7 +77,7 @@
 	<xsd:complexType name="task">
 		<xsd:attribute name="advice" type="nonemptystring" />
 	</xsd:complexType>
-	<!-- Complex tasks are tasks that may contains other tasks. -->
+	<!-- Complex tasks are tasks that may contain other tasks. -->
 	<xsd:complexType name="complexTask">
 		<xsd:complexContent>
 			<xsd:extension base="task">
@@ -133,7 +133,7 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="complexTask">
-					<xsd:attribute name="listener" type="nonemptystring" />
+					<xsd:attribute name="controller" type="nonemptystring" />
 					<xsd:attribute name="handler" type="nonemptystring" use="required" />
 				</xsd:extension>
 			</xsd:complexContent>
@@ -144,7 +144,7 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="task">
-					<xsd:attribute name="template" type="nonemptystring" use="required" />
+					<xsd:attribute name="view" type="nonemptystring" use="required" />
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>

@@ -163,6 +163,11 @@ component DebugContext extends="cflow.Context" accessors="true" {
 
 	// FACTORY METHODS ============================================================================
 
+	// Override the super method to make it public.
+	public component function createController(required string name) {
+		return super.createController(arguments.name);
+	}
+
 	public DebugTask function createInvokeTask(required string controllerName, required string handlerName) {
 
 		var task = super.createInvokeTask(argumentCollection = arguments);

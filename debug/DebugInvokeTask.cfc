@@ -20,15 +20,14 @@ component InvokeTask extends="DebugComplexTask" {
 
 	public void function init(required Task task, required struct metadata, required Context context) {
 		super.init(argumentCollection = arguments);
-		// inject the getter and setter for the controller property
-		arguments.task.setController = setController;
-		arguments.task.getController = getController;
-		variables.controllerMapping = GetMetadata(arguments.task.getController()).name;
+		// inject the setter for the controller
+		variables.task.setController = setController;
+		variables.controllerName = arguments.metadata.controllerName;
 	}
 
 	public boolean function run(required Event event) {
 		if (!variables.context.getCacheControllers()) {
-			variables.task.setController(new "#variables.controllerMapping#"());
+			variables.task.setController(variables.context.createController(variables.controllerName));
 		}
 
 		return super.run(arguments.event);
@@ -36,10 +35,6 @@ component InvokeTask extends="DebugComplexTask" {
 
 	private void function setController(required component controller) {
 		variables.controller = arguments.controller;
-	}
-
-	private component function getController() {
-		return variables.controller;
 	}
 
 }

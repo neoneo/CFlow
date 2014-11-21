@@ -80,15 +80,11 @@ component Context accessors="true" {
 		local.eventType = arguments.event.getType();
 		arguments.event.setTarget(arguments.targetName);
 		arguments.event.setType(arguments.eventType);
-		arguments.event.target = arguments.targetName;
-		arguments.event.event = arguments.eventType;
 
 		success = runEventTasks(arguments.event, arguments.targetName, arguments.eventType);
 
 		arguments.event.setTarget(local.targetName);
 		arguments.event.setType(local.eventType);
-		arguments.event.target = local.targetName;
-		arguments.event.event = local.eventType;
 
 		return success;
 	}

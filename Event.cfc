@@ -82,6 +82,10 @@ component Event accessors="true" {
 		return StructKeyExists(this, arguments.key);
 	}
 
+	public void function delete(required string key) {
+		StructDelete(this, arguments.key);
+	}
+
 	public boolean function willRejoin() {
 		return variables.rejoin;
 	}

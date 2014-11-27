@@ -160,8 +160,15 @@ component DebugEvent extends="cflow.Event" {
 
 	// PACKAGE OVERRIDES
 
+	public void function setTarget(required string value) {
+		super.setTarget(arguments.value);
+	}
+
+	public void function setType(required string value) {
+		super.setType(arguments.value);
+	}
+
 	public void function setRejoin(required boolean value) {
-		// this method is defined with package access in the superclass
 		super.setRejoin(arguments.value);
 	}
 

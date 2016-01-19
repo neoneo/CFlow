@@ -75,10 +75,14 @@ component PathInfoEndPoint implements="EndPoint" accessors="true" {
 					}
 				}
 				parameters.target = target;
-				parameters.event = LCase(cgi.request_method);
+				var requestData = GetHTTPRequestData();
+				if (cgi.request_method == "POST" && StructKeyExists(requestData.headers, "X-HTTP-Method-Override")) {
+					parameters.event = LCase(requestData.headers["X-HTTP-Method-Override"]);
+				} else {
+					parameters.event = LCase(cgi.request_method);
+				}
 				// pick up the request body
-				var headers = GetHTTPRequestData();
-				var content = headers.content;
+				var content = requestData.content;
 				parameters.content = content;
 				switch (cgi.http_accept) {
 					case "application/json":

@@ -83,18 +83,12 @@ component PathInfoEndPoint implements="EndPoint" accessors="true" {
 				}
 				// pick up the request body
 				var content = requestData.content;
-				parameters.content = content;
-				switch (cgi.http_accept) {
-					case "application/json":
-						if (IsJSON(content)) {
-							parameters.content = DeserializeJSON(content);
-						}
-						break;
-					case "application/xml":
-						if (IsXML(content)) {
-							parameters.content = ParseXML(content);
-						}
-						break;
+				if (cgi.http_accept contains "application/json" && IsJSON(content)) {
+					parameters.content = DeserializeJSON(content);
+				} else if (cgi.http_accept contains "application/xml" && IsXML(content)) {
+					parameters.content = ParseXML(content);
+				} else {
+					parameters.content = content;
 				}
 			} else {
 				var partCount = ListLen(cgi.path_info, "/");

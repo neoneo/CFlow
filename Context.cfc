@@ -35,9 +35,6 @@ component Context accessors="true" {
 		public = 1
 	};
 
-	// just create an instance of the default endpoint
-	// if it is not needed, it will be garbage collected
-	// assuming this will only occur once in the life of the application, it's not a big cost
 	variables.endPoint = new DefaultEndPoint();
 
 	/**
@@ -61,7 +58,7 @@ component Context accessors="true" {
 
 		var event = createEvent(arguments.targetName, arguments.eventType, arguments.parameters);
 
-		if (!targetExists(targetName) || !eventExists(targetName, eventType, variables.accessLevels.public)) {
+		if (!variables.implicitTasks && !eventExists(arguments.targetName, arguments.eventType, variables.accessLevels.public)) {
 			event.setTarget(getUndefinedTarget());
 			event.setType(getUndefinedEvent());
 		}
@@ -101,7 +98,7 @@ component Context accessors="true" {
 
 		// check if the event is defined
 		if (!eventExists(targetName, eventType)) {
-			if (getImplicitTasks()) {
+			if (variables.implicitTasks) {
 				// create a task according to the conventions
 				var task = createPhaseTask();
 				// if there is a controller with the name of the target, create an invoke task that invokes the handler by the name of the event type
@@ -264,6 +261,9 @@ component Context accessors="true" {
 	}
 
 	public boolean function eventExists(required string targetName, required string type, numeric accessLevel = variables.accessLevels.private) {
+		if (!targetExists(arguments.targetName)) {
+			return false;
+		}
 		var events = getTarget(arguments.targetName).events;
 		return StructKeyExists(events, arguments.type) && events[arguments.type].accessLevel >= arguments.accessLevel;
 	}

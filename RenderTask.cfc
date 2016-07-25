@@ -33,7 +33,7 @@
 
 	public boolean function run(required Event event) {
 
-		render(arguments.event.getProperties(), arguments.event.getResponse());
+		this.render(arguments.event.getProperties(), arguments.event.getResponse());
 
 		return true;
 	}

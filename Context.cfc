@@ -57,8 +57,7 @@ component Context accessors="true" {
 	public Response function handleEvent(required string targetName, required string eventType, struct parameters = {}) {
 
 		var event = createEvent(arguments.targetName, arguments.eventType, arguments.parameters);
-
-		if (!variables.implicitTasks && !eventExists(arguments.targetName, arguments.eventType, variables.accessLevels.public)) {
+		if (!variables.implicitTasks && !eventExists(arguments.targetName, arguments.eventType, variables.accessLevels.public) && !eventExists(arguments.targetName, "*", variables.accessLevels.public)) {
 			event.setTarget(getUndefinedTarget());
 			event.setType(getUndefinedEvent());
 		}
@@ -97,7 +96,7 @@ component Context accessors="true" {
 		var eventType = arguments.event.getType();
 
 		// check if the event is defined
-		if (!eventExists(targetName, eventType)) {
+		if (!eventExists(targetName, eventType) && !eventExists(targetName, "*")) {
 			if (variables.implicitTasks) {
 				// create a task according to the conventions
 				var task = createPhaseTask();

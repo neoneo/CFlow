@@ -33,7 +33,7 @@
 
 	public boolean function run(required Event event) {
 
-		this.render(arguments.event.getProperties(), arguments.event.getResponse());
+		renderView(arguments.event.getProperties(), arguments.event.getResponse());
 
 		return true;
 	}
@@ -43,7 +43,7 @@
 	}
 	</cfscript>
 
-	<cffunction name="render" access="private" output="false" returntype="void">
+	<cffunction name="renderView" access="private" output="false" returntype="void">
 		<cfargument name="data" type="struct" required="true">
 		<cfargument name="response" type="Response" required="true">
 

@@ -16,7 +16,7 @@
 
 <cfcomponent displayname="DefaultOutputStrategy" implements="DebugOutputStrategy" output="false">
 
-	<cffunction name="render" access="public" output="false" returntype="string">
+	<cffunction name="renderMessages" access="public" output="false" returntype="string">
 		<cfargument name="messages" type="array" required="true">
 
 		<cfsavecontent variable="local.content">
@@ -204,7 +204,7 @@
 						</cfif>
 						<cfif renderThreadTasks>
 							<!--- render the messages from the thread --->
-							#render(metadata.messages)#
+							#renderMessages(metadata.messages)#
 						</cfif>
 					</div>
 				</cfif>
@@ -218,7 +218,7 @@
 	<cffunction name="generate" access="public" returntype="string">
 		<cfargument name="messages" type="array" required="true">
 
-		<cfset var debugoutput = render(arguments.messages)>
+		<cfset var debugoutput = renderMessages(arguments.messages)>
 
 		<cfsavecontent variable="debugoutput">
 			<style type="text/css">
